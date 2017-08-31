@@ -1,0 +1,162 @@
+= lecture #2: 20170830
+
+== talking about hex
+
+catchup/context for class...
+
+.eg: converting to dec, from base 16 `CD` is:
+|===
+| C    | D
+| 16   | 1
+| 16^1 | 16^0
+| (c * 16^1) | (D * 16^0)
+| (12 * 16) | (13 * 1)
+| 192 | 13
+|===
+
+`205 = 192 + 13`
+
+takeaway: hex used as shorthand for 4-bit strings
+
+== ip addresses
+
+recall: ip's are 4-bytes
+
+ip address division:
+  address divided two parts: prefix (netid), suffix (hostid)
+
+
+NOTE: tradeoffs in how to divide (bigger net, bigger host, same size both?)
+
+solution was: *classful addressing*
+
+.three classes
+|===
+| class | net | host | design
+| a     | 1   | 3    | 0   -> net has 7 bits  (1 * 8 - 1)
+| b     | 2   | 2    | 10  -> net has 14 bits (2 * 8 - 2)
+| c     | 3   | 1    | 110 -> net has 21 bits (3 * 8 - 3)
+|===
+
+.size divisions:
+1. 2^8  =~ 256
+2. 2^16 =~ 16k
+3. 2^24 =~ 2 Billion
+
+"designator" column above: how to distinguish an address's class? need addr AND class-designation to be delivered?
+solution: embed class IN address
+
+.this classroom's machines have IP:
+. ip: `148.84.129.*`
+. netid: `148.84`
+. host: `129.17`
+
+.example practice: 148_10 = _2; how:
+    128: 1, 64: 0, 32: 0, 16: 1, 8: 0, 4: 1, 2:0 , 1:0
+    note: `10` is first two bytes, thus (see table above) *class B* network!
+
+
+.`2^7: 128` nets is ACTUALLY `126`; `0` reserved, `127` reserved
+|===
+| reservation | in bits | reason
+| zero | 0 000 000 | dhcp: client's addresses (sent over broadcast)
+| 127  | 1 111 111 | broadcast
+|===
+
+.pool sizes
+|===
+| class | net | host | design
+| a     | 1  ->  2^7-2=126 | 2^24-2=~16Bill
+| b     | 2  -> 2^14-2=~16k | 2^16-2=~65k
+| c     | 3  -> 2^21-2=~2Bill | 2^7-2=126
+|===
+
+so "classful" because ip address *itself* indicates its class
+
+NOTE: these are the *unicast* classes
+
+Class "D" is for *multicast*
+(ie: subscriptions)
+
+first bits are: `1110`
+
+Class "E" not being used (`11110`; reserved)
+
+
+=== practice examples
+
+==== class B: `8C3B2EF1`
+
+given `8C3B2EF1` what class is this address?
+convert to decimal: `1000 1100  0011 1011`
+
+.steps:
+1. take *first byte* `8C`
+2. inspect: `1000 1100`
+3. first bits: `10`
+4. thus *class b*
+5. then NETID: `1000 1100` (`8C3B`) = `140`
+6. then HOSTID: `0011 1011` (`2EF1`) = `59.46.241`
+7.
+
+.per-byte conversion
+. `8` `C` <- `1000` `1100` +
+            128 + 8 + 4 = 140
+. `3` `B` <- `0011` `1011` +
+            32 + 16 + 8 + 2 + 1 = 59
+. `2` `E` <- `0010` `1110` +
+            32 + 8 + 4 + 2 = 46
+. `F` `1` <- `1111` `0001` +
+            240  + 1 = 241
+. therefore: `140.59.46.241`
+
+==== class A: `462C7B2E`
+
+.`46` = `0100`
+. -> *class a*
+. -> netid is only *one* byte
+. -> netid = `46`
+. -> hostid = `2C7B2E`
+
+.per-byte conversion
+. `4` `6` <- `?` `?` +
+        ?? = 70
+. `2` `C` <- `0010` `1100` +
+        32 + 8 + 4 = 44
+. `7B` <- `0111` `1011` +
+        ?? = 123
+. `2E` <- `0010` `1110` +
+        ?? = 46
+. therefore: `70.44.123.46`
+
+TODO: memorize hex -> binary conversions
+
+
+==== class c: `C1F72B3F`
+
+`1100` `0001`
+. `110` first bits
+. -> *class c*
+. -> netid: `C1F72B`
+. -> hostid: `3F`
+
+. `C1` <- ?? +
+       = 193
+
+193.247.43.63
+
+
+=== addressing cont'd
+
+*limited broadcast*:
+    "local" or "limited" broadcast to all on *my* netid
+
+*directed broadcast*:
+    broadcast to *other* netid; ie: send `netid:FFF...`
+
+*multi-homed host*:
+    eg: multiple netcards, or (eg: a phone) manipulating multiple tranc'vrs [bluetooth, wifi, lte]
+
+
+
+loopback address (reserved) `127.*` actually goes through network device (but loops back); tests really working
