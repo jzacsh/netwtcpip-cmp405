@@ -1,0 +1,6 @@
+= Coursework: Networking CMP-405
+:me: https://j.zac.sh
+:cmp405: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17
+
+{me}[My] own coursework -- lecture notes, scribbles, homework -- while taking
+{cmp405}[CMP-405 at Lehman], Fall 2017.
