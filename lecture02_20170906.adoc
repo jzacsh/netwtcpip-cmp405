@@ -1,0 +1,89 @@
+= lecture 20170906
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%205.pdf
+
+QUESTION: what is the cloud representing in these lectures? `N^2` ish wires
+crossing? ... switch? either?
+
+.motivation:
+. use hardware physical addresses to comm over netw
+. applications only use internet addresses
+
+operate *only* in IP addres space: everything above/including IP layer
+
+machines *adapters* communicate with hardware addresses
+
+*address resolution problem*
+
+== address resolution protocol (arp)
+
+checks netid matches for dest ip; then asks for hwaddress of dest ip
+
+protocol living in *adapter* layer
+
+no security; can spoof replies "i'm HW_a"
+
+i: ip_i, hw_i
+in a network of `i` nodes
+
+arp cache; what happens
+
+WARN: ip protocol (and stack below) is *unreliable*
+
+standard arp cache lifetime is *20 min*, apparently
+
+. *if* `ip_a` sends to `ip_b` +
+  and `ip_a` has a *stale* _arp cache_
+. *then* `ip_a` deadlines _(or something?)_ +
+  and *removes* `ip_b` from arp cache +
+  and *re-initiates* arp
+
+*arp request*, *arp reply*
+
+*other* nodes *drop* broadcasted arp request
+*only* recipient *replies*
+
+. arp cache acts as key/value store, looking up ip addreses, returning deadline of
+trust for the entry, *and* hardware address last used by said ip address
+. arp cache entries are *deleted* when they're found to be stale _(or perhaps
+implementations poll their tables for stale entries)_
+
+NOTE: in homework assignment: make arp diagram and explain it (bullet points is file)
+
+=== more details
+
+"performed at each step along path through Internet"
+
+
+two basic algorithms:
+. one we just described in class: "dynamic binding"
+. "direct binding" (less relevant to our course)
+
+==== direct mapping algorithm
+
+example: hw addresses being really small (Eg: one byte) can be used as the
+*host* address in an ip address space (eg: class c), so hw address can always
+just be extracted directly from the ip; thus: "direct mapping"
+
+{slides}[slide 13] note the values are in hex; eg: `0001` in hex for *value* of
+`1` (ie: `0000 0001`) in the first field: "ethernet address type"
+
+
+=== arp packet format
+
+arbitrary address lengths (hardware and ip)
+
+entire arp message (described slide 13) is the *frame data area* of a packet
+encapsulation
+
+.frame; note: frame header precedes arp message
+6:: dest hw addr
+6:: src hw addr
+2:: type (typically `0800` meaning "ip")
+arbitrary length:: frame data area (up to 1500 bytes, min: 46 bytes; at least on ethernet ipv4)
+
+"frame" is outer-most envelope traveling across network
+
+*reverse arp*: get IP *given* a hw address; modern-context: replaced by use of
+dhcp
+
+
