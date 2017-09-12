@@ -30,12 +30,12 @@ int readHexFrom(char *output, int srcFile, int outLimit) {
 }
 
 int main(int argc, char **argv) {
-  char input[65000 /*max-size of collected frags of an ip datagram*/];
+  char hex[65000 /*max-size of collected frags of an ip datagram*/];
 
-  int hexChars;
-  if (!(hexChars = readHexFrom(input, STDIN_FILENO, 65000 /*outLimit*/))) {
+  int numHexChars;
+  if (!(numHexChars = readHexFrom(hex, STDIN_FILENO, 65000 /*outLimit*/))) {
     fprintf(stderr, "error: no frame data found on stdin\n");
     return 1;
   }
-  printf("Got %d hex characters\n", hexChars);
+  printf("Got %d hex characters\n", numHexChars);
 }
