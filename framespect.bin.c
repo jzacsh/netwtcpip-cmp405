@@ -19,14 +19,14 @@ struct frame {
   // Source hex values from which below fields are parsed.
   char srcHex[MAX_HEX_STREAM_LEN];
   int srcLen;
-
-  int cursor;
+  int cursor;  // internal state used by parser
 
   // Parsed ethernet frame header fields.
-  char ethfrm_dstHwAddr[6*2];
-  char ethfrm_srcHwAddr[6*2];
-  char ethfrm_type[2*2];
+  char ethframe_dstHwAddr[6*2];
+  char ethframe_srcHwAddr[6*2];
+  char ethframe_type[2*2];
 
+  ///////////////////////////////////////////////////
   // Parsed ethernet frame payload below this line...
   // TODO(zacsh) complete
 };
@@ -61,8 +61,14 @@ void printFrameHex(struct frame *frm) {
 
 /** Returns error code if fails to parse frame data. */
 int parseFrame(struct frame *frm) {
-  memcpy(frm->ethfrm_dstHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethfrm_dstHwAddr));
-  frm->cursor += sizeof(frm->ethfrm_dstHwAddr);
+  memcpy(frm->ethframe_dstHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethframe_dstHwAddr));
+  frm->cursor += sizeof(frm->ethframe_dstHwAddr);
+
+  memcpy(frm->ethframe_srcHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethframe_srcHwAddr));
+  frm->cursor += sizeof(frm->ethframe_srcHwAddr);
+
+  memcpy(frm->ethframe_type, frm->srcHex+frm->cursor, sizeof(frm->ethframe_type));
+  frm->cursor += sizeof(frm->ethframe_type);
 
   memcpy(frm->ethfrm_srcHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethfrm_srcHwAddr));
   frm->cursor += sizeof(frm->ethfrm_srcHwAddr);
@@ -100,17 +106,15 @@ void printFrame(struct frame *frm) {
   char fmtBuff[MAX_HEX_STREAM_LEN];
   memset(fmtBuff, '\0', MAX_HEX_STREAM_LEN);
 
-  printf("\n");
+  printf("\nEthernet Frame Headers:\n%s\n", PRETTY_PRINT_HORIZ);
 
-  printf("Ethernet Frame Headers:\n%s\n", PRETTY_PRINT_HORIZ);
-
-  formatHex(frm->ethfrm_dstHwAddr, fmtBuff, sizeof(frm->ethfrm_dstHwAddr));
+  formatHex(frm->ethframe_dstHwAddr, fmtBuff, sizeof(frm->ethframe_dstHwAddr));
   printf("destin hardware address: %s\n", fmtBuff);
 
-  formatHex(frm->ethfrm_srcHwAddr, fmtBuff, sizeof(frm->ethfrm_srcHwAddr));
+  formatHex(frm->ethframe_srcHwAddr, fmtBuff, sizeof(frm->ethframe_srcHwAddr));
   printf("source hardware address: %s\n", fmtBuff);
 
-  formatHex(frm->ethfrm_type, fmtBuff, sizeof(frm->ethfrm_type));
+  formatHex(frm->ethframe_type, fmtBuff, sizeof(frm->ethframe_type));
   printf("frame type: %s\n", fmtBuff);
 
   printf("\n");
