@@ -4,9 +4,18 @@
  * Sample of valid input can be retrieved by:
  *   `git show 341a73f6d601:lecture03_20170911.adoc  | sed -n '93,100'p`
  */
-#include <stdio.h>
-#include <unistd.h>
 #include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+/*max-size of collected frags of an ip datagram*/
+#define MAX_HEX_STREAM_LEN 65000
+
+struct frame {
+  char srcHex[MAX_HEX_STREAM_LEN];
+  int srcLen;
+};
 
 int readHexFrom(char *output, int srcFile, int outLimit) {
   char buff;
@@ -30,12 +39,29 @@ int readHexFrom(char *output, int srcFile, int outLimit) {
 }
 
 int main(int argc, char **argv) {
-  char hex[65000 /*max-size of collected frags of an ip datagram*/];
-
-  int numHexChars;
-  if (!(numHexChars = readHexFrom(hex, STDIN_FILENO, 65000 /*outLimit*/))) {
-    fprintf(stderr, "error: no frame data found on stdin\n");
-    return 1;
+  int status = 0;
+  struct frame *frm = NULL;
+  if (!(frm = malloc(sizeof(struct frame)))) {
+    perror("could not alloc space for an ethernet frame");
+    status = 1;
+    goto cleanup;
   }
-  printf("Got %d hex characters\n", numHexChars);
+
+  if (!(frm->srcLen = readHexFrom(frm->srcHex, STDIN_FILENO, MAX_HEX_STREAM_LEN))) {
+    fprintf(stderr, "error: no frame data found on stdin\n");
+    status = 1;
+    goto cleanup;
+  }
+
+  printf("Got %d hex characters\n", frm->srcLen);
+  for (int i = 0; i < frm->srcLen; i++) {
+    printf("%c", frm->srcHex[i]);
+    if (i % 2) { printf(" "); }
+  }
+
+cleanup:
+  if (frm != NULL) {
+    free(frm);
+  }
+  return status;
 }
