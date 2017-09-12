@@ -101,10 +101,10 @@ void printFrame(struct frame *frm) {
 
   printf("Ethernet Frame Headers:\n%s\n", PRETTY_PRINT_HORIZ);
 
-  formatHex(frm->ethframe_dstHwAddr, fmtBuff, 12);
+  formatHex(frm->ethframe_dstHwAddr, fmtBuff, sizeof(frm->ethframe_dstHwAddr));
   printf("destin hardware address: %s\n", fmtBuff);
 
-  formatHex(frm->ethframe_srcHwAddr, fmtBuff, 12);
+  formatHex(frm->ethframe_srcHwAddr, fmtBuff, sizeof(frm->ethframe_srcHwAddr));
   printf("source hardware address: %s\n", fmtBuff);
 
   printf("\n");
