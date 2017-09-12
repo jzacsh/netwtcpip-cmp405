@@ -28,6 +28,15 @@ struct frame {
 
   ///////////////////////////////////////////////////
   // Parsed ethernet frame payload below this line...
+
+  // Protocol version; typically `4` indicating IPv4
+  char ipfrm_version; // 4 bits
+
+  // Count of two-byte groups occuring in header before payload (typically `5`)
+  //
+  // Necessary in case "optional" header fields are utilized, allowing IP
+  // payload to eventually be found.
+  char ipfrm_headerlen; // 4 bits
   // TODO(zacsh) complete
 };
 
@@ -70,11 +79,11 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->ethframe_type, frm->srcHex+frm->cursor, sizeof(frm->ethframe_type));
   frm->cursor += sizeof(frm->ethframe_type);
 
-  memcpy(frm->ethfrm_srcHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethfrm_srcHwAddr));
-  frm->cursor += sizeof(frm->ethfrm_srcHwAddr);
+  frm->ipfrm_version = frm->srcHex[frm->cursor];
+  frm->cursor += sizeof(frm->ipfrm_version);
 
-  memcpy(frm->ethfrm_type, frm->srcHex+frm->cursor, sizeof(frm->ethfrm_type));
-  frm->cursor += sizeof(frm->ethfrm_type);
+  frm->ipfrm_headerlen = frm->srcHex[frm->cursor];
+  frm->cursor += sizeof(frm->ipfrm_headerlen);
 
   return 0;
 }
@@ -117,8 +126,11 @@ void printFrame(struct frame *frm) {
   formatHex(frm->ethframe_type, fmtBuff, sizeof(frm->ethframe_type));
   printf("frame type: %s\n", fmtBuff);
 
-  printf("\n");
-  printf("Ethernet Frame Payload (IP Frame):\n%s\n", PRETTY_PRINT_HORIZ);
+  printf("\nEthernet Frame Payload (IP Frame):\n%s\n", PRETTY_PRINT_HORIZ);
+
+  printf("version: %c\n", frm->ipfrm_version);
+
+  printf("header len: %c\n", frm->ipfrm_headerlen);
 
   printf("\n");
 }
