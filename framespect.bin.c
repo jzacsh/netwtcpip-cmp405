@@ -37,6 +37,11 @@ struct frame {
   // Necessary in case "optional" header fields are utilized, allowing IP
   // payload to eventually be found.
   char ipfrm_headerlen; // 4 bits
+
+
+  // Field "type of service"
+  char ipfrm_serviceType[2]; // 1 byte
+
   // TODO(zacsh) complete
 };
 
@@ -85,6 +90,9 @@ int parseFrame(struct frame *frm) {
   frm->ipfrm_headerlen = frm->srcHex[frm->cursor];
   frm->cursor += sizeof(frm->ipfrm_headerlen);
 
+  memcpy(frm->ipfrm_serviceType, frm->srcHex+frm->cursor, sizeof(frm->ipfrm_serviceType));
+  frm->cursor += sizeof(frm->ipfrm_serviceType);
+
   return 0;
 }
 
@@ -131,6 +139,9 @@ void printFrame(struct frame *frm) {
   printf("version: %c\n", frm->ipfrm_version);
 
   printf("header len: %c\n", frm->ipfrm_headerlen);
+
+  formatHex(frm->ipfrm_serviceType, fmtBuff, sizeof(frm->ipfrm_serviceType));
+  printf("service type: %s\n", frm->ipfrm_serviceType);
 
   printf("\n");
 }
