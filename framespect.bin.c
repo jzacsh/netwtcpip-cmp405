@@ -67,6 +67,9 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->ethframe_srcHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethframe_srcHwAddr));
   frm->cursor += sizeof(frm->ethframe_srcHwAddr);
 
+  memcpy(frm->ethframe_type, frm->srcHex+frm->cursor, sizeof(frm->ethframe_type));
+  frm->cursor += sizeof(frm->ethframe_type);
+
   return 0;
 }
 
@@ -106,6 +109,9 @@ void printFrame(struct frame *frm) {
 
   formatHex(frm->ethframe_srcHwAddr, fmtBuff, sizeof(frm->ethframe_srcHwAddr));
   printf("source hardware address: %s\n", fmtBuff);
+
+  formatHex(frm->ethframe_type, fmtBuff, sizeof(frm->ethframe_type));
+  printf("frame type: %s\n", fmtBuff);
 
   printf("\n");
   printf("Ethernet Frame Payload (IP Frame):\n%s\n", PRETTY_PRINT_HORIZ);
