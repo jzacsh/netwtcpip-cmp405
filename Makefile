@@ -9,7 +9,7 @@ CFLAGS    =  -std=c99 -O0 -g -Wall $(INCLUDES)
 test: memcheck
 
 memcheck:
-	$(MAKE) sampleethframe | valgrind --error-exitcode=1 --leak-check=yes --suppressions=valgrind.supp ./framespect.bin
+	$(MAKE) sampleethframe | valgrind --track-origins=yes --error-exitcode=1 --leak-check=yes --suppressions=valgrind.supp ./framespect.bin
 
 sampleethframe:
 	@git show 341a73f6d601:lecture03_20170911.adoc  | sed -n 93,100p
