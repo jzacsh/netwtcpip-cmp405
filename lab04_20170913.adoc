@@ -1,0 +1,31 @@
+= lecture 2017-09-13
+
+== fragmenting
+picking up same topic as last lecture
+
+QUESTION: why does ARP need to happen for comm. to router? shouldn't knowing
+your router's hw-address being an aspect of being *on* the network to begin
+with?
+
+
+ANSWER: need at *some* point to ARP for router; eg: talking to DHCP server
+*may* not be related to router (eg: they maybe servers on different nodes)
+
+positive ack w/re-transmi
+
+
+
+
+no 2.3, 4.1, 4.7
+
+18; 3.4->1.5
+
+== forwarding ip datagrams
+
+
+why does a host, `A`, need to make a routing decision?
+if `A` has *two routers on host
+
+*routing table*: dest netid -> *host* on *my* netid who *can* do this
+
+NOTE: hosts have routing tables _(eg: might have multiple routers on your network)_
