@@ -18,54 +18,74 @@
 #define PRETTY_PRINT_HORIZ "------------------------------------------------------------"
 
 struct frame {
+  unsigned char src[MAX_HEX_STREAM_LEN]; // not yet ready: use `srcHex` field
+
   // Source hex values from which below fields are parsed.
-  char srcHex[MAX_HEX_STREAM_LEN];
+  char srcHex[MAX_HEX_STREAM_LEN]; // deprecated: use `src` field
   int srcLen;
   int cursor;  // internal state used by parser
 
   // Parsed ethernet frame header fields.
-  char ethframe_dstHwAddr[6*2];
-  char ethframe_srcHwAddr[6*2];
-  char ethframe_type[2*2];
+  unsigned char ethframe_dstHwAddr[6];
+  unsigned char ethframe_srcHwAddr[6];
+  unsigned char ethframe_type[2];
 
   ///////////////////////////////////////////////////
   // Parsed ethernet frame payload below this line...
 
   // Protocol version; typically `4` indicating IPv4
-  char ipfrm_version; // 4 bits
+  unsigned char ipfrm_version; // 4 bits
 
   // Count of two-byte groups occuring in header before payload (typically `5`)
   //
   // Necessary in case "optional" header fields are utilized, allowing IP
   // payload to eventually be found.
-  char ipfrm_headerlen; // 4 bits
+  unsigned char ipfrm_headerlen; // 4 bits
 
 
   // Field "type of service"
-  char ipfrm_serviceType[2]; // 1 byte
+  unsigned char ipfrm_serviceType; // 1 byte
 
   // TODO(zacsh) complete
 };
 
-int readHexFrom(char *output, int srcFile, int outLimit) {
-  char buff;
-  int i = 0;
-  while (read(srcFile, &buff, 1) > 0) {
-    if (isspace(buff)) {
-      if (IS_DEBUG) printf(" ");
+int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
+  char hex; // [0,f]=[0,15] -- a raw input string
+  unsigned char dec; // same, converted to decimal value
+
+  int ini = 0;
+  int outi = 0;
+  while (read(srcFile, &hex, 1) > 0) {
+    if (isspace(hex)) {
       continue;
     }
 
-    output[i] = buff;
-    if (IS_DEBUG) printf("%c", output[i]);
-    i++;
+    dec = (unsigned char) strtol(&hex, NULL, 16);
+    ini++;
 
-    if (i >= outLimit) {
+    if (IS_DEBUG) fprintf(stderr, "ini(%d); outi(%d); %d, hex: %d or %x\n",
+        ini, outi, (ini-1) % 2, dec, dec);
+
+    if (!((ini-1) % 2)) {
+      output[outi] = dec << 4;
+      continue;
+    }
+
+    output[outi] |= dec;
+
+    if (IS_DEBUG) {
+      unsigned char le = (output[outi] & 0xf0) >> 4;
+      unsigned char ri = output[outi] & 0x0f;
+      fprintf(stderr, "\tdone packing: '%d', or %x %x\n", output[outi], le, ri);
+    }
+
+    outi++;
+    if (outi >= outLimit) {
       break;
     }
   }
   if (IS_DEBUG) printf("\n");
-  return i;
+  return outi;
 }
 
 void printFrameHex(struct frame *frm) {
@@ -77,47 +97,41 @@ void printFrameHex(struct frame *frm) {
 
 /** Returns error code if fails to parse frame data. */
 int parseFrame(struct frame *frm) {
-  memcpy(frm->ethframe_dstHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethframe_dstHwAddr));
+  if (IS_DEBUG) fprintf(stderr, "starting parseFrame(...);\n");
+
+  if (IS_DEBUG) fprintf(stderr, "sizeof dst hardware: %ld\n", sizeof(frm->ethframe_dstHwAddr));
+  memcpy(frm->ethframe_dstHwAddr, frm->src+frm->cursor, sizeof(frm->ethframe_dstHwAddr));
   frm->cursor += sizeof(frm->ethframe_dstHwAddr);
 
-  memcpy(frm->ethframe_srcHwAddr, frm->srcHex+frm->cursor, sizeof(frm->ethframe_srcHwAddr));
+  memcpy(frm->ethframe_srcHwAddr, frm->src+frm->cursor, sizeof(frm->ethframe_srcHwAddr));
   frm->cursor += sizeof(frm->ethframe_srcHwAddr);
 
-  memcpy(frm->ethframe_type, frm->srcHex+frm->cursor, sizeof(frm->ethframe_type));
+  memcpy(frm->ethframe_type, frm->src+frm->cursor, sizeof(frm->ethframe_type));
   frm->cursor += sizeof(frm->ethframe_type);
 
-  frm->ipfrm_version = frm->srcHex[frm->cursor];
-  frm->cursor += sizeof(frm->ipfrm_version);
+  frm->ipfrm_version = (frm->src[frm->cursor] & 0xf0) >> 4;
+  frm->ipfrm_headerlen = frm->src[frm->cursor] & 0x0f;
+  frm->cursor++;
 
-  frm->ipfrm_headerlen = frm->srcHex[frm->cursor];
-  frm->cursor += sizeof(frm->ipfrm_headerlen);
-
-  memcpy(frm->ipfrm_serviceType, frm->srcHex+frm->cursor, sizeof(frm->ipfrm_serviceType));
+  frm->ipfrm_serviceType = frm->src[frm->cursor];
   frm->cursor += sizeof(frm->ipfrm_serviceType);
 
   return 0;
 }
 
 /* expects `dst` is size +1 large */
-void formatHex(char *src, char *dst, int size) {
+void formatHex(unsigned char *src, char *dst, int size) {
   memset(dst, '\0', size + 1);
 
-  char buff[size*2/*overestimate*/];
-  memset(buff, '\0', sizeof(buff));
   int srci, outi;
-  for (srci = 0, outi = 0; srci < size; ++outi) {
-    buff[outi] = src[srci];
-
+  for (srci = 0, outi = 0; srci < size; outi += 3) {
+    snprintf(dst+outi, 4 /*2 hex chars + space + '\0' */, "%02X ", src[srci]);
     srci++;
-    if (srci && !(srci % 2)) {
-      outi++;
-      buff[outi] = ' ';
-    }
   }
-  if (buff[outi-1] == ' ') {
-    buff[outi-1] = '\0';
+
+  if (dst[outi-1] == ' ') {
+    dst[outi-1] = '\0';
   }
-  memcpy(dst, buff, size*2);
 }
 
 /** Pretty prints the contents of frm. */
@@ -138,12 +152,11 @@ void printFrame(struct frame *frm) {
 
   printf("\nEthernet Frame Payload (IP Frame):\n%s\n", PRETTY_PRINT_HORIZ);
 
-  printf("version: %c\n", frm->ipfrm_version);
+  printf("version: %d [hex: %02X]\n", frm->ipfrm_version, frm->ipfrm_version);
 
-  printf("header len: %c\n", frm->ipfrm_headerlen);
+  printf("header len: %d [hex: %02X]\n", frm->ipfrm_headerlen, frm->ipfrm_headerlen);
 
-  formatHex(frm->ipfrm_serviceType, fmtBuff, sizeof(frm->ipfrm_serviceType));
-  printf("service type: %s\n", frm->ipfrm_serviceType);
+  printf("service type: %02X\n", frm->ipfrm_serviceType);
 
   printf("\n");
 }
@@ -158,7 +171,7 @@ int main(int argc, char **argv) {
   }
   memset(frm, '\0', sizeof(struct frame));
 
-  if (!(frm->srcLen = readHexFrom(frm->srcHex, STDIN_FILENO, MAX_HEX_STREAM_LEN))) {
+  if (!(frm->srcLen = readHexFrom(frm->src, STDIN_FILENO, MAX_HEX_STREAM_LEN))) {
     fprintf(stderr, "error: no frame data found on stdin\n");
     status = 1;
     goto cleanup;
