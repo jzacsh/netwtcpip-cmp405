@@ -10,6 +10,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#define IS_DEBUG 0
+
 /*max-size of collected frags of an ip datagram*/
 #define MAX_HEX_STREAM_LEN 65000
 
@@ -50,19 +52,19 @@ int readHexFrom(char *output, int srcFile, int outLimit) {
   int i = 0;
   while (read(srcFile, &buff, 1) > 0) {
     if (isspace(buff)) {
-//    printf(" ");
+      if (IS_DEBUG) printf(" ");
       continue;
     }
 
     output[i] = buff;
-//  printf("%c", output[i]);
+    if (IS_DEBUG) printf("%c", output[i]);
     i++;
 
     if (i >= outLimit) {
       break;
     }
   }
-//    printf("\n");
+  if (IS_DEBUG) printf("\n");
   return i;
 }
 
