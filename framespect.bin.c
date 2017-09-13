@@ -5,6 +5,7 @@
  *   `git show 341a73f6d601:lecture03_20170911.adoc  | sed -n '93,100'p`
  */
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,7 +59,11 @@ int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
       continue;
     }
 
+    errno = 0;
     dec = (unsigned char) strtol(&hex, NULL, 16);
+    if (dec < 0 || dec > 15 || errno == ERANGE || errno != 0) {
+      return -1;
+    }
     ini++;
 
     if (IS_DEBUG) fprintf(stderr, "ini(%d); outi(%d); %d, hex: %d or %x\n",
@@ -162,7 +167,7 @@ int main(int argc, char **argv) {
   }
   memset(frm, '\0', sizeof(struct frame));
 
-  if (!(frm->srcLen = readHexFrom(frm->src, STDIN_FILENO, MAX_HEX_STREAM_LEN))) {
+  if ((frm->srcLen = readHexFrom(frm->src, STDIN_FILENO, MAX_HEX_STREAM_LEN)) < 0) {
     fprintf(stderr, "error: no frame data found on stdin\n");
     status = 1;
     goto cleanup;
