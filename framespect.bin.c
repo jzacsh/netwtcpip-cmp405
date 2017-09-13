@@ -18,10 +18,8 @@
 #define PRETTY_PRINT_HORIZ "------------------------------------------------------------"
 
 struct frame {
-  unsigned char src[MAX_HEX_STREAM_LEN]; // not yet ready: use `srcHex` field
-
   // Source hex values from which below fields are parsed.
-  char srcHex[MAX_HEX_STREAM_LEN]; // deprecated: use `src` field
+  unsigned char src[MAX_HEX_STREAM_LEN];
   int srcLen;
   int cursor;  // internal state used by parser
 
@@ -86,13 +84,6 @@ int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
   }
   if (IS_DEBUG) printf("\n");
   return outi;
-}
-
-void printFrameHex(struct frame *frm) {
-  for (int i = 0; i < frm->srcLen; ++i) {
-    printf("%c", frm->srcHex[i]);
-    if (i % 2) { printf(" "); }
-  }
 }
 
 /** Returns error code if fails to parse frame data. */
