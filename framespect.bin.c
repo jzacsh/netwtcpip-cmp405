@@ -57,7 +57,18 @@ struct frame {
   // (despite their order of arrival).
   unsigned char ipfrm_fragIdent[2];
 
-  // TODO(zacsh) complete
+  // TODO(zacsh) above are implemented; need to complete remaining fields
+
+  // Field "flags" for fragments can be all off, or a combo of:
+  // - 010: "DF" Don't Fragment
+  // - 001: "MF" More Fragments
+  // First bit is reserved and must be zero.
+  unsigned char ipfrm_fragFlag; // 3 bits
+
+  // Field "offset" for fragments is a integer index in [0,2^13) which fragment
+  // indicating the byte-offset this payload represents within the larger
+  // fragment group.
+  unsigned char ipfrm_fragOffset[2]; // bits: 13 = 16 - 3
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
