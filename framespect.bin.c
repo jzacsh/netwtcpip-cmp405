@@ -49,6 +49,10 @@ struct frame {
   // Field "type of service"
   unsigned char ipfrm_serviceType; // 1 byte
 
+  // Field "total length" contains a byte-count of the entire ip frame,
+  // including both header & payload.
+  unsigned char ipfrm_totalLen[2];
+
   // TODO(zacsh) complete
 };
 
@@ -116,6 +120,9 @@ int parseFrame(struct frame *frm) {
   frm->ipfrm_serviceType = frm->src[frm->cursor];
   frm->cursor += sizeof(frm->ipfrm_serviceType);
 
+  memcpy(frm->ipfrm_totalLen, frm->src+frm->cursor, sizeof(frm->ipfrm_totalLen));
+  frm->cursor += sizeof(frm->ipfrm_totalLen);
+
   return 0;
 }
 
@@ -134,8 +141,27 @@ void formatHex(unsigned char *src, char *dst, int size) {
   }
 }
 
-/** Pretty prints the contents of frm. */
-void printFrame(struct frame *frm) {
+// Returns 0 on success, less than 0 on failure.
+int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
+  *dst &= 0x00000000;
+  if (bytes > 4) {
+    fprintf(stderr, "trying to build an integer value from more than 32 bits, unexpected inside eth frame\n");
+    return -1;
+  }
+
+  int end = bytes - 1;
+  for (int i = 0; i < bytes; ++i) {
+    if (IS_DEBUG) fprintf(stderr,
+        "\t[dbg] src[i=%d]='%d' << %d --> %d\n",
+        i, src[i], (end - i)*4,
+        (0xff & src[i]) << ((end - i)*4));
+    *dst |= (0xff & src[i]) << ((end - i)*4);
+  }
+}
+
+/** Pretty prints the contents of frm. Return less than 0 indicates failure. */
+int printFrame(struct frame *frm) {
+  unsigned long int numBuff;
   char fmtBuff[MAX_HEX_STREAM_LEN];
   memset(fmtBuff, '\0', MAX_HEX_STREAM_LEN);
 
@@ -158,7 +184,14 @@ void printFrame(struct frame *frm) {
 
   printf("service type: %02X\n", frm->ipfrm_serviceType);
 
+  formatHex(frm->ipfrm_totalLen, fmtBuff, sizeof(frm->ipfrm_totalLen));
+  if (getNum(frm->ipfrm_totalLen, &numBuff, sizeof(frm->ipfrm_totalLen)) < 0) {
+    return -1;
+  }
+  printf("total length: %ld [hex: %s]\n", numBuff, fmtBuff);
+
   printf("\n");
+  return 0;
 }
 
 // TODO(zacsh) edge-cases not considered, eg:
@@ -186,7 +219,7 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
 
-  printFrame(frm);
+  printFrame(frm) < 0 ? status = 1 : 0;
 
 cleanup:
   if (frm != NULL) {
