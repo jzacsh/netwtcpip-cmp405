@@ -157,6 +157,7 @@ int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
         (0xff & src[i]) << ((end - i)*4));
     *dst |= (0xff & src[i]) << ((end - i)*4);
   }
+  return 0;
 }
 
 /** Pretty prints the contents of frm. Return less than 0 indicates failure. */
