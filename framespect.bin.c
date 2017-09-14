@@ -18,6 +18,10 @@
 
 #define PRETTY_PRINT_HORIZ "------------------------------------------------------------"
 
+#define IPFRAME_FRAG_FLAG_DF 0x02
+
+#define IPFRAME_FRAG_FLAG_MF 0x01
+
 struct frame {
   // Source hex values from which below fields are parsed.
   unsigned char src[MAX_HEX_STREAM_LEN];
@@ -212,6 +216,16 @@ int printFrame(struct frame *frm) {
 
   formatHex(frm->ipfrm_fragIdent, fmtBuff, sizeof(frm->ipfrm_fragIdent));
   printf("(fragment) identification: %s\n", fmtBuff);
+
+  printf("(fragment) flags: %s, %s\n",
+      (frm->ipfrm_fragFlag & IPFRAME_FRAG_FLAG_DF ? "do not fragment" : ""),
+      (frm->ipfrm_fragFlag & IPFRAME_FRAG_FLAG_MF ? "more fragments" : ""));
+
+  if (getNum(frm->ipfrm_fragOffset, &numBuff, sizeof(frm->ipfrm_fragOffset)) < 0) {
+    return -1;
+  }
+  formatHex(frm->ipfrm_fragOffset, fmtBuff, sizeof(frm->ipfrm_fragOffset));
+  printf("(fragment) offset: %ld [hex: %s]\n", numBuff, fmtBuff);
 
   printf("\n");
   return 0;
