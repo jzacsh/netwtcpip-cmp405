@@ -24,6 +24,11 @@ struct frame {
   int srcLen;
   int cursor;  // internal state used by parser
 
+  // IP & Ethernet frame fields (prefixed as such) are below. Each indicates its
+  // size in bytes which matches the protocol. Where protocol is not on
+  // byte-boundaries, the expected bit or byte size is indicated beside the
+  // field.
+
   // Parsed ethernet frame header fields.
   unsigned char ethfrm_dstHwAddr[6];
   unsigned char ethfrm_srcHwAddr[6];
