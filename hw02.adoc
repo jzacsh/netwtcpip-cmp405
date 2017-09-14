@@ -4,6 +4,8 @@
 
 recording my actual answers to they're easy to re-enter...
 
+NOTE: 2017-09-13 23:42:18-04:00 got a 60/65 points; yet to see what was wrong with these answers...
+
 [options="header"]
 .numerical questions
 |===
@@ -54,6 +56,10 @@ or will it require routers to handle the message. |
 
 
 == hw #2 scratch work
+
+
+WARNING: below was with a ton of misunderstanding. above section are my answers,
+but the work is on paper.
 
 scratch work done for hw #2 while waiting for lecture to start
 
