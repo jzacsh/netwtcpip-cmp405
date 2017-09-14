@@ -161,6 +161,8 @@ void printFrame(struct frame *frm) {
   printf("\n");
 }
 
+// TODO(zacsh) edge-cases not considered, eg:
+// - no sanitation is done on input stream
 int main(int argc, char **argv) {
   int status = 0;
   struct frame *frm = NULL;
