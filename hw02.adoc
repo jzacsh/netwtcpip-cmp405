@@ -8,27 +8,47 @@ recording my actual answers to they're easy to re-enter...
 .numerical questions
 |===
 | no. | question | answer
+
 | 1  | Find the source hardware address. |
+  `B9 AA B8 AO OF C3`
 | 2  | Find the destination hardware address. |
+  `C4 BC 6E 3A 5C E7`
 | 3  | What type of frame is this? |
-| 4  | What Flag(s) are set? |
+  `08 00`
+| 4  | What *fragment* Flag(s) are set? |
+  `011`
 | 5  | What is the fragment offset? |
+  `6145` = `1 1000 0000 0001`
 | 6  | What is the TTL count? |
+  `0x83` = `131`
 | 7  | What is the Header Checksum? |
+  `EB 40`
 | 8  | If the header includes no options or padding, what are the first five
 bytes of the datagram data? |
+  `41 8E B7 C2 CB`
 | 9  | Find the destination IP address. |
+  `B3 DC 88 4D`
 | 10 |  What class is the destination IP address? |
+  Class B; `B` = `1011` -> net: `B3 DC` ^ host: `88 4D`
 | 11 |  What is the network ID in the destination address? |
+  `B3 DC` (see #10)
 | 12 |  What is the host ID in the destination address? |
+  `88 4D` (see #10)
 | 13 |  Write the destination IP address in dotted decimal notation. |
+  `179.220.136.77`
 | 14 |  Find the source IP address. |
+  `CC 51 2D BB`
 | 15 |  What class is the source IP address? |
+  Class C; `C` = `1100` -> netid: `CC 51 2D` ^ host: `BB`
 | 16 |  What is the network ID in the source address? |
+  `CC 51 2D` (see #15)
 | 17 |  What is the host ID in the source address? |
+  `BB` (see #15)
 | 18 |  Write the source IP address in dotted decimal notation. |
+  `204.81.45.187`
 | 19 |  Can this message be delivered directly by the source to the destination,
 or will it require routers to handle the message. |
+  Will require routers, as they're on different netids (`CC 51 2D` != `B3 DC`).
 |===
 
 
