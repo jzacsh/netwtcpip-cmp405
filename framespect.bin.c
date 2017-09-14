@@ -40,7 +40,8 @@ struct frame {
   // Protocol version; typically `4` indicating IPv4
   unsigned char ipfrm_version; // 4 bits
 
-  // Count of two-byte groups occuring in header before payload (typically `5`)
+  // Field "internet header length" is the count of 4-byte groups (32-bit words)
+  // occuring in the current header before payload (typically `5`).
   //
   // Necessary in case "optional" header fields are utilized, allowing IP
   // payload to eventually be found.
