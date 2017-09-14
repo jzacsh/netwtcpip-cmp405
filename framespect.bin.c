@@ -173,8 +173,8 @@ int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
     if (IS_DEBUG) fprintf(stderr,
         "\t[dbg] src[i=%d]='%d' << %d --> %d\n",
         i, src[i], (end - i)*4,
-        (0xff & src[i]) << ((end - i)*4));
-    *dst |= (0xff & src[i]) << ((end - i)*4);
+        (0xff & src[i]) << ((end - i)*8));
+    *dst |= (0xff & src[i]) << ((end - i)*8);
   }
   return 0;
 }
