@@ -55,7 +55,7 @@ struct frame {
 
   // Field "identificationa" used to identify disparate groups of fragments
   // (despite their order of arrival).
-  unsigned char ipfrm_identif[2];
+  unsigned char ipfrm_fragIdent[2];
 
   // TODO(zacsh) complete
 };
@@ -127,8 +127,8 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->ipfrm_totalLen, frm->src+frm->cursor, sizeof(frm->ipfrm_totalLen));
   frm->cursor += sizeof(frm->ipfrm_totalLen);
 
-  memcpy(frm->ipfrm_identif, frm->src+frm->cursor, sizeof(frm->ipfrm_identif));
-  frm->cursor += sizeof(frm->ipfrm_identif);
+  memcpy(frm->ipfrm_fragIdent, frm->src+frm->cursor, sizeof(frm->ipfrm_fragIdent));
+  frm->cursor += sizeof(frm->ipfrm_fragIdent);
 
   return 0;
 }
@@ -198,7 +198,7 @@ int printFrame(struct frame *frm) {
   }
   printf("total length: %ld [hex: %s]\n", numBuff, fmtBuff);
 
-  formatHex(frm->ipfrm_identif, fmtBuff, sizeof(frm->ipfrm_identif));
+  formatHex(frm->ipfrm_fragIdent, fmtBuff, sizeof(frm->ipfrm_fragIdent));
   printf("(fragment) identification: %s\n", fmtBuff);
 
   printf("\n");
