@@ -4,6 +4,7 @@
 
 recording my actual answers to they're easy to re-enter...
 
+[options="header"]
 .numerical questions
 |===
 | no. | question | answer
