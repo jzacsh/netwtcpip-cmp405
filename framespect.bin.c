@@ -91,6 +91,10 @@ struct frame {
   // Field "TTL" is a decrementing-counter of hops allowed for a packet before
   // it should be dropped.
   unsigned char ipfrm_timeToLive;
+
+  // Field "Protocol" defines the protocol used in this IP frame's payload.
+  // Values' semantics can be found here: https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
+  unsigned char ipfrm_payloadProtocol;
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
@@ -174,6 +178,9 @@ int parseFrame(struct frame *frm) {
   frm->ipfrm_timeToLive = frm->src[frm->cursor];
   frm->cursor += sizeof(frm->ipfrm_timeToLive);
 
+  frm->ipfrm_payloadProtocol = frm->src[frm->cursor];
+  frm->cursor += sizeof(frm->ipfrm_payloadProtocol);
+
   return 0;
 }
 
@@ -255,6 +262,8 @@ int printFrame(struct frame *frm) {
   printf("(fragment) offset: %ld [frag and offset was: '%s' hex]\n", numBuff, fmtBuff);
 
   printf("TTL: %d [hex: %02X]\n", frm->ipfrm_timeToLive, frm->ipfrm_timeToLive);
+
+  printf("Protocol: %d [hex: %02X]\n", frm->ipfrm_payloadProtocol, frm->ipfrm_payloadProtocol);
 
   printf("\n");
   return 0;
