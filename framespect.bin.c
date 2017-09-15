@@ -22,6 +22,15 @@
 
 #define IPFRAME_FRAG_FLAG_MF 0x01
 
+// Flushes valid flag values (max of '0110 0000') out of the left-half of the
+// 16-bit word composing fragmentation's flags & offset fields.
+#define IPFRAME_FRAG_FLAG_MASK 0x60
+
+// Opposite~ish bits of IPFRAME_FRAG_FLAG_MASK; flushes valid flag values (max
+// of '0001 1111') out of the left-half of the 16-bit word composing
+// fragmentation's flags & offset fields.
+#define IPFRAME_FRAG_OFFSET_MASK 0x1f
+
 struct frame {
   // Source hex values from which below fields are parsed.
   unsigned char src[MAX_HEX_STREAM_LEN];
@@ -62,7 +71,9 @@ struct frame {
   // (despite their order of arrival).
   unsigned char ipfrm_fragIdent[2];
 
-  // TODO(zacsh) above are implemented; need to complete remaining fields
+  // Internal: contents of the last-half of the 32-bit "fragmentation" word of
+  // the header. That is: the raw contents of flags + offset.
+  unsigned char _ipfrm_fragEndOfWord[2];
 
   // Field "flags" for fragments can be all off, or a combo of:
   // - 010: "DF" Don't Fragment
@@ -74,6 +85,8 @@ struct frame {
   // indicating the byte-offset this payload represents within the larger
   // fragment group.
   unsigned char ipfrm_fragOffset[2]; // bits: 13 = 16 - 3
+
+  // TODO(zacsh) above are implemented; need to complete remaining fields
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
@@ -145,6 +158,14 @@ int parseFrame(struct frame *frm) {
 
   memcpy(frm->ipfrm_fragIdent, frm->src+frm->cursor, sizeof(frm->ipfrm_fragIdent));
   frm->cursor += sizeof(frm->ipfrm_fragIdent);
+
+  memcpy(frm->_ipfrm_fragEndOfWord, frm->src+frm->cursor, sizeof(frm->_ipfrm_fragEndOfWord));
+  frm->cursor += sizeof(frm->_ipfrm_fragEndOfWord);
+
+  frm->ipfrm_fragFlag = ((unsigned char) IPFRAME_FRAG_FLAG_MASK) & frm->_ipfrm_fragEndOfWord[0];
+
+  memcpy(frm->ipfrm_fragOffset, frm->_ipfrm_fragEndOfWord, sizeof(frm->_ipfrm_fragEndOfWord));
+  frm->ipfrm_fragOffset[0] &= IPFRAME_FRAG_OFFSET_MASK;
 
   return 0;
 }
@@ -220,12 +241,11 @@ int printFrame(struct frame *frm) {
   printf("(fragment) flags: %s, %s\n",
       (frm->ipfrm_fragFlag & IPFRAME_FRAG_FLAG_DF ? "do not fragment" : ""),
       (frm->ipfrm_fragFlag & IPFRAME_FRAG_FLAG_MF ? "more fragments" : ""));
-
   if (getNum(frm->ipfrm_fragOffset, &numBuff, sizeof(frm->ipfrm_fragOffset)) < 0) {
     return -1;
   }
-  formatHex(frm->ipfrm_fragOffset, fmtBuff, sizeof(frm->ipfrm_fragOffset));
-  printf("(fragment) offset: %ld [hex: %s]\n", numBuff, fmtBuff);
+  formatHex(frm->_ipfrm_fragEndOfWord, fmtBuff, sizeof(frm->_ipfrm_fragEndOfWord));
+  printf("(fragment) offset: %ld [frag and offset was: %s hex]\n", numBuff, fmtBuff);
 
   printf("\n");
   return 0;
