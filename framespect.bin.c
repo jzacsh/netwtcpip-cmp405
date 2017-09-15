@@ -252,7 +252,7 @@ int printFrame(struct frame *frm) {
     return -1;
   }
   formatHex(frm->_ipfrm_fragEndOfWord, fmtBuff, sizeof(frm->_ipfrm_fragEndOfWord));
-  printf("(fragment) offset: %ld [frag and offset was: %s hex]\n", numBuff, fmtBuff);
+  printf("(fragment) offset: %ld [frag and offset was: '%s' hex]\n", numBuff, fmtBuff);
 
   printf("TTL: %d [hex: %02X]\n", frm->ipfrm_timeToLive, frm->ipfrm_timeToLive);
 
