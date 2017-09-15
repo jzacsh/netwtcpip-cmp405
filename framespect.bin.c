@@ -87,6 +87,10 @@ struct frame {
   unsigned char ipfrm_fragOffset[2]; // bits: 13 = 16 - 3
 
   // TODO(zacsh) above are implemented; need to complete remaining fields
+
+  // Field "TTL" is a decrementing-counter of hops allowed for a packet before
+  // it should be dropped.
+  unsigned char ipfrm_timeToLive;
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
@@ -167,6 +171,9 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->ipfrm_fragOffset, frm->_ipfrm_fragEndOfWord, sizeof(frm->_ipfrm_fragEndOfWord));
   frm->ipfrm_fragOffset[0] &= IPFRAME_FRAG_OFFSET_MASK;
 
+  frm->ipfrm_timeToLive = frm->src[frm->cursor];
+  frm->cursor += sizeof(frm->ipfrm_timeToLive);
+
   return 0;
 }
 
@@ -246,6 +253,8 @@ int printFrame(struct frame *frm) {
   }
   formatHex(frm->_ipfrm_fragEndOfWord, fmtBuff, sizeof(frm->_ipfrm_fragEndOfWord));
   printf("(fragment) offset: %ld [frag and offset was: %s hex]\n", numBuff, fmtBuff);
+
+  printf("TTL: %d [hex: %02X]\n", frm->ipfrm_timeToLive, frm->ipfrm_timeToLive);
 
   printf("\n");
   return 0;
