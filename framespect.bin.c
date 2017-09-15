@@ -99,6 +99,12 @@ struct frame {
   // Field "Header Checksum" is a checksum of the *header* fields (with the
   // checksum field itself set to zero) of the current frame.
   unsigned char ipfrm_headerChecksum[2];
+
+  // Field "Source IP Address"
+  unsigned char ipfrm_srcIPAddr[4];
+
+  // Field "Destination IP Address"
+  unsigned char ipfrm_dstIPAddr[4];
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
@@ -188,6 +194,12 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->ipfrm_headerChecksum, frm->src+frm->cursor, sizeof(frm->ipfrm_headerChecksum));
   frm->cursor += sizeof(frm->ipfrm_headerChecksum);
 
+  memcpy(frm->ipfrm_srcIPAddr, frm->src+frm->cursor, sizeof(frm->ipfrm_srcIPAddr));
+  frm->cursor += sizeof(frm->ipfrm_srcIPAddr);
+
+  memcpy(frm->ipfrm_dstIPAddr, frm->src+frm->cursor, sizeof(frm->ipfrm_dstIPAddr));
+  frm->cursor += sizeof(frm->ipfrm_dstIPAddr);
+
   return 0;
 }
 
@@ -223,6 +235,21 @@ int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
     *dst |= (0xff & src[i]) << ((end - i)*8);
   }
   return 0;
+}
+
+// isSource 1 or 0; 1 indicates source IP should be pretty-printed, else
+// destination.
+void prettyPrintIPAddress(struct frame *frm, int isSource) {
+  char *label = "destination";
+  unsigned char *addr = frm->ipfrm_dstIPAddr;
+  if (isSource) {
+    label = "source";
+    addr = frm->ipfrm_srcIPAddr;
+  }
+
+  printf("%s IP address: %d.%d.%d.%d [%02X %02X %02X %02X]\n", label,
+      addr[0], addr[1], addr[2], addr[3],
+      addr[0], addr[1], addr[2], addr[3]);
 }
 
 /** Pretty prints the contents of frm. Return less than 0 indicates failure. */
@@ -274,6 +301,9 @@ int printFrame(struct frame *frm) {
 
   formatHex(frm->ipfrm_headerChecksum, fmtBuff, sizeof(frm->ipfrm_headerChecksum));
   printf("header checksum: %s (hex)\n", fmtBuff);
+
+  prettyPrintIPAddress(frm, 1 /*isSource*/);
+  prettyPrintIPAddress(frm, 0 /*isSource*/);
 
   printf("\n");
   return 0;
