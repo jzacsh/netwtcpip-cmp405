@@ -95,6 +95,10 @@ struct frame {
   // Field "Protocol" defines the protocol used in this IP frame's payload.
   // Values' semantics can be found here: https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
   unsigned char ipfrm_payloadProtocol;
+
+  // Field "Header Checksum" is a checksum of the *header* fields (with the
+  // checksum field itself set to zero) of the current frame.
+  unsigned char ipfrm_headerChecksum[2];
 };
 
 int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
@@ -181,6 +185,9 @@ int parseFrame(struct frame *frm) {
   frm->ipfrm_payloadProtocol = frm->src[frm->cursor];
   frm->cursor += sizeof(frm->ipfrm_payloadProtocol);
 
+  memcpy(frm->ipfrm_headerChecksum, frm->src+frm->cursor, sizeof(frm->ipfrm_headerChecksum));
+  frm->cursor += sizeof(frm->ipfrm_headerChecksum);
+
   return 0;
 }
 
@@ -264,6 +271,9 @@ int printFrame(struct frame *frm) {
   printf("TTL: %d [hex: %02X]\n", frm->ipfrm_timeToLive, frm->ipfrm_timeToLive);
 
   printf("Protocol: %d [hex: %02X]\n", frm->ipfrm_payloadProtocol, frm->ipfrm_payloadProtocol);
+
+  formatHex(frm->ipfrm_headerChecksum, fmtBuff, sizeof(frm->ipfrm_headerChecksum));
+  printf("header checksum: %s (hex)\n", fmtBuff);
 
   printf("\n");
   return 0;
