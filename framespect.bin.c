@@ -207,12 +207,12 @@ int parseFrame(struct frame *frm) {
 }
 
 /* expects `dst` is size +1 large */
-void formatHex(unsigned char *src, char *dst, int size) {
+void _formatHexUnsafe(unsigned char *src, char *dst, int size, int isSafe) {
   memset(dst, '\0', size + 1);
 
   int srci, outi;
   for (srci = 0, outi = 0; srci < size; outi += 3) {
-    if (src[srci] == '\0') {
+    if (isSafe && src[srci] == '\0') {
       break;
     }
 
@@ -223,6 +223,14 @@ void formatHex(unsigned char *src, char *dst, int size) {
   if (outi > 0 && dst[outi-1] == ' ') {
     dst[outi-1] = '\0';
   }
+}
+
+void formatHex(unsigned char *src, char *dst, int size) {
+  _formatHexUnsafe(src, dst, size, 0/*isSafe*/);
+}
+
+void formatHexSafe(unsigned char *src, char *dst, int size) {
+  _formatHexUnsafe(src, dst, size, 1/*isSafe*/);
 }
 
 // Returns 0 on success, less than 0 on failure.
@@ -344,7 +352,7 @@ int printFrame(struct frame *frm) {
   prettyPrintIPAddress(frm, 1 /*isSource*/);
   prettyPrintIPAddress(frm, 0 /*isSource*/);
 
-  formatHex(frm->src+frm->cursor, fmtBuff, totalLen);
+  formatHexSafe(frm->src+frm->cursor, fmtBuff, totalLen);
   printf("remaining data is payload:\n%s\n\n", fmtBuff);
 
   printf("\n");
