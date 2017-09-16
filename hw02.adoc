@@ -1,4 +1,5 @@
 = hw 2 numerical questions
+:hw2ipdatagram: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw2-ipframe.png
 
 == actual answers
 
