@@ -4,3 +4,5 @@
 
 {me}[My] own coursework -- lecture notes, scribbles, homework -- while taking
 {cmp405}[CMP-405 at Lehman], Fall 2017.
+
+see `testdata_ipframe/` readme for my tinkering with `framespect.bin.c`
