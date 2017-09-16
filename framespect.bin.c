@@ -212,11 +212,15 @@ void formatHex(unsigned char *src, char *dst, int size) {
 
   int srci, outi;
   for (srci = 0, outi = 0; srci < size; outi += 3) {
+    if (src[srci] == '\0') {
+      break;
+    }
+
     snprintf(dst+outi, 4 /*2 hex chars + space + '\0' */, "%02X ", src[srci]);
     srci++;
   }
 
-  if (dst[outi-1] == ' ') {
+  if (outi > 0 && dst[outi-1] == ' ') {
     dst[outi-1] = '\0';
   }
 }
@@ -267,7 +271,7 @@ void prettyPrintIPAddress(struct frame *frm, int isSource) {
       addr[0], addr[1], addr[2], addr[3]);
 
   const unsigned char klass = getIPAddrClass(addr[0]);
-  unsigned char netid[MAX_DOTTED_DEC_STR_SIZE], hostid[MAX_DOTTED_DEC_STR_SIZE];
+  char netid[MAX_DOTTED_DEC_STR_SIZE], hostid[MAX_DOTTED_DEC_STR_SIZE];
   switch (klass) {
     case 'a':
       snprintf(netid, MAX_DOTTED_DEC_STR_SIZE, "%d", addr[0]);
@@ -311,11 +315,12 @@ int printFrame(struct frame *frm) {
 
   printf("service type: %02X\n", frm->ipfrm_serviceType);
 
+  unsigned long int totalLen;
   formatHex(frm->ipfrm_totalLen, fmtBuff, sizeof(frm->ipfrm_totalLen));
-  if (getNum(frm->ipfrm_totalLen, &numBuff, sizeof(frm->ipfrm_totalLen)) < 0) {
+  if (getNum(frm->ipfrm_totalLen, &totalLen, sizeof(frm->ipfrm_totalLen)) < 0) {
     return -1;
   }
-  printf("total length: %ld [hex: %s]\n", numBuff, fmtBuff);
+  printf("total length: %ld [hex: %s]\n", totalLen, fmtBuff);
 
   formatHex(frm->ipfrm_fragIdent, fmtBuff, sizeof(frm->ipfrm_fragIdent));
   printf("(fragment) identification: %s\n", fmtBuff);
@@ -338,6 +343,9 @@ int printFrame(struct frame *frm) {
 
   prettyPrintIPAddress(frm, 1 /*isSource*/);
   prettyPrintIPAddress(frm, 0 /*isSource*/);
+
+  formatHex(frm->src+frm->cursor, fmtBuff, totalLen);
+  printf("remaining data is payload:\n%s\n\n", fmtBuff);
 
   printf("\n");
   return 0;
