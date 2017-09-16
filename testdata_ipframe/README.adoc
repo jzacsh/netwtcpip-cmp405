@@ -1,0 +1,13 @@
+= ip frame samples
+:fall2017samples: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/examples/
+
+files here are downloaded directly from {fall2017samples}[fall 2017 sample set],
+and modified only in that the ip frames themselves were converted from their PDF
+form (with fully colored diagrams, and questions, etc.) to an OCR `txt` file
+dump of the datagram itself.
+
+.useful for comparing against solutions
+----
+$ cat -n ./ipdatagram_sample02.png.txt
+$ ../framespect.bin < ./ipdatagram_sample02.png.txt
+----
