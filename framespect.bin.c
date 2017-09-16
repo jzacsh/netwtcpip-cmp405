@@ -31,6 +31,9 @@
 // fragmentation's flags & offset fields.
 #define IPFRAME_FRAG_OFFSET_MASK 0x1f
 
+// Max of 3 digits per 4 octets, plus 3 separating dots for said octets.
+#define MAX_DOTTED_DEC_STR_SIZE 15
+
 struct frame {
   // Source hex values from which below fields are parsed.
   unsigned char src[MAX_HEX_STREAM_LEN];
@@ -237,6 +240,18 @@ int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
   return 0;
 }
 
+// Returns 'a', 'b', 'c', or '0' indicating no other classes are checked for.
+unsigned char getIPAddrClass(const unsigned char topOctet) {
+  if (topOctet < 128) {
+    return 'a';
+  } else if (topOctet >= 128 && topOctet < 192) {
+    return 'b';
+  } else if (topOctet >= 192 && topOctet < 224) {
+    return 'c';
+  }
+  return '0';
+}
+
 // isSource 1 or 0; 1 indicates source IP should be pretty-printed, else
 // destination.
 void prettyPrintIPAddress(struct frame *frm, int isSource) {
@@ -250,6 +265,25 @@ void prettyPrintIPAddress(struct frame *frm, int isSource) {
   printf("%s IP address: %d.%d.%d.%d [%02X %02X %02X %02X]\n", label,
       addr[0], addr[1], addr[2], addr[3],
       addr[0], addr[1], addr[2], addr[3]);
+
+  const unsigned char klass = getIPAddrClass(addr[0]);
+  unsigned char netid[MAX_DOTTED_DEC_STR_SIZE], hostid[MAX_DOTTED_DEC_STR_SIZE];
+  switch (klass) {
+    case 'a':
+      snprintf(netid, MAX_DOTTED_DEC_STR_SIZE, "%d", addr[0]);
+      snprintf(hostid, MAX_DOTTED_DEC_STR_SIZE, "%d.%d.%d", addr[1], addr[2], addr[3]);
+      break;
+    case 'b':
+      snprintf(netid, MAX_DOTTED_DEC_STR_SIZE, "%d.%d", addr[0], addr[1]);
+      snprintf(hostid, MAX_DOTTED_DEC_STR_SIZE, "%d.%d", addr[2], addr[3]);
+      break;
+    case 'c':
+      snprintf(netid, MAX_DOTTED_DEC_STR_SIZE, "%d", addr[0]);
+      snprintf(hostid, MAX_DOTTED_DEC_STR_SIZE, "%d.%d.%d", addr[1], addr[2], addr[3]);
+      break;
+  }
+
+  printf("\tclass %c -> netid: %s, hostid: %s\n", klass, netid, hostid);
 }
 
 /** Pretty prints the contents of frm. Return less than 0 indicates failure. */
