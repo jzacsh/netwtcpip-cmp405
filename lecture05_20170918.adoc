@@ -1,0 +1,41 @@
+= lecture on routing tables
+:slideschap7: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%207.pdf
+:slideschap8: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%208.pdf
+
+== chap 07 cont'd
+.how populated: future lectures/semester; eg:
+. distance vector
+. link state
+
+.important special-case routes:
+. default routes
+. host-specific routes
+
+== chap 08: error handling
+
+error handling approach: "ICMP"
+
+.need semantics around error; eg:
+. bad address?
+. corrupt data?
+. etc.
+. AND need "control" messages; eg: for debugging, like `ping`
+
+ICMP = Internet Control Message Protocol
+
+used primarily by routers to report delivery or routing problems back to original source
+
+WARNING: no error messages sent ABOUT error messages
+
+error reporting vs error correction
+. ICMP does *not* provide _interaction_ between router & source +
+  (ie: routers are *stateless* - forget errors after sending)
+. consequence: when datagram causes an error, ICMP only report to source. source must relate the error effectively
+
+ICMP messages are *IN* the payload of an ipdatagram (eg: "type" field of ip header)
+
+ICMP message has its own header
+
+ICMP codes: 3 vs. 5 is interesting
+
+error messages include a *snapshot* of an ip datagram, not the whole thing; specifically: internet header + first 64 bits of payload
