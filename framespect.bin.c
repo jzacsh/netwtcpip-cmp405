@@ -54,17 +54,17 @@ struct frame {
   // Parsed ethernet frame payload below this line...
 
   // Protocol version; typically `4` indicating IPv4
-  unsigned char ipfrm_version; // 4 bits
+  unsigned char ipfrm_version; // warning: 4 bits
 
   // Field "internet header length" is the count of 4-byte groups (32-bit words)
   // occuring in the current header before payload (typically `5`).
   //
   // Necessary in case "optional" header fields are utilized, allowing IP
   // payload to eventually be found.
-  unsigned char ipfrm_headerLen; // 4 bits
+  unsigned char ipfrm_headerLen; // warning: 4 bits
 
   // Field "type of service"
-  unsigned char ipfrm_serviceType; // 1 byte
+  unsigned char ipfrm_serviceType;
 
   // Field "total length" contains a byte-count of the entire ip frame,
   // including both header & payload.
@@ -82,12 +82,12 @@ struct frame {
   // - 010: "DF" Don't Fragment
   // - 001: "MF" More Fragments
   // First bit is reserved and must be zero.
-  unsigned char ipfrm_fragFlag; // 3 bits
+  unsigned char ipfrm_fragFlag; // warning: 3 bits
 
   // Field "offset" for fragments is a integer index in [0,2^13) which fragment
   // indicating the byte-offset this payload represents within the larger
   // fragment group.
-  unsigned char ipfrm_fragOffset[2]; // bits: 13 = 16 - 3
+  unsigned char ipfrm_fragOffset[2]; // warning: bits = 13 = 16 - 3
 
   // TODO(zacsh) above are implemented; need to complete remaining fields
 
