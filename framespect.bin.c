@@ -34,9 +34,14 @@
 // Max of 3 digits per 4 octets, plus 3 separating dots for said octets.
 #define MAX_DOTTED_DEC_STR_SIZE 15
 
+// allocation being used to represent 8-bits. Per ANSI C spec, which I cannot
+// find, I *believe* `unsigned char` is guaranteed to always be a single 8-bit
+// byte. TODO: confirm this belief, or find a better way.
+typedef unsigned char octet_t;
+
 struct frame {
   // Source hex values from which below fields are parsed.
-  unsigned char src[MAX_HEX_STREAM_LEN];
+  octet_t src[MAX_HEX_STREAM_LEN];
   int srcLen;
   int cursor;  // internal state used by parser
 
@@ -46,73 +51,73 @@ struct frame {
   // field.
 
   // Parsed ethernet frame header fields.
-  unsigned char ethfrm_dstHwAddr[6];
-  unsigned char ethfrm_srcHwAddr[6];
-  unsigned char ethfrm_type[2];
+  octet_t ethfrm_dstHwAddr[6];
+  octet_t ethfrm_srcHwAddr[6];
+  octet_t ethfrm_type[2];
 
   ///////////////////////////////////////////////////
   // Parsed ethernet frame payload below this line...
 
   // Protocol version; typically `4` indicating IPv4
-  unsigned char ipfrm_version; // warning: 4 bits
+  octet_t ipfrm_version; // warning: 4 bits
 
   // Field "internet header length" is the count of 4-byte groups (32-bit words)
   // occuring in the current header before payload (typically `5`).
   //
   // Necessary in case "optional" header fields are utilized, allowing IP
   // payload to eventually be found.
-  unsigned char ipfrm_headerLen; // warning: 4 bits
+  octet_t ipfrm_headerLen; // warning: 4 bits
 
   // Field "type of service"
-  unsigned char ipfrm_serviceType;
+  octet_t ipfrm_serviceType;
 
   // Field "total length" contains a byte-count of the entire ip frame,
   // including both header & payload.
-  unsigned char ipfrm_totalLen[2];
+  octet_t ipfrm_totalLen[2];
 
   // Field "identificationa" used to identify disparate groups of fragments
   // (despite their order of arrival).
-  unsigned char ipfrm_fragIdent[2];
+  octet_t ipfrm_fragIdent[2];
 
   // Internal: contents of the last-half of the 32-bit "fragmentation" word of
   // the header. That is: the raw contents of flags + offset.
-  unsigned char _ipfrm_fragEndOfWord[2];
+  octet_t _ipfrm_fragEndOfWord[2];
 
   // Field "flags" for fragments can be all off, or a combo of:
   // - 010: "DF" Don't Fragment
   // - 001: "MF" More Fragments
   // First bit is reserved and must be zero.
-  unsigned char ipfrm_fragFlag; // warning: 3 bits
+  octet_t ipfrm_fragFlag; // warning: 3 bits
 
   // Field "offset" for fragments is a integer index in [0,2^13) which fragment
   // indicating the byte-offset this payload represents within the larger
   // fragment group.
-  unsigned char ipfrm_fragOffset[2]; // warning: bits = 13 = 16 - 3
+  octet_t ipfrm_fragOffset[2]; // warning: bits = 13 = 16 - 3
 
   // TODO(zacsh) above are implemented; need to complete remaining fields
 
   // Field "TTL" is a decrementing-counter of hops allowed for a packet before
   // it should be dropped.
-  unsigned char ipfrm_timeToLive;
+  octet_t ipfrm_timeToLive;
 
   // Field "Protocol" defines the protocol used in this IP frame's payload.
   // Values' semantics can be found here: https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
-  unsigned char ipfrm_payloadProtocol;
+  octet_t ipfrm_payloadProtocol;
 
   // Field "Header Checksum" is a checksum of the *header* fields (with the
   // checksum field itself set to zero) of the current frame.
-  unsigned char ipfrm_headerChecksum[2];
+  octet_t ipfrm_headerChecksum[2];
 
   // Field "Source IP Address"
-  unsigned char ipfrm_srcIPAddr[4];
+  octet_t ipfrm_srcIPAddr[4];
 
   // Field "Destination IP Address"
-  unsigned char ipfrm_dstIPAddr[4];
+  octet_t ipfrm_dstIPAddr[4];
 };
 
-int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
+int readHexFrom(octet_t *output, int srcFile, int outLimit) {
   char hex; // [0,f]=[0,15] -- a raw input string
-  unsigned char dec; // same, converted to decimal value
+  octet_t dec; // same, converted to decimal value
 
   int ini = 0;
   int outi = 0;
@@ -122,7 +127,7 @@ int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
     }
 
     errno = 0;
-    dec = (unsigned char) strtol(&hex, NULL, 16);
+    dec = (octet_t) strtol(&hex, NULL, 16);
     if (dec < 0 || dec > 15 || errno == ERANGE || errno != 0) {
       return -1;
     }
@@ -139,8 +144,8 @@ int readHexFrom(unsigned char *output, int srcFile, int outLimit) {
     output[outi] |= dec;
 
     if (IS_DEBUG) {
-      unsigned char le = (output[outi] & 0xf0) >> 4;
-      unsigned char ri = output[outi] & 0x0f;
+      octet_t le = (output[outi] & 0xf0) >> 4;
+      octet_t ri = output[outi] & 0x0f;
       fprintf(stderr, "\tdone packing: '%d', or %x %x\n", output[outi], le, ri);
     }
 
@@ -183,7 +188,7 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->_ipfrm_fragEndOfWord, frm->src+frm->cursor, sizeof(frm->_ipfrm_fragEndOfWord));
   frm->cursor += sizeof(frm->_ipfrm_fragEndOfWord);
 
-  frm->ipfrm_fragFlag = ((unsigned char) IPFRAME_FRAG_FLAG_MASK) & frm->_ipfrm_fragEndOfWord[0];
+  frm->ipfrm_fragFlag = ((octet_t) IPFRAME_FRAG_FLAG_MASK) & frm->_ipfrm_fragEndOfWord[0];
 
   memcpy(frm->ipfrm_fragOffset, frm->_ipfrm_fragEndOfWord, sizeof(frm->_ipfrm_fragEndOfWord));
   frm->ipfrm_fragOffset[0] &= IPFRAME_FRAG_OFFSET_MASK;
@@ -207,7 +212,7 @@ int parseFrame(struct frame *frm) {
 }
 
 /* expects `dst` is size +1 large */
-void _formatHexUnsafe(unsigned char *src, char *dst, int size, int isSafe) {
+void _formatHexUnsafe(octet_t *src, char *dst, int size, int isSafe) {
   memset(dst, '\0', size + 1);
 
   int srci, outi;
@@ -225,16 +230,16 @@ void _formatHexUnsafe(unsigned char *src, char *dst, int size, int isSafe) {
   }
 }
 
-void formatHex(unsigned char *src, char *dst, int size) {
+void formatHex(octet_t *src, char *dst, int size) {
   _formatHexUnsafe(src, dst, size, 0/*isSafe*/);
 }
 
-void formatHexSafe(unsigned char *src, char *dst, int size) {
+void formatHexSafe(octet_t *src, char *dst, int size) {
   _formatHexUnsafe(src, dst, size, 1/*isSafe*/);
 }
 
 // Returns 0 on success, less than 0 on failure.
-int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
+int getNum(octet_t *src, unsigned long int *dst, int bytes) {
   *dst &= 0x00000000;
   if (bytes > 4) {
     fprintf(stderr, "trying to build an integer value from more than 32 bits, unexpected inside eth frame\n");
@@ -253,7 +258,7 @@ int getNum(unsigned char *src, unsigned long int *dst, int bytes) {
 }
 
 // Returns 'a', 'b', 'c', or '0' indicating no other classes are checked for.
-unsigned char getIPAddrClass(const unsigned char topOctet) {
+octet_t getIPAddrClass(const octet_t topOctet) {
   if (topOctet < 128) {
     return 'a';
   } else if (topOctet >= 128 && topOctet < 192) {
@@ -268,7 +273,7 @@ unsigned char getIPAddrClass(const unsigned char topOctet) {
 // destination.
 void prettyPrintIPAddress(struct frame *frm, int isSource) {
   char *label = "destination";
-  unsigned char *addr = frm->ipfrm_dstIPAddr;
+  octet_t *addr = frm->ipfrm_dstIPAddr;
   if (isSource) {
     label = "source";
     addr = frm->ipfrm_srcIPAddr;
@@ -278,7 +283,7 @@ void prettyPrintIPAddress(struct frame *frm, int isSource) {
       addr[0], addr[1], addr[2], addr[3],
       addr[0], addr[1], addr[2], addr[3]);
 
-  const unsigned char klass = getIPAddrClass(addr[0]);
+  const octet_t klass = getIPAddrClass(addr[0]);
   char netid[MAX_DOTTED_DEC_STR_SIZE], hostid[MAX_DOTTED_DEC_STR_SIZE];
   switch (klass) {
     case 'a':
