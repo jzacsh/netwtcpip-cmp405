@@ -11,3 +11,139 @@ dump of the datagram itself.
 $ cat -n ./ipdatagram_sample02.png.txt
 $ ../framespect.bin < ./ipdatagram_sample02.png.txt
 ----
+
+
+== `framespect.bin` - example runs for sample files
+
+.inspecting: ./ipdatagram_sample01.png.txt
+----
+$ cat -n ./ipdatagram_sample01.png.txt
+     1	8B BD CB D5 A3 00 9E CF 04 7F AC 2B 08 00 45 11 00 72 FC 53 14 8D 47 36 9A 84 D2
+     2	92 8E 39 49 16 75 02 D6 1B BE C8 33 02 C7 DF 1A 12 AF D3 91 AF BE 91 3D 25 OD 6E
+     3	4F 5E 61 OA E5 42 FO 6C B1 OE 4C E7 57 89 4E 9D C7 2D 7E 74 A8 AF FE 7B lA FF 1E
+     4	1B 45 4A 3D 5B 5E 7A 95 SE 31 C4 83 3E AS 47 E0 Al 95 35 99 33 07 2D D6 7F 3F ES
+     5	E8 5C 20 9D 80 25 CC B1 EF 7F 69 44 B6 AC A4 EE 03 88 SC BO
+
+$ ../framespect.bin < ./ipdatagram_sample01.png.txt | cat -n
+     1	Got 128 hex characters
+     2
+     3	Ethernet Frame Headers:
+     4	------------------------------------------------------------
+     5	destin hardware address: 8B BD CB D5 A3 00
+     6	source hardware address: 9E CF 04 7F AC 2B
+     7	frame type: 08 00
+     8
+     9	Ethernet Frame Payload (IP Frame):
+    10	------------------------------------------------------------
+    11	version: 4 [hex: 04]
+    12	header len: 5 [hex: 05]
+    13	service type: 11
+    14	total length: 114 [hex: 00 72]
+    15	(fragment) identification: FC 53
+    16	(fragment) flags: ,
+    17	(fragment) offset: 5261 [frag and offset was: '14 8D' hex]
+    18	TTL: 71 [hex: 47]
+    19	Protocol: 54 [hex: 36]
+    20	header checksum: 9A 84 (hex)
+    21	source IP address: 210.146.142.57 [D2 92 8E 39]
+    22		class c -> netid: 210, hostid: 146.142.57
+    23	destination IP address: 73.22.117.2 [49 16 75 02]
+    24		class a -> netid: 73, hostid: 22.117.2
+    25	remaining data is payload:
+    26	D6 1B BE C8 33 02 C7 DF 1A 12 AF D3 91 AF BE 91 3D 25 0D 6E
+    27	4F 5E 61 0A E5 42 F0 6C B1 0E 4C E7 57 89 4E 9D C7 2D 7E 74
+    28	A8 AF FE 7B 0A FF 1E 1B 45 4A 3D 5B 5E 7A 95 0E 31 C4 83 3E
+    29	A0 47 E0 A0 95 35 99 33 07 2D D6 7F 3F E0 E8 5C 20 9D 80 25
+    30	CC B1 EF 7F 69 44 B6 AC A4 EE 03 88 0C B0
+    31
+    32
+----
+
+.inspecting: ./ipdatagram_sample02.png.txt
+----
+$ cat -n ./ipdatagram_sample02.png.txt
+     1	4B AS AO 4E 76 1B D1 1A 9D 41 79 BD 08 00 45 61 00 72 CA OC 33 6A BC EA F7 21 21
+     2	09 7F 7A Cl 2B 02 5D 7E 7D 37 33 97 91 CA 7A OC 5A AE AO A7 8A CF 56 07 DC 79 35
+     3	EA BD DE 11 6E 12 77 81 D8 33 88 73 lE 75 02 70 20 7B 2C 96 61 DE E2 27 75 29 19
+     4	52 9A 87 C4 CA 1A 96 1C 72 OC BF AS 2F 84 A3 BF C7 CC A4 6E 37 99 13 44 48 C5 D8
+     5	39 22 94 72 95 13 D5 DD 91 F7 A7 EF EO AB 30 7F 8E 54 7B B4
+
+$ ../framespect.bin < ./ipdatagram_sample02.png.txt | cat -n
+     1	Got 128 hex characters
+     2
+     3	Ethernet Frame Headers:
+     4	------------------------------------------------------------
+     5	destin hardware address: 4B A0 A0 4E 76 1B
+     6	source hardware address: D1 1A 9D 41 79 BD
+     7	frame type: 08 00
+     8
+     9	Ethernet Frame Payload (IP Frame):
+    10	------------------------------------------------------------
+    11	version: 4 [hex: 04]
+    12	header len: 5 [hex: 05]
+    13	service type: 61
+    14	total length: 114 [hex: 00 72]
+    15	(fragment) identification: CA 0C
+    16	(fragment) flags: ,
+    17	(fragment) offset: 4970 [frag and offset was: '33 6A' hex]
+    18	TTL: 188 [hex: BC]
+    19	Protocol: 234 [hex: EA]
+    20	header checksum: F7 21 (hex)
+    21	source IP address: 33.9.127.122 [21 09 7F 7A]
+    22		class a -> netid: 33, hostid: 9.127.122
+    23	destination IP address: 192.43.2.93 [C0 2B 02 5D]
+    24		class c -> netid: 192, hostid: 43.2.93
+    25	remaining data is payload:
+    26	7E 7D 37 33 97 91 CA 7A 0C 5A AE A0 A7 8A CF 56 07 DC 79 35
+    27	EA BD DE 11 6E 12 77 81 D8 33 88 73 0E 75 02 70 20 7B 2C 96
+    28	61 DE E2 27 75 29 19 52 9A 87 C4 CA 1A 96 1C 72 0C BF A0 2F
+    29	84 A3 BF C7 CC A4 6E 37 99 13 44 48 C5 D8 39 22 94 72 95 13
+    30	D5 DD 91 F7 A7 EF E0 AB 30 7F 8E 54 7B B4
+    31
+    32
+----
+
+.inspecting: ./ipdatagram_sample03.png.txt
+----
+$ cat -n ./ipdatagram_sample03.png.txt
+     1	87 36 8F 42 77 95 83 1A AB 39 16 D9 08 00 45 EE 00 72 B3 45 4A 9A E0 E0 BC 20 39
+     2	16 85 EA DE 78 12 02 B3 86 BE AA B7 06 OC 15 71 87 B1 85 28 59 F9 68 E9 13 C5 B7
+     3	76 2C A9 B4 C9 78 1C 42 39 AE 8C 54 EB E7 DA BB 05 CF F4 BA FD 5B 1C 42 4A 8D 61
+     4	FD 13 4F 2B 02 36 99 30 67 43 28 Cl 98 C7 03 F1 80 ED 5F 1F 31 05 04 E6 41 70 E5
+     5	26 47 4A 19 A6 1C CD DA 14 5C CA AD D2 72 CB 71 42 93 08 01
+
+$ ../framespect.bin < ./ipdatagram_sample03.png.txt | cat -n
+     1	Got 128 hex characters
+     2
+     3	Ethernet Frame Headers:
+     4	------------------------------------------------------------
+     5	destin hardware address: 87 36 8F 42 77 95
+     6	source hardware address: 83 1A AB 39 16 D9
+     7	frame type: 08 00
+     8
+     9	Ethernet Frame Payload (IP Frame):
+    10	------------------------------------------------------------
+    11	version: 4 [hex: 04]
+    12	header len: 5 [hex: 05]
+    13	service type: EE
+    14	total length: 114 [hex: 00 72]
+    15	(fragment) identification: B3 45
+    16	(fragment) flags: ,
+    17	(fragment) offset: 2714 [frag and offset was: '4A 9A' hex]
+    18	TTL: 224 [hex: E0]
+    19	Protocol: 224 [hex: E0]
+    20	header checksum: BC 20 (hex)
+    21	source IP address: 57.22.133.234 [39 16 85 EA]
+    22		class a -> netid: 57, hostid: 22.133.234
+    23	destination IP address: 222.120.18.2 [DE 78 12 02]
+    24		class c -> netid: 222, hostid: 120.18.2
+    25	remaining data is payload:
+    26	B3 86 BE AA B7 06 0C 15 71 87 B1 85 28 59 F9 68 E9 13 C5 B7
+    27	76 2C A9 B4 C9 78 1C 42 39 AE 8C 54 EB E7 DA BB 05 CF F4 BA
+    28	FD 5B 1C 42 4A 8D 61 FD 13 4F 2B 02 36 99 30 67 43 28 C0 98
+    29	C7 03 F1 80 ED 5F 1F 31 05 04 E6 41 70 E5 26 47 4A 19 A6 1C
+    30	CD DA 14 5C CA AD D2 72 CB 71 42 93 08 01
+    31
+    32
+----
+
