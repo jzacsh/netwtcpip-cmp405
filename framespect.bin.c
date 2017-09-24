@@ -307,6 +307,14 @@ void prettyPrintIPAddress(struct frame *frm, int isSource) {
   printf("\tclass %c -> netid: %s, hostid: %s\n", klass, netid, hostid);
 }
 
+void printAsBinary(int numBytes, const char data) {
+  const int numBits = numBytes * 8;
+  for (int i = 0; i < numBits; ++i) {
+    if (i > 3 && !(i % 4)) { printf(" "); }
+    printf("%1d", (((data << i) & 0x80) >> 7) & 1);
+  }
+}
+
 /** Pretty prints the contents of frm. Return less than 0 indicates failure. */
 int printFrame(struct frame *frm) {
   unsigned long int numBuff;
