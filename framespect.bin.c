@@ -21,9 +21,11 @@
 
 #define PRETTY_PRINT_HORIZ "------------------------------------------------------------"
 
-#define IPFRAME_FRAG_FLAG_DF 0x02
+// 0000 0010 but want 0010, so input must be downshifted before masking.
+#define IPFRAME_FRAG_FLAG_DF 0x04
 
-#define IPFRAME_FRAG_FLAG_MF 0x01
+// 0000 0001 but want 0001, so input must be downshifted before masking.
+#define IPFRAME_FRAG_FLAG_MF 0x02
 
 // Flushes valid flag values (max of '0110 0000') out of the left-half of the
 // 16-bit word composing fragmentation's flags & offset fields.
@@ -192,7 +194,7 @@ int parseFrame(struct frame *frm) {
   memcpy(frm->_ipfrm_fragEndOfWord, frm->src+frm->cursor, sizeof(frm->_ipfrm_fragEndOfWord));
   frm->cursor += sizeof(frm->_ipfrm_fragEndOfWord);
 
-  frm->ipfrm_fragFlag = ((octet_t) IPFRAME_FRAG_FLAG_MASK) & frm->_ipfrm_fragEndOfWord[0];
+  frm->ipfrm_fragFlag = (((octet_t) IPFRAME_FRAG_FLAG_MASK) & frm->_ipfrm_fragEndOfWord[0]) >> 4;
 
   memcpy(frm->ipfrm_fragOffset, frm->_ipfrm_fragEndOfWord, sizeof(frm->_ipfrm_fragEndOfWord));
   frm->ipfrm_fragOffset[0] &= IPFRAME_FRAG_OFFSET_MASK;
