@@ -101,7 +101,8 @@ struct frame {
   octet_t ipfrm_timeToLive;
 
   // Field "Protocol" defines the protocol used in this IP frame's payload.
-  // Values' semantics can be found here: https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
+  // Values' semantics can be found here:
+  // https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
   octet_t ipfrm_payloadProtocol;
 
   // Field "Header Checksum" is a checksum of the *header* fields (with the
