@@ -84,7 +84,7 @@ $ ../framespect.bin < ./ipdatagram_sample02.png.txt | cat -n
     13	service type: 61
     14	total length: 114 [hex: 00 72]
     15	(fragment) identification: CA 0C
-    16	(fragment) flags: ,
+    16	(fragment) flags: , more fragments
     17	(fragment) offset: 4970 [frag and offset was: '33 6A' hex]
     18	TTL: 188 [hex: BC]
     19	Protocol: 234 [hex: EA]
@@ -128,7 +128,7 @@ $ ../framespect.bin < ./ipdatagram_sample03.png.txt | cat -n
     13	service type: EE
     14	total length: 114 [hex: 00 72]
     15	(fragment) identification: B3 45
-    16	(fragment) flags: ,
+    16	(fragment) flags: do not fragment,
     17	(fragment) offset: 2714 [frag and offset was: '4A 9A' hex]
     18	TTL: 224 [hex: E0]
     19	Protocol: 224 [hex: E0]
