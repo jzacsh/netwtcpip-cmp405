@@ -21,10 +21,10 @@
 
 #define PRETTY_PRINT_HORIZ "------------------------------------------------------------"
 
-// 0000 0010 but want 0010, so input must be downshifted before masking.
+// 0000 0100 but want 0100 0000, so input must be downshifted before masking.
 #define IPFRAME_FRAG_FLAG_DF 0x04
 
-// 0000 0001 but want 0001, so input must be downshifted before masking.
+// 0000 0010 but want 0010 0000, so input must be downshifted before masking.
 #define IPFRAME_FRAG_FLAG_MF 0x02
 
 // Flushes valid flag values (max of '0110 0000') out of the left-half of the
