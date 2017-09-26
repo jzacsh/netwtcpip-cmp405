@@ -1,0 +1,40 @@
+= lecture 20170925 - IP: Classless & Subnet Address Extensions
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%209.pdf
+
+{slides}[Topic tonight]: Internet Protocol: Classless & Subnet Address Extensions (CIDR)
+
+.problems to solve:
+1. want to take large network & split into smaller pieces _(eg: routing of many
+   geographically separated machines in a single class a network isn't inherently obvious)_
+2. want to many small networks and blob them together
+
+== 2: to tackle splitting large network
+
+.one solution to (2): "proxy arp"
+. internal routers see ARP requests based on *true* netid, and respond on behalf of actual
+. known informally as "the ARP hack"
+. easy on a napkin, gets ugly in complicated real networks
+.. requires manual config, requires arp, can cause broadcast storms
+
+.big picture addressing solution
+|===
+| netid | hostid
+| prefix | suffix (huge)
+| prefix | injection <1> | suffix (huge, but slightly smaller)
+|===
+
+_injection_ becomes a "subnet ID"
+
+idea: all routers *internal* to a given netid are aware and route based on this
+*subnetid*  
+
+.better solution: subnetting
+. QUESTION: doesn't this still require internal-routers to ARP proxy??
+
+fixed length subnet mask vs variable-length subnet mask
+
+.Variable Length Subnet Masks (VLSM)
+. more complex; tricky 
+. addressing ambiguities
+
+== 1: [next lecture]
