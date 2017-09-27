@@ -1,0 +1,69 @@
+= lecture 20170927: CIDR Continued
+:slideslast: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%209.pdf
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2010.pdf
+
+... finishing up chapter 9, from {slideslast}[monday's lecture].
+
+now to problem 2: combining many networks (eg: for class-c networks)
+
+
+.private addresses: Non-routable IP addresses
+|===
+| prefix | lowest address | highest address
+| 10/8   | 10.0.0.0       | 10.255.255.255
+| 172.16/12   | 172.16.0.0 | 172.31.255.255
+| 192.168/16  | 192.168.0.0 | 192.168.255.255
+| 169.254/16 | 169.254.0.0 | 169.254.255.255
+|===
+
+NOTE: ranges here are *exclusive* obvz: cannot have all 1s or 0s in a host id
+
+.practice/example
+----
+given: 128.10.211.78/255.255.240.0
+then: ip  : 1000 0000.0000 1010.1101 0011.0100 1110 
+then: mask: 1111 1111.1111 1111.1111 0000.0000 0000
+
+by classful addressing:
+            net id        | subnet  |  host id
+      ip  : 1000 0000.0000 1010.1101 0011.0100 1110 
+      mask: 1111 1111.1111 1111.1111 0000.0000 0000
+----
+
+.network number
+|===
+| 32768 | 16384 | 8192 | 4096 | 2048 | 1024 | 512 | 256 | 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1
+|     1 |   0   |   0  |   0  |   0  |   0  |  0  |  0  |  0  |  0 | 0  | 0  | 1 | 0 | 1 | 0 <1>
+|===
+<1> netid: 32,778
+
+.host number
+|===
+| 2048 | 1024 | 512 | 256 | 128 | 64 | 32 | 16 | 8 | 4 | 2 | 1
+|   0  |   0  |  0  |  1  |  0  | 1  | 0  |  0 | 1 | 1 | 1 | 0 <1>
+|===
+<1> hostid: 846
+
+.results:
+. netid: 32,778
+. subnetid: 13 (0b1101)
+. hostid:  846
+
+== chapter 10: protocol layering
+
+new topic: {slides}[today's lecture slides]
+
+.motiviation: comms are difficult, eg:
+. hardware failure
+. network congestion
+. packet delay/loss
+. data corruption
+. data duplication or inverted arrival
+
+solution: each protocol layer deals w/just portion of problem space
+
+as in rfc 791:
+. high-level protocols
+. internet module
+. network interface modules
+
