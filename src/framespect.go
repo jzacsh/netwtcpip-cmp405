@@ -66,13 +66,6 @@ func decodeHexStream(input io.Reader) ([]byte, error) {
 				"expected hex val of [0,f]; at col %d: '%s'", len(bytes), hex)
 		}
 
-		// TODO(zacsh) finish debugging: figure out how to force golang to talk
-		// ANSI-C  ascii to me between decimal and char
-		fmt.Fprintf(
-			os.Stderr,
-			"processing: %+q = #:%d = c:%c = x=%x\n",
-			hex, hex, hex, hex)
-
 		if onLeftHalf {
 			bytes = append(bytes, hex<<4)
 		} else {
@@ -81,16 +74,50 @@ func decodeHexStream(input io.Reader) ([]byte, error) {
 		onLeftHalf = !onLeftHalf
 	}
 
-	//TODO(zacsh) finish debugging/developing
-	//fmt.Fprintf(os.Stderr, "dbg: '%q'\n", byte(2))
-	//fmt.Fprintf(os.Stderr, "DEBUGGING dumping parsed hex chars:\n")
-	//for _, ch := range bytes {
-	//	fmt.Fprintf(os.Stderr, "%+q", ((ch & 0xf0) >> 4))
-	//	fmt.Fprintf(os.Stderr, "%+q", (ch & 0x0f))
-	//}
-	//fmt.Fprintf(os.Stderr, "DEBUGGING end\n") // TODO(zacsh) remove me
-
 	return bytes, nil
+}
+
+func mustIntFromHex(hex byte) int {
+	resp, e := getIntFromHex(hex)
+	if e != nil {
+		panic(e)
+	}
+	return resp
+}
+
+// Given a hex char, returns its corresponding integer: a value in [0,15]
+func getIntFromHex(hex byte) (int, error) {
+	// Char-to-rune table:
+	//
+	// | char    code point
+	// +-------------------
+	// | [0,9] = [48,57]
+	// | [A,F] = [65,70]
+	// | [a,f] = [97,102]
+
+	runePoint := rune(hex)
+	val := getValidHex(runePoint)
+	if val == -1 {
+		return -1, fmt.Errorf("invalid hex, got: '%c'", runePoint)
+	}
+	return val, nil // TODO(zacsh) finish converting to int [0,15]
+}
+
+func isValidHex(rn rune) bool { return getValidHex(rn) != -1 }
+
+func getValidHex(rn rune) int {
+	switch {
+	case (rn >= 48 && rn <= 57): /*[0,9]*/
+		fmt.Fprintf(os.Stderr, "think '%c' is [0,9]\n", rn) // TODO(zacsh) debugging; remove
+	case (rn >= 65 && rn <= 70): /*[A,F]*/
+		fmt.Fprintf(os.Stderr, "think '%c' is [A,F]\n", rn) // TODO(zacsh) debugging; remove
+	case (rn >= 97 && rn <= 102): /*[a,f]*/
+		fmt.Fprintf(os.Stderr, "think '%c' is [a,f]\n", rn) // TODO(zacsh) debugging; remove
+	default:
+		return -1
+	}
+	fmt.Fprintf(os.Stderr, "think '%c' IS hex; returning %d\n", rn, int(rn)) // TODO(zacsh) debugging; remove
+	return int(rn)
 }
 
 func main() {
