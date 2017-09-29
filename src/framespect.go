@@ -70,7 +70,7 @@ func decodeHexStream(input io.Reader) ([]byte, error) {
 		if onLeftHalf {
 			bytes = append(bytes, byte(integer<<4))
 		} else {
-			bytes[len(bytes)-1] = bytes[len(bytes)-1] & byte(integer<<4)
+			bytes[len(bytes)-1] = bytes[len(bytes)-1] + byte(integer)
 		}
 		onLeftHalf = !onLeftHalf
 	}
