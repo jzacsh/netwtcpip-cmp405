@@ -18,4 +18,8 @@ func (bb *ByteBlob) Remainder() []byte {
 	return bb.Next(remaining)
 }
 
+func (bb *ByteBlob) RemainingBlob() ByteBlob {
+	return ByteBlob{Data: bb.Remainder()}
+}
+
 func (bb *ByteBlob) IsEmpty() bool { return len(bb.Data) > 0 }

@@ -42,5 +42,5 @@ func (ef *EthFrame) ParseHead() (EthFrame, ip.IPPayload, error) {
 	ef.ethDestination = ef.Blob.Next(6)
 	ef.ethSource = ef.Blob.Next(6)
 	ef.ethType = ef.Blob.Next(2)
-	return *ef, ip.IPPayload{Blob: ef.Blob.Remainder()}, nil
+	return *ef, ip.IPPayload{Blob: ef.Blob.RemainingBlob()}, nil
 }
