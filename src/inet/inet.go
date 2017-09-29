@@ -28,9 +28,9 @@ func (ef *EthFrame) HasHeader() bool {
 
 func (ef *EthFrame) String() string {
 	return fmt.Sprintf(
-		`destination hardware addr: 0x% X
-source hardware addr: 0x% X
-ethernet frame type: 0x%c
+		`  destination hardware addr: 0x% X
+  source hardware addr: 0x% X
+  ethernet frame type: 0x%c
 `, ef.Destination, ef.Source, ef.Type)
 }
 
