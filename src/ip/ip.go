@@ -21,6 +21,6 @@ func (ipp *IPPayload) String() string {
 // - that beginning subset which the module identified as its own header
 // - the remainder subset which the module identified as its own header
 func (ipp *IPPayload) ParseHead() (IPPayload, PseudoAppModule, error) {
-	panic("ParseHead not yet implemented")
+	panic("ip pkgs' ParseHead not yet implemented")
 	return *ipp, PseudoAppModule{Unclaimed: ipp.Blob[len(ipp.Blob):]}, nil
 }
