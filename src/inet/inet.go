@@ -28,17 +28,10 @@ func (ef *EthFrame) HasHeader() bool {
 
 func (ef *EthFrame) String() string {
 	return fmt.Sprintf(
-		`destination hardware addr: 0x%x%x%x%x%x%x
-source hardware addr: 0x%x
+		`destination hardware addr: 0x% X
+source hardware addr: 0x% X
 ethernet frame type: 0x%c
-`, ef.Destination[0],
-		ef.Destination[1],
-		ef.Destination[2],
-		ef.Destination[3],
-		ef.Destination[4],
-		ef.Destination[5],
-		ef.Source,
-		ef.Type)
+`, ef.Destination, ef.Source, ef.Type)
 }
 
 // ParseHead takes a frame blob of bytes and returns two subsets or two nils and
