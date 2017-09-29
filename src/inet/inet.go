@@ -15,9 +15,9 @@ import (
 type EthFrame struct {
 	Blob blob.ByteBlob
 
-	Destination []byte
-	Source      []byte
-	Type        []byte
+	ethDestination []byte
+	ethSource      []byte
+	ethType        []byte
 }
 
 func (ef *EthFrame) RawHeader() []byte { return ef.Blob.Data }
@@ -31,7 +31,7 @@ func (ef *EthFrame) String() string {
 		`  destination hardware addr: 0x% X
   source hardware addr: 0x% X
   ethernet frame type: 0x% X
-`, ef.Destination, ef.Source, ef.Type)
+`, ef.ethDestination, ef.ethSource, ef.ethType)
 }
 
 // ParseHead takes a frame blob of bytes and returns two subsets or two nils and
@@ -39,8 +39,8 @@ func (ef *EthFrame) String() string {
 // - that beginning subset which the module identified as its own header
 // - the remainder subset which the module identified as its own header
 func (ef *EthFrame) ParseHead() (EthFrame, ip.IPPayload, error) {
-	ef.Destination = ef.Blob.Next(6)
-	ef.Source = ef.Blob.Next(6)
-	ef.Type = ef.Blob.Next(2)
+	ef.ethDestination = ef.Blob.Next(6)
+	ef.ethSource = ef.Blob.Next(6)
+	ef.ethType = ef.Blob.Next(2)
 	return *ef, ip.IPPayload{Blob: ef.Blob.Remainder()}, nil
 }
