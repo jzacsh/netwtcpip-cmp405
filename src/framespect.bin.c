@@ -99,8 +99,6 @@ struct frame {
   // fragment group.
   octet_t ipfrm_fragOffset[2]; // warning: bits = 13 = 16 - 3
 
-  // TODO(zacsh) above are implemented; need to complete remaining fields
-
   // Field "TTL" is a decrementing-counter of hops allowed for a packet before
   // it should be dropped.
   octet_t ipfrm_timeToLive;
