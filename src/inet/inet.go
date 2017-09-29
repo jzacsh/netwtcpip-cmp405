@@ -46,8 +46,8 @@ ethernet frame type: 0x%c
 // - that beginning subset which the module identified as its own header
 // - the remainder subset which the module identified as its own header
 func (ef *EthFrame) ParseHead() (EthFrame, ip.IPPayload, error) {
-	ef.Destination = ef.Blob.Next(6 * 2)
-	ef.Source = ef.Blob.Next(6 * 2)
-	ef.Type = ef.Blob.Next(2 * 2)
+	ef.Destination = ef.Blob.Next(6)
+	ef.Source = ef.Blob.Next(6)
+	ef.Type = ef.Blob.Next(2)
 	return *ef, ip.IPPayload{Blob: ef.Blob.Remainder()}, nil
 }
