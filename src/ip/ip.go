@@ -81,7 +81,8 @@ func (ipp *IPPayload) String() string {
 	return fmt.Sprintf(
 		`  version: %2d
   header len: %2d (# of 4-octets in header)
-`, ipp.ipVersion, ipp.ipHeaderLen)
+  service type: 0x% X
+`, ipp.ipVersion, ipp.ipHeaderLen, ipp.ipServiceType)
 }
 
 // ParseHead takes a frame blob of bytes and returns two subsets or two nils and
@@ -92,6 +93,7 @@ func (ipp *IPPayload) ParseHead() (IPPayload, PseudoAppModule, error) {
 	versionAndHeader := ipp.Blob.Next(1)
 	ipp.ipVersion = (0xf0 & versionAndHeader[0]) >> 4
 	ipp.ipHeaderLen = 0x0f & versionAndHeader[0]
+	ipp.ipServiceType = ipp.Blob.Next(1)[0]
 	// TODO(zacsh) complete this parsing
 	return *ipp, PseudoAppModule{Unclaimed: ipp.Blob.Remainder()}, nil
 }
