@@ -2,7 +2,7 @@
  * Inspects an IP ethernet frame, given as a string of hex values.
  *
  * Sample of valid input can be retrieved by:
- *   `git show 341a73f6d601:lecture03_20170911.adoc  | sed -n '93,100'p`
+ *   `git show 8e5e667dde950:testdata_ipframe/ipdatagram_sample04.txt`
  *
  * WARNING: behavior here is based on a rough view recieved in lectures. Only
  * in *some* places have I referred to the IP(v4) spec (RFC 791).

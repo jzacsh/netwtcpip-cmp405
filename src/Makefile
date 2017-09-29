@@ -16,7 +16,7 @@ memcheck:
 	$(MAKE) sampleethframe | valgrind --track-origins=yes --error-exitcode=1 --leak-check=yes --suppressions=valgrind.supp ./framespect.bin
 
 sampleethframe:
-	@git show 341a73f6d601:lecture03_20170911.adoc  | sed -n 93,100p
+	@git show 8e5e667dde950:testdata_ipframe/ipdatagram_sample04.txt
 
 .PHONY: clean sampleethframe memcheck test all default
 
