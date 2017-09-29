@@ -8,11 +8,7 @@ type ByteBlob struct {
 }
 
 func (bb *ByteBlob) Next(count int) []byte {
-	start := bb.cursor + 1
-	if start == 1 {
-		start = 0
-	}
-	next := bb.Data[start : bb.cursor+count]
+	next := bb.Data[bb.cursor : bb.cursor+count]
 	bb.cursor += count
 	return next
 }
