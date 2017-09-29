@@ -97,5 +97,5 @@ func main() {
 		log.Fatalf("parsing ip frame: %s", e)
 	}
 	log.Printf("ip frame:\n%v\n", ipFrame.String())
-	log.Printf("above-IP level payload (eg: application-bound):\n%s\n", payload)
+	log.Printf("above-IP level payload (eg: application-bound):\n% X\n", payload)
 }
