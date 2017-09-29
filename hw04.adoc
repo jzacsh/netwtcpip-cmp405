@@ -1,0 +1,36 @@
+= hw #4: CIDR
+
+== problem 1
+
+Given the class B network address 128.10 will be divided into subnets.
+
+.Compute
+a. the minimum number of bits necessary to obtain the number of subnets required
+b. the maximum number of hosts in each subnet
+c. the subnet mask, and
+d. write the dotted decimal address
+
+[cols=7, options="header"]
+.Given Networks
+|===
+| Max # Of Subnets
+| (a) Min # Of Subnet Bits | (b) Max # Of Hosts per Subnet | (c) Subnet Mask
+| (given) Subnet # | (given) Host #
+| (d) Dotted Decimal IP Address
+
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 55   | 51  | 121  | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 55   | 42  | 867  | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 121  | 115 | 246  | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 121  | 97  | 443  | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 26   | 19  | 237  | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 26   | 25  | 1397 | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 261  | 227 | 86   | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 261  | 259 | 49   | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 529  | 519 | 33   | TODO(d)
+| TODO(max) | TODO(a) | TODO(b) | TODO(c) | 529  | 510 | 59   | TODO(d)
+|===
+
+
+== problem 2
+
+TODO
