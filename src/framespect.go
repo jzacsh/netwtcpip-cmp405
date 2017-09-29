@@ -41,7 +41,7 @@ type ModuleFrame interface {
 }
 
 func decodeHexStream(input io.Reader) ([]byte, error) {
-	chars, e := ioutil.ReadAll(os.Stdin)
+	chars, e := ioutil.ReadAll(input)
 	if e != nil {
 		return nil, fmt.Errorf("reading from stdin: %s", e)
 	}
