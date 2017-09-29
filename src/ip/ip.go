@@ -90,9 +90,9 @@ func (ipp *IPPayload) String() string {
 // - that beginning subset which the module identified as its own header
 // - the remainder subset which the module identified as its own header
 func (ipp *IPPayload) ParseHead() (IPPayload, PseudoAppModule, error) {
-	versionAndHeader := ipp.Blob.Next(1)
-	ipp.ipVersion = (0xf0 & versionAndHeader[0]) >> 4
-	ipp.ipHeaderLen = 0x0f & versionAndHeader[0]
+	versionAndHeader := ipp.Blob.Next(1)[0]
+	ipp.ipVersion = (0xf0 & versionAndHeader) >> 4
+	ipp.ipHeaderLen = 0x0f & versionAndHeader
 	ipp.ipServiceType = ipp.Blob.Next(1)[0]
 	// TODO(zacsh) complete this parsing
 	return *ipp, PseudoAppModule{Unclaimed: ipp.Blob.Remainder()}, nil
