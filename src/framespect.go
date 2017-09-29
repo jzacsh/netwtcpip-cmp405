@@ -10,6 +10,7 @@ import (
 
 	"./blob"
 	"./inet"
+	"github.com/jzacsh/hexint"
 )
 
 type FrameHead interface {
@@ -51,7 +52,7 @@ func decodeHexStream(input io.Reader) ([]byte, error) {
 	onLeftHalf := true
 	bytes := make([]byte, 0, 256)
 	for _, char := range chars {
-		ch := strings.ToUpper(strings.TrimSpace(string(char)))
+		ch := strings.TrimSpace(string(char))
 		if len(ch) == 0 {
 			continue
 		}
@@ -61,15 +62,15 @@ func decodeHexStream(input io.Reader) ([]byte, error) {
 		}
 
 		hex := byte(ch[0])
-		if hex < 0 || hex > 255 {
-			return nil, fmt.Errorf(
-				"expected hex val of [0,f]; at col %d: '%s'", len(bytes), hex)
+		integer, e := hexint.DecodeInt(hex)
+		if e != nil {
+			return nil, fmt.Errorf("input at [octet #%d] '%c': %v", len(bytes), hex, e)
 		}
 
 		if onLeftHalf {
-			bytes = append(bytes, hex<<4)
+			bytes = append(bytes, byte(integer<<4))
 		} else {
-			bytes[len(bytes)-1] = bytes[len(bytes)-1] & (hex << 4)
+			bytes[len(bytes)-1] = bytes[len(bytes)-1] & byte(integer<<4)
 		}
 		onLeftHalf = !onLeftHalf
 	}
