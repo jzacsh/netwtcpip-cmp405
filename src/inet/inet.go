@@ -30,7 +30,7 @@ func (ef *EthFrame) String() string {
 	return fmt.Sprintf(
 		`  destination hardware addr: 0x% X
   source hardware addr: 0x% X
-  ethernet frame type: 0x%c
+  ethernet frame type: 0x% X
 `, ef.Destination, ef.Source, ef.Type)
 }
 
