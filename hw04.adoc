@@ -45,16 +45,13 @@ NOTE: All your answers must be in decimal (Base 10).
 [cols=5, options="header"]
 .Given Networks
 |===
-| IP Address
-| Subnet Mask
-| (a) Network Number
-| (a) Subnet Number
-| (c) Host Number
+| IP Address | Subnet Mask
+| (a) Network Number | (a) Subnet Number | (c) Host Number
 
-| 9.201.195.84   | 255.255.240.0 | TODO(a) | TODO(b) | TODO(c)
-| 128.10.189.215 | 255.255.248.0 | TODO(a) | TODO(b) | TODO(c)
-| 135.21.243.82  | 255.255.224.0 | TODO(a) | TODO(b) | TODO(c)
-| 75.149.205.61  | 255.255.192.0 | TODO(a) | TODO(b) | TODO(c)
-| 7.105.198.111  | 255.255.252.0 | TODO(a) | TODO(b) | TODO(c)
+|   9.201.195. 84 | 255.255.240.0 | TODO(a) | TODO(b) | TODO(c)
+| 128. 10.189.215 | 255.255.248.0 | TODO(a) | TODO(b) | TODO(c)
+| 135. 21.243. 82 | 255.255.224.0 | TODO(a) | TODO(b) | TODO(c)
+|  75.149.205. 61 | 255.255.192.0 | TODO(a) | TODO(b) | TODO(c)
+|   7.105.198.111 | 255.255.252.0 | TODO(a) | TODO(b) | TODO(c)
 
 |===
