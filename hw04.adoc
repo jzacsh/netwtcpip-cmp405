@@ -18,16 +18,16 @@ d. write the dotted decimal address
 | (given) Subnet # | (given) Host #
 | (d) Dotted Decimal IP Address
 
-| 55   | TODO(a) | TODO(b) | TODO(c) | 51  | 121  | TODO(d)
-| 55   | TODO(a) | TODO(b) | TODO(c) | 42  | 867  | TODO(d)
-| 121  | TODO(a) | TODO(b) | TODO(c) | 115 | 246  | TODO(d)
-| 121  | TODO(a) | TODO(b) | TODO(c) | 97  | 443  | TODO(d)
-| 26   | TODO(a) | TODO(b) | TODO(c) | 19  | 237  | TODO(d)
-| 26   | TODO(a) | TODO(b) | TODO(c) | 25  | 1397 | TODO(d)
-| 261  | TODO(a) | TODO(b) | TODO(c) | 227 | 86   | TODO(d)
-| 261  | TODO(a) | TODO(b) | TODO(c) | 259 | 49   | TODO(d)
-| 529  | TODO(a) | TODO(b) | TODO(c) | 519 | 33   | TODO(d)
-| 529  | TODO(a) | TODO(b) | TODO(c) | 510 | 59   | TODO(d)
+|  55 |  6 | TODO(b) | TODO(c) | 51  | 121  | TODO(d)
+|  55 |  6 | TODO(b) | TODO(c) | 42  | 867  | TODO(d)
+| 121 |  7 | TODO(b) | TODO(c) | 115 | 246  | TODO(d)
+| 121 |  7 | TODO(b) | TODO(c) | 97  | 443  | TODO(d)
+|  26 |  5 | TODO(b) | TODO(c) | 19  | 237  | TODO(d)
+|  26 |  5 | TODO(b) | TODO(c) | 25  | 1397 | TODO(d)
+| 261 |  9 | TODO(b) | TODO(c) | 227 | 86   | TODO(d)
+| 261 |  9 | TODO(b) | TODO(c) | 259 | 49   | TODO(d)
+| 529 | 10 | TODO(b) | TODO(c) | 519 | 33   | TODO(d)
+| 529 | 10 | TODO(b) | TODO(c) | 510 | 59   | TODO(d)
 |===
 
 
