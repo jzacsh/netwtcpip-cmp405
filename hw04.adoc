@@ -13,21 +13,21 @@ d. write the dotted decimal address
 [cols=7, options="header"]
 .Given Networks
 |===
-| Max # Of Subnets
-| (a) Min # Of Subnet Bits | (b) Max # Of Hosts per Subnet | (c) Subnet Mask
+| Max Subnets
+| (a)Min# Subnet Bits | (b)Max# Hosts per Subnet | (c)Subnet Mask
 | (given) Subnet # | (given) Host #
-| (d) Dotted Decimal IP Address
+| (d)Dotted Decimal Address
 
-|  55 |  6 | TODO(b) | TODO(c) | 51  | 121  | TODO(d)
-|  55 |  6 | TODO(b) | TODO(c) | 42  | 867  | TODO(d)
-| 121 |  7 | TODO(b) | TODO(c) | 115 | 246  | TODO(d)
-| 121 |  7 | TODO(b) | TODO(c) | 97  | 443  | TODO(d)
-|  26 |  5 | TODO(b) | TODO(c) | 19  | 237  | TODO(d)
-|  26 |  5 | TODO(b) | TODO(c) | 25  | 1397 | TODO(d)
-| 261 |  9 | TODO(b) | TODO(c) | 227 | 86   | TODO(d)
-| 261 |  9 | TODO(b) | TODO(c) | 259 | 49   | TODO(d)
-| 529 | 10 | TODO(b) | TODO(c) | 519 | 33   | TODO(d)
-| 529 | 10 | TODO(b) | TODO(c) | 510 | 59   | TODO(d)
+|  55 |  6 |  67108863 <- 26 = 32 - 6  | TODO(c) | 51  | 121  | TODO(d)
+|  55 |  6 |  67108863 <- 26 = 32 - 6  | TODO(c) | 42  | 867  | TODO(d)
+| 121 |  7 |  33554431 <- 25 = 32 - 7  | TODO(c) | 115 | 246  | TODO(d)
+| 121 |  7 |  33554431 <- 25 = 32 - 7  | TODO(c) | 97  | 443  | TODO(d)
+|  26 |  5 | 134217727 <- 27 = 32 - 5  | TODO(c) | 19  | 237  | TODO(d)
+|  26 |  5 | 134217727 <- 27 = 32 - 5  | TODO(c) | 25  | 1397 | TODO(d)
+| 261 |  9 |   8388607 <- 23 = 32 - 9  | TODO(c) | 227 | 86   | TODO(d)
+| 261 |  9 |   8388607 <- 23 = 32 - 9  | TODO(c) | 259 | 49   | TODO(d)
+| 529 | 10 |   4194303 <- 22 = 32 - 10 | TODO(c) | 519 | 33   | TODO(d)
+| 529 | 10 |   4194303 <- 22 = 32 - 10 | TODO(c) | 510 | 59   | TODO(d)
 |===
 
 
@@ -60,6 +60,7 @@ NOTE: All your answers must be in decimal (Base 10).
 [cols=3, options="header"]
 |===
 | no.bits | top  | highest integer
+
 | 1       | 2^0  |          1
 | 2       | 2^1  |          3
 | 3       | 2^2  |          7
