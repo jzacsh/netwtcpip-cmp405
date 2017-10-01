@@ -4,6 +4,18 @@
 
 Given the class B network address 128.10 will be divided into subnets.
 
+Recall class B normally would have the mask:
+`0xFF.FF.00.00 = 0b11111111.11111111.00000000.00000000`
+[cols=5, options="header"]
+.also note: the network we're subdividing is has the octets:
+|===
+| base | octet high | octet left | octet right | octet low
+
+|  10  |    `128`    |     `10`    |     `0`     |    `0`
+|  16  |    `80`     |     `0A`    |    `00`     |   `00`
+|   2  | `1000 0000` | `0000 1010` | `0000 0000` | `0000 0000`
+|===
+
 .Compute
 a. the minimum number of bits necessary to obtain the number of subnets required
 b. the maximum number of hosts in each subnet
@@ -14,9 +26,9 @@ d. write the dotted decimal address
 .Given Networks
 |===
 | Max Subnets | (a)Min# Subnet Bits
-           | (b)Max# Hosts per Subnet | (c)Subnet Mask
-| (given) Subnet # | (given) Host #
-| (d)Dotted Decimal Address
+           | (b)Max# Hosts per Subnet
+           | (c)Subnet Mask
+| (given) Subnet # | (given) Host # | (d)Dotted Decimal Address
 
 |  55 |  6 |  67108863 <- 26 = 32 - 6
            | 0xFC.00.00.00 = 0b11111100.00000000.00000000.00000000
