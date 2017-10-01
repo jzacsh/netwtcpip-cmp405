@@ -67,7 +67,8 @@ func Classful(ip OctsList) (OctsList, uint, string) {
 	}
 }
 
-func countSubnetBits(o Octets) uint {
+// CountOnes counts the on-bits of an 32-bit octets integer.
+func CountOnes(o Octets) uint {
 	var n uint = 0
 	for i := n; i < 32; i++ {
 		n += 1 & (uint(o) >> i)
@@ -92,7 +93,7 @@ func (a *Addr) SubnetIndex() Octets {
 
 	uniqSubnetBits := (^classMaskPck) & a.Mask.Pack()
 	middleSubnetBits := uniqSubnetBits & a.IP.Pack()
-	totalNetBitsCount := cidrOffset + countSubnetBits(uniqSubnetBits)
+	totalNetBitsCount := cidrOffset + CountOnes(uniqSubnetBits)
 	return middleSubnetBits >> (32 - totalNetBitsCount)
 }
 
