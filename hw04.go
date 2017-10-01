@@ -69,40 +69,37 @@ func countSubnetBits(o Octets) uint {
 	return n
 }
 
+func (a *Addr) NetworkIndex() Octets {
+	classMask, cidrOffset, _ := a.Classful()
+	return (a.ip.Pack() & classMask.Pack()) >> (32 - cidrOffset)
+}
+
+func (a *Addr) SubnetIndex() Octets {
+	classMask, cidrOffset, _ := a.Classful()
+	classMaskPck := classMask.Pack()
+
+	uniqSubnetBits := (^classMaskPck) & a.mask.Pack()
+	middleSubnetBits := uniqSubnetBits & a.ip.Pack()
+	totalNetBitsCount := cidrOffset + countSubnetBits(uniqSubnetBits)
+	return middleSubnetBits >> (32 - totalNetBitsCount)
+}
+
+func (a *Addr) HostIndex() Octets {
+	maskPck := a.mask.Pack()
+	return (^maskPck) & a.ip.Pack()
+}
+
 func main() {
 	fmt.Printf("analyzing %d hosts ...\n", len(hosts))
 	for _, addr := range hosts {
-		ipPck := addr.ip.Pack()
-		maskPck := addr.mask.Pack()
-		hostMaskPck := ^addr.mask.Pack()
-
-		classMask, cidrOffset, klass := addr.Classful()
-		classMaskPck := classMask.Pack()
-
-		subnetMaskPck := (^classMaskPck) & maskPck
+		classMask, _, klass := addr.Classful()
 
 		fmt.Printf(
-			"  network: %v (class %s masked) # %d\n\t%v\n\tsubnet : %d <- %v\n\thost   : %d <- %v\n\n",
-			(ipPck & classMaskPck).List(),
-			klass, (ipPck & classMaskPck),
+			"  network: %v (class %s masked)\n\t%v\n\tnetwork id:\t%d\n\t subnet id:\t%d\n\t   host id:\t%d\n\n",
+			(addr.ip.Pack() & classMask.Pack()).List(), klass,
 			addr.String(),
-			ipPck&subnetMaskPck, (ipPck & subnetMaskPck).List(),
-			ipPck&hostMaskPck, (ipPck & hostMaskPck).List())
-
-		// TODO(zacsh) cleanup, and push back up to above printf, after fully
-		// matching nitty-griddy meaningless busy work in the last slide
-		fmt.Printf("[dbg] binary value debugging:\n     ip:\t%032b\nclsmask:\t%032b\n  sbmsk:\t%032b\n\n",
-			ipPck, classMaskPck, maskPck)
-		networkid := (ipPck & classMaskPck) >> (32 - cidrOffset)
-		fmt.Printf("[dbg] binary arithmetic debugging:\n   ip&clss:\t%032b\n  ip&class:\t%d\n      host:\t%d\n\n",
-			networkid, networkid,
-			(^maskPck)&ipPck)
-
-		uniqSubnetBits := (^classMaskPck) & maskPck
-		uniqSubnetBitCount := countSubnetBits(uniqSubnetBits)
-		subnetID := (uniqSubnetBits & ipPck) >> (32 - cidrOffset - uniqSubnetBitCount)
-		fmt.Printf("[dbg] subnet mask debugging:\n  subnet bits:\t%d\n  subnet #:\t%d\n\n",
-			uniqSubnetBitCount,
-			subnetID)
+			addr.NetworkIndex(),
+			addr.SubnetIndex(),
+			addr.HostIndex())
 	}
 }
