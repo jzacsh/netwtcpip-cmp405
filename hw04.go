@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"./src/parseip4"
+	"github.com/jzacsh/netwtcpip-cmp405/parseip4"
 )
 
 var hosts = []parseip4.Addr{
