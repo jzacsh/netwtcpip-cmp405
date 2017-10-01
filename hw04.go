@@ -94,8 +94,10 @@ func main() {
 		fmt.Printf("[dbg] binary value debugging:\n     ip:\t%032b\nclsmask:\t%032b\n  sbmsk:\t%032b\n\n",
 			ipPck, classMaskPck, maskPck)
 		networkid := (ipPck & classMaskPck) >> (32 - cidrOffset)
-		fmt.Printf("[dbg] binary arithmetic debugging:\nip&clss:\t%032b\nip&class:\t%d\n\n",
-			networkid, networkid)
+		fmt.Printf("[dbg] binary arithmetic debugging:\n   ip&clss:\t%032b\n  ip&class:\t%d\n      host:\t%d\n\n",
+			networkid, networkid,
+			(^maskPck)&ipPck)
+
 		uniqSubnetBits := (^classMaskPck) & maskPck
 		uniqSubnetBitCount := countSubnetBits(uniqSubnetBits)
 		subnetID := (uniqSubnetBits & ipPck) >> (32 - cidrOffset - uniqSubnetBitCount)
