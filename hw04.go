@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/jzacsh/netwtcpip-cmp405/parseip4"
 )
@@ -49,7 +50,21 @@ func (s *subnetRequisites) String() string {
 }
 
 func (s *subnetRequisites) FindSolution() OptimalSubnet {
-	return OptimalSubnet{} // TODO implement
+	opt := OptimalSubnet{}
+
+	// Brute force solve for Ceil(log2(s.MaxSubnets))
+	for {
+		if math.Pow(2, float64(opt.MinSubnetBits))-1 >= float64(s.MaxSubnets) {
+			break
+		}
+		opt.MinSubnetBits++
+	}
+
+	// TODO: opt.MaxHostsPerSubnet
+
+	// TODO: opt.SubnetMask
+
+	return opt
 }
 
 func main() {
