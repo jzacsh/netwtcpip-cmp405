@@ -49,18 +49,33 @@ func (s *subnetRequisites) String() string {
 		s.MaxSubnets, s.SubnetIndex, s.HostIndex)
 }
 
+func maxIntWithBits(nbits uint) uint32 {
+	// 1 because 2^N bits only gets 2^N-1 if all 1s. +1 more because all 1s is
+	// reserved for broadcast.
+	const gap float64 = 2
+
+	maxInt := math.Pow(2, float64(nbits))
+	if maxInt < gap {
+		// we want to avoid underflows, so stick to the point of the API and return
+		// effectively zero
+		return 0
+	}
+
+	return uint32(maxInt - gap)
+}
+
 func (s *subnetRequisites) FindSolution() OptimalSubnet {
 	opt := OptimalSubnet{}
 
 	// Brute force solve for Ceil(log2(s.MaxSubnets))
 	for {
-		if math.Pow(2, float64(opt.MinSubnetBits))-1 >= float64(s.MaxSubnets) {
+		if maxIntWithBits(opt.MinSubnetBits) >= uint32(s.MaxSubnets) {
 			break
 		}
 		opt.MinSubnetBits++
 	}
 
-	// TODO: opt.MaxHostsPerSubnet
+	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - opt.MinSubnetBits))
 
 	// TODO: opt.SubnetMask
 
