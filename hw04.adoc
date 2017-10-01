@@ -131,7 +131,7 @@ NOTE: All your answers must be in decimal (Base 10).
 .Given Networks
 |===
 | IP Address | Subnet Mask
-| (a) Network Number | (a) Subnet Number | (c) Host Number
+| (a) Network Number | (b) Subnet Number | (c) Host Number
 
 |   9.201.195.84
 | 255.255.240.0
