@@ -70,8 +70,9 @@ func main() {
 
 		subnetMaskPck := (^classMaskPck) & maskPck
 		fmt.Printf(
-			"  network: %v (class %s masked)\n\t%v\n\tsubnet : %d <- %v\n\thost   : %d <- %v\n\n",
-			(ipPck & classMaskPck).List(), klass,
+			"  network: %v (class %s masked) # %d\n\t%v\n\tsubnet : %d <- %v\n\thost   : %d <- %v\n\n",
+			(ipPck & classMaskPck).List(),
+			klass, (ipPck & classMaskPck),
 			addr.String(),
 			ipPck&subnetMaskPck, (ipPck & subnetMaskPck).List(),
 			ipPck&hostMaskPck, (ipPck & hostMaskPck).List())
