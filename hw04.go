@@ -24,29 +24,45 @@ type subnetRequisites struct {
 }
 
 type OptimalSubnet struct {
-	Given   subnetRequisites
-	Require struct {
-		MinSubnetBits     uint
-		MaxHostsPerSubnet parseip4.Octets
-		SubnetMask        parseip4.OctsList
-	}
+	MinSubnetBits     uint
+	MaxHostsPerSubnet parseip4.Octets
+	SubnetMask        parseip4.OctsList
 }
 
-var partOneGivens = []OptimalSubnet{
-	OptimalSubnet{Given: subnetRequisites{55, 51, 121}},
-	OptimalSubnet{Given: subnetRequisites{55, 42, 867}},
-	OptimalSubnet{Given: subnetRequisites{121, 115, 246}},
-	OptimalSubnet{Given: subnetRequisites{121, 97, 443}},
-	OptimalSubnet{Given: subnetRequisites{26, 19, 237}},
-	OptimalSubnet{Given: subnetRequisites{26, 25, 1397}},
-	OptimalSubnet{Given: subnetRequisites{261, 227, 86}},
-	OptimalSubnet{Given: subnetRequisites{261, 259, 49}},
-	OptimalSubnet{Given: subnetRequisites{529, 519, 33}},
-	OptimalSubnet{Given: subnetRequisites{529, 510, 59}},
+var partOneGivens = []subnetRequisites{
+	{55, 51, 121},
+	{55, 42, 867},
+	{121, 115, 246},
+	{121, 97, 443},
+	{26, 19, 237},
+	{26, 25, 1397},
+	{261, 227, 86},
+	{261, 259, 49},
+	{529, 519, 33},
+	{529, 510, 59},
+}
+
+func (s *subnetRequisites) String() string {
+	return fmt.Sprintf(
+		"max subnets: %d, subnet index: %d, host index: %d",
+		s.MaxSubnets, s.SubnetIndex, s.HostIndex)
+}
+
+func (s *subnetRequisites) FindSolution() OptimalSubnet {
+	return OptimalSubnet{} // TODO implement
 }
 
 func main() {
 	fmt.Printf("part 1: analyzing %d hosts ...\n", len(partOneGivens))
+	for _, req := range partOneGivens {
+		sol := req.FindSolution()
+		fmt.Printf(
+			"  given: %s\n\tmin # of subnet bits: %d\n\tmax # hosts per subnet: %d\n\tsubnetmask: %d\n",
+			req.String(),
+			sol.MinSubnetBits,
+			sol.MaxHostsPerSubnet,
+			sol.SubnetMask)
+	}
 
 	fmt.Printf("\n\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
 	for _, addr := range partTwoHosts {
