@@ -6,7 +6,7 @@ import (
 	"github.com/jzacsh/netwtcpip-cmp405/parseip4"
 )
 
-var hosts = []parseip4.Addr{
+var partTwoHosts = []parseip4.Addr{
 	{IP: parseip4.NewAddr(9, 201, 195, 84), Mask: parseip4.NewAddr(255, 255, 240, 0)},
 	{IP: parseip4.NewAddr(128, 10, 189, 215), Mask: parseip4.NewAddr(255, 255, 248, 0)},
 	{IP: parseip4.NewAddr(135, 21, 243, 82), Mask: parseip4.NewAddr(255, 255, 224, 0)},
@@ -18,12 +18,12 @@ var hosts = []parseip4.Addr{
 }
 
 func main() {
-	fmt.Printf("analyzing %d hosts ...\n", len(hosts))
-	for _, addr := range hosts {
+	fmt.Printf("\n\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
+	for _, addr := range partTwoHosts {
 		classMask, _, klass := parseip4.Classful(addr.IP)
 
 		fmt.Printf(
-			"  network: %v (class %s masked)\n\t%v\n\tnetwork id:\t%d\n\t subnet id:\t%d\n\t   host id:\t%d\n\n",
+			"  network: %v (class %s masked)\n\t%v\n\tnetwork id:\t%d\n\t subnet id:\t%d\n\t   host id:\t%d\n",
 			(addr.IP.Pack() & classMask.Pack()).List(), klass,
 			addr.String(),
 			addr.NetworkIndex(),
