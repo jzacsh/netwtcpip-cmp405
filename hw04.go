@@ -20,7 +20,7 @@ var hosts = []parseip4.Addr{
 func main() {
 	fmt.Printf("analyzing %d hosts ...\n", len(hosts))
 	for _, addr := range hosts {
-		classMask, _, klass := addr.Classful()
+		classMask, _, klass := parseip4.Classful(addr.IP)
 
 		fmt.Printf(
 			"  network: %v (class %s masked)\n\t%v\n\tnetwork id:\t%d\n\t subnet id:\t%d\n\t   host id:\t%d\n\n",

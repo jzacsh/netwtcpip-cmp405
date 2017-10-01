@@ -53,8 +53,8 @@ func (a *Addr) String() string {
 // Classful determines the classful-addressing "class" of an IP address and
 // returns three representations of this: a mask, a CIDR-notation offset, and
 // the human-readable class label.
-func (a *Addr) Classful() (OctsList, uint, string) { // TODO(zacsh) make this a `OctsList` address
-	topOctet := a.IP[0]
+func Classful(ip OctsList) (OctsList, uint, string) {
+	topOctet := ip[0]
 	switch {
 	case topOctet < 128:
 		return OctsList{255, 0, 0, 0}, 8 * 1, "A"
@@ -79,7 +79,7 @@ func countSubnetBits(o Octets) uint {
 // would be, if it were considered as one of a continuous stream of potential
 // networks within the IP address space.
 func (a *Addr) NetworkIndex() Octets {
-	classMask, cidrOffset, _ := a.Classful()
+	classMask, cidrOffset, _ := Classful(a.IP)
 	return (a.IP.Pack() & classMask.Pack()) >> (32 - cidrOffset)
 }
 
@@ -87,7 +87,7 @@ func (a *Addr) NetworkIndex() Octets {
 // would be, if it were considered as one of a continuous stream of potential
 // networks within the IP address space.
 func (a *Addr) SubnetIndex() Octets {
-	classMask, cidrOffset, _ := a.Classful()
+	classMask, cidrOffset, _ := Classful(a.IP)
 	classMaskPck := classMask.Pack()
 
 	uniqSubnetBits := (^classMaskPck) & a.Mask.Pack()
