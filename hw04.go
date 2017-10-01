@@ -27,7 +27,7 @@ type subnetRequisites struct {
 type OptimalSubnet struct {
 	MinSubnetBits     uint
 	MaxHostsPerSubnet parseip4.Octets
-	SubnetMask        parseip4.OctsList
+	Address           parseip4.Addr
 }
 
 var partOneGivens = []subnetRequisites{
@@ -77,7 +77,11 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 
 	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - opt.MinSubnetBits))
 
-	// TODO: opt.SubnetMask
+	// TODO opt.Address.Mask
+	opt.Address.Mask = parseip4.NewAddr(0, 0, 0, 0)
+
+	// TODO opt.Address.IP
+	opt.Address.IP = parseip4.NewAddr(0, 0, 0, 0)
 
 	return opt
 }
@@ -87,11 +91,11 @@ func main() {
 	for _, req := range partOneGivens {
 		sol := req.FindSolution()
 		fmt.Printf(
-			"  given: %s\n\tmin # of subnet bits: %d\n\tmax # hosts per subnet: %d\n\tsubnetmask: %d\n",
+			"  given: %s\n\tmin # of subnet bits: %d\n\tmax # hosts per subnet: %d\n\taddress: %s\n",
 			req.String(),
 			sol.MinSubnetBits,
 			sol.MaxHostsPerSubnet,
-			sol.SubnetMask)
+			sol.Address.String())
 	}
 
 	fmt.Printf("\n\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
