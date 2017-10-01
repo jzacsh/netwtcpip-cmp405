@@ -78,10 +78,13 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - opt.MinSubnetBits))
 
 	// TODO opt.Address.Mask
-	opt.Address.Mask = parseip4.NewAddr(0, 0, 0, 0)
+	mask := parseip4.Octets(0xFFFFFFFF)
+	mask <<= (32 - opt.MinSubnetBits)
+	opt.Address.Mask = mask.List()
 
 	// TODO opt.Address.IP
-	opt.Address.IP = parseip4.NewAddr(0, 0, 0, 0)
+	ip := parseip4.Octets(0xFFFFFFFF)
+	opt.Address.IP = ip.List()
 
 	return opt
 }
