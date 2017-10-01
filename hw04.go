@@ -17,7 +17,37 @@ var partTwoHosts = []parseip4.Addr{
 	{IP: parseip4.NewAddr(128, 10, 211, 78), Mask: parseip4.NewAddr(255, 255, 240, 0)},
 }
 
+type subnetRequisites struct {
+	MaxSubnets  uint
+	SubnetIndex parseip4.Octets
+	HostIndex   parseip4.Octets
+}
+
+type OptimalSubnet struct {
+	Given   subnetRequisites
+	Require struct {
+		MinSubnetBits     uint
+		MaxHostsPerSubnet parseip4.Octets
+		SubnetMask        parseip4.OctsList
+	}
+}
+
+var partOneGivens = []OptimalSubnet{
+	OptimalSubnet{Given: subnetRequisites{55, 51, 121}},
+	OptimalSubnet{Given: subnetRequisites{55, 42, 867}},
+	OptimalSubnet{Given: subnetRequisites{121, 115, 246}},
+	OptimalSubnet{Given: subnetRequisites{121, 97, 443}},
+	OptimalSubnet{Given: subnetRequisites{26, 19, 237}},
+	OptimalSubnet{Given: subnetRequisites{26, 25, 1397}},
+	OptimalSubnet{Given: subnetRequisites{261, 227, 86}},
+	OptimalSubnet{Given: subnetRequisites{261, 259, 49}},
+	OptimalSubnet{Given: subnetRequisites{529, 519, 33}},
+	OptimalSubnet{Given: subnetRequisites{529, 510, 59}},
+}
+
 func main() {
+	fmt.Printf("part 1: analyzing %d hosts ...\n", len(partOneGivens))
+
 	fmt.Printf("\n\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
 	for _, addr := range partTwoHosts {
 		classMask, _, klass := parseip4.Classful(addr.IP)
