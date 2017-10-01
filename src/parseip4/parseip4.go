@@ -10,7 +10,7 @@ type Octets uint32
 
 // OctsList is a (presumed) len()=4 list of 8-bit unsigned integer values, or
 // octets.
-type OctsList []int // TODO(zacsh) make this a uint8
+type OctsList []uint8
 
 // Addr represents an IP address and its mask, which may or may not be a
 // default classful addressing mask.
@@ -20,7 +20,7 @@ type Addr struct {
 }
 
 // NewAddr builds a proper-length OctsList.
-func NewAddr(highest, second, third, lowest int) OctsList {
+func NewAddr(highest, second, third, lowest uint8) OctsList {
 	return OctsList{highest, second, third, lowest}
 }
 
@@ -36,10 +36,10 @@ func (o OctsList) Pack() Octets {
 // OctsList unpacks a Octets value into its component 8-bit valued integers.
 func (ino Octets) List() OctsList {
 	return OctsList{
-		int((0xFF000000 & ino) >> 24),
-		int((0x00FF0000 & ino) >> 16),
-		int((0x0000FF00 & ino) >> 8),
-		int(0x000000FF & ino),
+		uint8((0xFF000000 & ino) >> 24),
+		uint8((0x00FF0000 & ino) >> 16),
+		uint8((0x0000FF00 & ino) >> 8),
+		uint8(0x000000FF & ino),
 	}
 }
 
