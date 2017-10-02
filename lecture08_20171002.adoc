@@ -1,0 +1,73 @@
+= lecture 20171002 - Chap10 Contin'd & Chap 11
+:slideslast: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2010.pdf
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2011.pdf
+
+...finishing chapteer 10: layering. left off at {slideslast}[chapter 10, slide 20].
+
+[columns=3, options="header"]
+.packet consistencies
+|===
+| bits | consistency | explanation
+
+| ip datagram | across hops | thus *implicitly* machine-to-machine consistency
+| ethframe header | machine-to-machine | *within* networks (ie: between hops)
+| transport frame | end-to-end consistent | 
+|===
+
+WARNING: in illustration on slide 20, Host A never *encodes* `IP:R` in any packet!
+only *passes* `IP:R` as a *parameter* to the NetworkInterface's API (eg: it
+exists only in memory). Only _encoding_ of any kind, into an actual packet, is
+that `HW:R` is written into the eth-frame header by Host A's NetworkInterface.
+
+NOTE: wifi, bluetooth, ethernet all use *ethernet frame* standard (ie: that of
+of 6-byte offsets, same organization of data)
+
+== chapteer 11: UDP
+
+protocol port number: unsigned 2-byte integer
+
+UDP: *only* adds ability to address by *port number*, nothing else
+
+[columns=3, options="header"]
+.udp message header format: 8 bytes long
+|===
+| field | length | notes 
+
+| source port | 2 bytes | 
+| destination port | 2 bytes |
+| message length | 2 bytes |
+| checksum | 2 bytes | *optional*
+|===
+
+QUESTION: what does checksum cover?
+
+[columns=2, options="header"]
+.udp pseudo-header: 12 bytes long
+|===
+| field | bytes
+
+| source ip addr | 4
+| dest ip addr | 4
+| zero | 1
+| proto | 1
+| udp length | 2
+|===
+
+.udp header construction
+. fill src port, dst port, message length
+. leave checksum length
+. build *pseudo-header*
+.. calculate checksum over *both* headers +
+   ie: pseudo (12) + real (8; ie: less checksum)
+.. save checksum
+.. inject checksum ot *real* header
+. drop *pseudo-header*
+
+QUESTION: what is the "zero" field for in the pseudo-header?
+
+purpose of checksum: can i trust this packet arrived at the right machine?
+*QUESTION*: difficult to believe this is a total duplicate of IP's own
+checksuming on such fields - what's the real reason? distinguishing *state*
+within an application? eg: "whose [cookies] do I send back" distinguished by
+checksum as a pseudo-UUID?
+
