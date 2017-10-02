@@ -44,6 +44,18 @@ var partOneGivens = []subnetRequisites{
 	{parseip4.OctsList{128, 10, 0, 0}, 529, 510, 59},
 }
 
+// Sanity checks taken from slides:
+// http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/classnotes/Subnets%20To%20IP%20Address.pdf
+var partOneSanityCheck = []subnetRequisites{
+	{parseip4.OctsList{128, 10, 0, 0}, 200, 193, 129}, // slide 1
+	{parseip4.OctsList{128, 10, 0, 0}, 120, 119, 68},  // slide 2
+	{parseip4.OctsList{128, 10, 0, 0}, 120, 105, 352}, // slide 3
+	{parseip4.OctsList{128, 10, 0, 0}, 58, 45, 98},    // slide 4
+	{parseip4.OctsList{128, 10, 0, 0}, 58, 48, 598},   // slide 5
+	{parseip4.OctsList{128, 10, 0, 0}, 29, 28, 59},    // slide 6
+	{parseip4.OctsList{128, 10, 0, 0}, 29, 25, 1069},  // slide 7
+}
+
 func (s *subnetRequisites) String() string {
 	return fmt.Sprintf(
 		"max subnets: %d, subnet index: %d, host index: %d",
@@ -97,6 +109,17 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 func main() {
 	fmt.Printf("part 1: analyzing %d hosts ...\n", len(partOneGivens))
 	for _, req := range partOneGivens {
+		sol := req.FindSolution()
+		fmt.Printf(
+			"  given: %s\n\tmin # of subnet bits: %d\n\tmax # hosts per subnet: %d\n\taddress: %s\n",
+			req.String(),
+			sol.MinSubnetBits,
+			sol.MaxHostsPerSubnet,
+			sol.Address.String())
+	}
+
+	fmt.Printf("part 1 SANITY CHECK: analyzing %d hosts from in-class examples...\n", len(partOneSanityCheck))
+	for _, req := range partOneSanityCheck {
 		sol := req.FindSolution()
 		fmt.Printf(
 			"  given: %s\n\tmin # of subnet bits: %d\n\tmax # hosts per subnet: %d\n\taddress: %s\n",
