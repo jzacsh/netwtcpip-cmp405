@@ -19,9 +19,10 @@ var partTwoHosts = []parseip4.Addr{
 }
 
 type subnetRequisites struct {
-	MaxSubnets  uint
-	SubnetIndex parseip4.Octets
-	HostIndex   parseip4.Octets
+	ClassfulContext parseip4.OctsList
+	MaxSubnets      uint
+	SubnetIndex     parseip4.Octets
+	HostIndex       parseip4.Octets
 }
 
 type OptimalSubnet struct {
@@ -31,16 +32,16 @@ type OptimalSubnet struct {
 }
 
 var partOneGivens = []subnetRequisites{
-	{55, 51, 121},
-	{55, 42, 867},
-	{121, 115, 246},
-	{121, 97, 443},
-	{26, 19, 237},
-	{26, 25, 1397},
-	{261, 227, 86},
-	{261, 259, 49},
-	{529, 519, 33},
-	{529, 510, 59},
+	{parseip4.OctsList{128, 10, 0, 0}, 55, 51, 121},
+	{parseip4.OctsList{128, 10, 0, 0}, 55, 42, 867},
+	{parseip4.OctsList{128, 10, 0, 0}, 121, 115, 246},
+	{parseip4.OctsList{128, 10, 0, 0}, 121, 97, 443},
+	{parseip4.OctsList{128, 10, 0, 0}, 26, 19, 237},
+	{parseip4.OctsList{128, 10, 0, 0}, 26, 25, 1397},
+	{parseip4.OctsList{128, 10, 0, 0}, 261, 227, 86},
+	{parseip4.OctsList{128, 10, 0, 0}, 261, 259, 49},
+	{parseip4.OctsList{128, 10, 0, 0}, 529, 519, 33},
+	{parseip4.OctsList{128, 10, 0, 0}, 529, 510, 59},
 }
 
 func (s *subnetRequisites) String() string {
