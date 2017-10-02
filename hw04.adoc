@@ -1,6 +1,55 @@
 = hw #4: CIDR
+:toc:
 
-== problem 1
+== corrected scratch work
+
+.table below replaces <<badattempt, incorrect original attempt>>
+----
+part 1: analyzing 10 hosts ...
+  given: max subnets: 55, subnet index: 51, host index: 121
+	min # of subnet bits: 6
+	max # hosts per subnet: 1022
+	address: 128.10.204.121/252.0.0.0
+  given: max subnets: 55, subnet index: 42, host index: 867
+	min # of subnet bits: 6
+	max # hosts per subnet: 1022
+	address: 128.10.171.99/252.0.0.0
+  given: max subnets: 121, subnet index: 115, host index: 246
+	min # of subnet bits: 7
+	max # hosts per subnet: 510
+	address: 128.10.230.246/254.0.0.0
+  given: max subnets: 121, subnet index: 97, host index: 443
+	min # of subnet bits: 7
+	max # hosts per subnet: 510
+	address: 128.10.195.187/254.0.0.0
+  given: max subnets: 26, subnet index: 19, host index: 237
+	min # of subnet bits: 5
+	max # hosts per subnet: 2046
+	address: 128.10.152.237/248.0.0.0
+  given: max subnets: 26, subnet index: 25, host index: 1397
+	min # of subnet bits: 5
+	max # hosts per subnet: 2046
+	address: 128.10.205.117/248.0.0.0
+  given: max subnets: 261, subnet index: 227, host index: 86
+	min # of subnet bits: 9
+	max # hosts per subnet: 126
+	address: 128.10.227.86/255.128.0.0
+  given: max subnets: 261, subnet index: 259, host index: 49
+	min # of subnet bits: 9
+	max # hosts per subnet: 126
+	address: 128.10.129.177/255.128.0.0
+  given: max subnets: 529, subnet index: 519, host index: 33
+	min # of subnet bits: 10
+	max # hosts per subnet: 62
+	address: 128.10.129.225/255.192.0.0
+  given: max subnets: 529, subnet index: 510, host index: 59
+	min # of subnet bits: 10
+	max # hosts per subnet: 62
+	address: 128.10.255.59/255.192.0.0
+----
+
+[[badattempt]]
+=== problem 1: bad attempt - IGNORE
 
 Given the class B network address 128.10 will be divided into subnets.
 
@@ -188,7 +237,7 @@ NOTE: All your answers must be in decimal (Base 10).
 	   host id:	623
 ----
 
-.bit affordance of integers
+.bit affordance of integers (ERROR: off by one!)
 [cols=3, options="header"]
 |===
 | no.bits | top  | highest integer
