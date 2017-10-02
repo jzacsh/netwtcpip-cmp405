@@ -2,7 +2,9 @@
 // address, per IP v4, including addresses using CIDR.
 package parseip4
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Octets represents all 4 octets of an address, in as single unsigned integer.
 // To produce a sensible Octets value, see OctsList.Pack().
@@ -74,6 +76,17 @@ func CountOnes(o Octets) uint {
 		n += 1 & (uint(o) >> i)
 	}
 	return n
+}
+
+// CountBitSize counts how much of 32 bit address space is utilized `o`.
+func CountBitSize(o Octets) uint {
+	var i uint = 0
+	for ; i < 32; i++ {
+		if ((1 << 31) & (o << i)) != 0 {
+			break
+		}
+	}
+	return 32 - i
 }
 
 // NetworkIndex determines what the integer index of an address's network number
