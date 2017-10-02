@@ -78,13 +78,17 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 
 	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - opt.MinSubnetBits))
 
-	// TODO opt.Address.Mask
 	mask := parseip4.Octets(0xFFFFFFFF)
 	mask <<= (32 - opt.MinSubnetBits)
 	opt.Address.Mask = mask.List()
 
-	// TODO opt.Address.IP
-	ip := parseip4.Octets(0xFFFFFFFF)
+	_, classCidrOffset, _ := parseip4.Classful(s.ClassfulContext)
+	subnetBitCount := parseip4.CountBitSize(s.SubnetIndex)
+	hostBitAddrSpace := 32 - classCidrOffset - subnetBitCount
+
+	ip := s.ClassfulContext.Pack() |
+		parseip4.Octets(s.SubnetIndex<<hostBitAddrSpace) |
+		s.HostIndex
 	opt.Address.IP = ip.List()
 
 	return opt
@@ -102,7 +106,7 @@ func main() {
 			sol.Address.String())
 	}
 
-	fmt.Printf("\n\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
+	fmt.Printf("\npart 2: analyzing %d hosts ...\n", len(partTwoHosts))
 	for _, addr := range partTwoHosts {
 		classMask, _, klass := parseip4.Classful(addr.IP)
 
