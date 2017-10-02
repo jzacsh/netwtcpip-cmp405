@@ -67,6 +67,7 @@ func maxIntWithBits(nbits uint) uint32 {
 
 func (s *subnetRequisites) FindSolution() OptimalSubnet {
 	opt := OptimalSubnet{}
+	_, classCidrOffset, _ := parseip4.Classful(s.ClassfulContext)
 
 	// Brute force solve for Ceil(log2(s.MaxSubnets))
 	for {
@@ -76,13 +77,12 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 		opt.MinSubnetBits++
 	}
 
-	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - opt.MinSubnetBits))
+	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - classCidrOffset - opt.MinSubnetBits))
 
 	mask := parseip4.Octets(0xFFFFFFFF)
 	mask <<= (32 - opt.MinSubnetBits)
 	opt.Address.Mask = mask.List()
 
-	_, classCidrOffset, _ := parseip4.Classful(s.ClassfulContext)
 	subnetBitCount := parseip4.CountBitSize(s.SubnetIndex)
 	hostBitAddrSpace := 32 - classCidrOffset - subnetBitCount
 
