@@ -9,43 +9,43 @@ part 1: analyzing 10 hosts ...
   given: max subnets: 55, subnet index: 51, host index: 121
 	min # of subnet bits: 6
 	max # hosts per subnet: 1022
-	address: 128.10.204.121/252.0.0.0
+	address: 128.10.204.121/255.255.252.0
   given: max subnets: 55, subnet index: 42, host index: 867
 	min # of subnet bits: 6
 	max # hosts per subnet: 1022
-	address: 128.10.171.99/252.0.0.0
+	address: 128.10.171.99/255.255.252.0
   given: max subnets: 121, subnet index: 115, host index: 246
 	min # of subnet bits: 7
 	max # hosts per subnet: 510
-	address: 128.10.230.246/254.0.0.0
+	address: 128.10.230.246/255.255.254.0
   given: max subnets: 121, subnet index: 97, host index: 443
 	min # of subnet bits: 7
 	max # hosts per subnet: 510
-	address: 128.10.195.187/254.0.0.0
+	address: 128.10.195.187/255.255.254.0
   given: max subnets: 26, subnet index: 19, host index: 237
 	min # of subnet bits: 5
 	max # hosts per subnet: 2046
-	address: 128.10.152.237/248.0.0.0
+	address: 128.10.152.237/255.255.248.0
   given: max subnets: 26, subnet index: 25, host index: 1397
 	min # of subnet bits: 5
 	max # hosts per subnet: 2046
-	address: 128.10.205.117/248.0.0.0
+	address: 128.10.205.117/255.255.248.0
   given: max subnets: 261, subnet index: 227, host index: 86
 	min # of subnet bits: 9
 	max # hosts per subnet: 126
-	address: 128.10.227.86/255.128.0.0
+	address: 128.10.227.86/255.255.255.128
   given: max subnets: 261, subnet index: 259, host index: 49
 	min # of subnet bits: 9
 	max # hosts per subnet: 126
-	address: 128.10.129.177/255.128.0.0
+	address: 128.10.129.177/255.255.255.128
   given: max subnets: 529, subnet index: 519, host index: 33
 	min # of subnet bits: 10
 	max # hosts per subnet: 62
-	address: 128.10.129.225/255.192.0.0
+	address: 128.10.129.225/255.255.255.192
   given: max subnets: 529, subnet index: 510, host index: 59
 	min # of subnet bits: 10
 	max # hosts per subnet: 62
-	address: 128.10.255.59/255.192.0.0
+	address: 128.10.255.59/255.255.255.192
 ----
 
 [[badattempt]]
