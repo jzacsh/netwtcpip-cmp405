@@ -89,10 +89,10 @@ func (s *subnetRequisites) FindSolution() OptimalSubnet {
 		opt.MinSubnetBits++
 	}
 
-	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(32 - classCidrOffset - opt.MinSubnetBits))
+	totalmaskSize := 32 - classCidrOffset - opt.MinSubnetBits
+	opt.MaxHostsPerSubnet = parseip4.Octets(maxIntWithBits(totalmaskSize))
 
-	mask := parseip4.Octets(0xFFFFFFFF)
-	mask <<= (32 - opt.MinSubnetBits)
+	mask := parseip4.Octets(0xFFFFFFFF) << totalmaskSize
 	opt.Address.Mask = mask.List()
 
 	subnetBitCount := parseip4.CountBitSize(s.SubnetIndex)
