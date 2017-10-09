@@ -1,0 +1,52 @@
+= hw6
+:hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
+
+<<hw6instruct, below>> is a dump of {hw6url}[homework 6 instructions] as of
+2017-10-08 21:17:40-04:00.
+
+[[hw6instruct]]
+.homework 6 instructions
+----
+                                  Homework 6
+
+                       CMP 405: Introduction To Networks
+                  Lehman College, City University of New York
+                                   Fall 2017
+
+This Homework Is Due By 11:59 PM on Monday October 30, 2017
+
+For this assignment you will be extending what you learned about socket
+programming in Datagram Socket Demo
+
+You will be implementing a text messaging application. You will have a seperate
+window for each person you are communicating with. The window will have as a
+title the IP address and port number of the person you are messaging with.
+
+You will have a main window that allows you to initiate messaging sessions with
+other people based on their IP address and port number. Once you initiate a new
+messaging session, you will create a new window for that session. This window
+should also have a button to exit the program.
+
+You will still have the receiving Thread which will handle all the incoming
+messages. However, your code will also keep track of the source IP addresses
+and port number along with the window containing that messaging session. If the
+source IP address and port number combination is a new one, you will have to
+open a new messaging window. Otherwise, the incoming message will be displayed
+in the existing window for that source IP address.
+
+Each window will have the following components:
+
+ 1. The title of the window should be the IP address and port number of the
+    other side of the messaging session.
+ 2. A section to display the messaging interaction. This window should contain
+    the messages from both you and the person you are messaging with.
+ 3. A section for you to type your reply.
+ 4. A button to send your reply.
+ 5. A button the close and end the messaging session.
+
+Please submit your programs in a ZIP file containing all your java programs.
+
+Please do not use packages for your project.
+
+Submit your ZIP file on Blackboard to Homework 6
+----
