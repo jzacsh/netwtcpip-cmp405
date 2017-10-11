@@ -1,0 +1,7 @@
+= SendReceive Project Usage
+
+.sample run
+----
+$ make bin/SendReceiveSocket.class
+$ java -classpath bin SendReceiveSocket
+----
