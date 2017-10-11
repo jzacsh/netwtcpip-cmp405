@@ -94,14 +94,20 @@ public class SendReceiveSocket {
     String prefix = "Message number ";
     byte[] buffer = new byte[100];
 
-    for ( int i = 1 ; i <= 10 ; i++ ) {
-      String message = prefix + i;
+//  for ( int i = 1 ; i <= 10 ; i++ ) { // TODO remove this
+      String message = "jon zacsh here\n";
       buffer = message.getBytes();
 
       try {
+        byte[] octs = new byte[4];
+        octs[0] = (byte)192;
+        octs[1] = (byte)168;
+        octs[2] = (byte)1;
+        octs[3] = (byte)112;
+        InetAddress fakhouri = InetAddress.getByAddress(octs);
         DatagramPacket packet = new DatagramPacket(buffer,
            message.length(),
-           myAddress,
+           fakhouri,
            64000);
 
         System.out.println("Sending message = " + message);
@@ -111,7 +117,7 @@ public class SendReceiveSocket {
         e.printStackTrace();
         System.exit(-1);
       }
-    }
+//  }
 
     try {
       TimeUnit.MINUTES.sleep(1);
