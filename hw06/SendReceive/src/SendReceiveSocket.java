@@ -58,7 +58,7 @@ public class SendReceiveSocket {
 }
 
 class SendClient {
-  private static final String LOG_TAG = "recv'r";
+  private static final String LOG_TAG = "sender";
   private static final String senderUXInstruction =
       "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
 
