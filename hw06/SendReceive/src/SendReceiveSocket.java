@@ -5,6 +5,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.lang.InterruptedException;
 
 public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
@@ -54,6 +55,15 @@ public class SendReceiveSocket {
     System.out.printf("[setup] listener & sender setups complete.\n\n");
     RecvClient receiver = new RecvClient(inSocket).report().listenInThread();
     new SendClient(destIP, destPort, outSock).report().sendMessagePerLine(new Scanner(System.in));
+
+    // TODO(zacsh) figure out why two [enter]s fail to stop thread, but an error sending *out* on
+    // socket succeeds
+    System.out.printf("\n\n[dbg] tried stopping thread....\n");
+    try {
+      receiver.stop().join();
+    } catch(InterruptedException e) {
+      System.err.printf("problem stopping receiver: %s\n", e);
+    }
   }
 }
 
@@ -93,7 +103,7 @@ class SendClient {
       if (message.length() == 0) {
         if (isPrevEmpty) {
           System.out.printf("[%s] caught two empty messages, exiting.... ", LOG_TAG);
-          break;
+          return;
         }
         isPrevEmpty = true;
         System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
@@ -118,21 +128,32 @@ class SendClient {
 class RecvClient implements Runnable {
   private static final String LOG_TAG = "recv'r";
 
+  boolean stopped = false;
+  Thread running = null;
   DatagramSocket inSock = null;
   public RecvClient(DatagramSocket inSocket) {
     this.inSock = inSocket;
   }
 
-  public void listenInThread() {
-    Thread recvrThred = new Thread(this);
-    recvrThred.setName("Receive Thread");
-    recvrThred.start();
-  }
   public RecvClient report() {
     System.out.printf(
         "[%s] READY to spawn thread, consuming from socket %s\n",
         LOG_TAG, this.inSock.getLocalSocketAddress());
     return this;
+  }
+
+  public RecvClient listenInThread() {
+    System.out.printf("[%s] spawning receiver thread... ", LOG_TAG);
+    this.running = new Thread(this);
+    this.running.setName("Receive Thread");
+    this.running.start();
+    System.out.printf("Done.\n");
+    return this;
+  }
+
+  public Thread stop() {
+    this.stopped = true;
+    return this.running;
   }
 
   /** blocking receiver that accepts packets on inSocket. */
@@ -142,6 +163,10 @@ class RecvClient implements Runnable {
 
     int receiptIndex = 0;
     while (true) {
+      if (stopped) {
+        return;
+      }
+
       for (int i = 0; i < inBuffer.length; ++i) {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
