@@ -1,5 +1,7 @@
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
