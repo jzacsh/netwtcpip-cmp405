@@ -1,4 +1,3 @@
-
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -11,37 +10,6 @@ public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
   private static final int outSourcePort = 63000;
 
-  private static final String senderUXInstruction =
-      "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
-
-  /** blocking receiver that accepts packets on inSocket. */
-  public static void receivePacketsSync(DatagramSocket inSocket) {
-    byte[] inBuffer = new byte[100];
-    DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
-
-    int receiptIndex = 0;
-    while (true) {
-      for ( int i = 0 ; i < inBuffer.length ; i++ ) {
-        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
-      }
-
-      System.out.println("[recv'r] waiting for input...");
-      try {
-        inSocket.receive(inPacket);
-      } catch (Exception e) {
-        e.printStackTrace();
-        System.exit(-1);
-      }
-      receiptIndex++;
-
-      System.out.printf(
-          "[recv'r] received #%03d: %s\n%s\n%s\n",
-          receiptIndex, "\"\"\"", "\"\"\"",
-          new String(inPacket.getData()));
-
-    }
-  }
-
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
    */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
@@ -49,14 +17,14 @@ public class SendReceiveSocket {
       final InetAddress host,
       final int port,
       final String failMessage) {
-    DatagramSocket outSocket = null;
+    DatagramSocket sock = null;
     try {
-      outSocket = new DatagramSocket(port, host);
+      sock = new DatagramSocket(port, host);
     } catch (SocketException e) {
       System.err.printf(failMessage, port, host, e);
       System.exit(1);
     }
-    return outSocket;
+    return sock;
   }
 
   private static final int mustParsePort(String portRaw, String label) {
@@ -110,42 +78,51 @@ public class SendReceiveSocket {
       System.exit(1);
     }
 
+    final DatagramSocket outSock = mustOpenSocket(
+        receiptHost, outSourcePort,
+        "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
+
     final DatagramSocket inSocket = mustOpenSocket(
         receiptHost, receiptPort,
         "[setup] failed opening receiving socket on %s:%d: %s\n");
     System.out.printf("[setup] successfully resolved current host as: %s\n", receiptHost);
 
-    Thread receiveThread = new Thread(new Runnable () {
-      public void run() {
-        receivePacketsSync(inSocket);
-      }
-    });
-    receiveThread.setName("Receive Thread");
-    receiveThread.start();
-
-    final DatagramSocket outSocket = mustOpenSocket(
-        receiptHost, outSourcePort,
-        "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
-
     System.out.printf("[setup] listener & sender setups complete.\n\n");
+    new RecvClient(inSocket).listenInThread();
+    new SendClient(destIP, destPort, outSock).sendMessagePerLine(new Scanner(System.in));
+  }
+}
 
+class SendClient {
+  private static final String LOG_TAG = "recv'r";
+  private static final String senderUXInstruction =
+      "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
 
-    System.out.printf("[sender] usage instructions:\n%s", senderUXInstruction);
+  private InetAddress destIP;
+  private int destPort;
+  private DatagramSocket socket = null;
+  public SendClient(final InetAddress destIP, final int destPort, DatagramSocket outSock) {
+    this.destIP = destIP;
+    this.destPort = destPort;
+    this.socket = outSock;
+  }
+
+  public void sendMessagePerLine(Scanner ui) {
+    System.out.printf("[%s] usage instructions:\n%s", LOG_TAG, senderUXInstruction);
     boolean isPrevEmpty = false;
     String message;
     byte[] buffer = new byte[100];
     int msgIndex = 0;
-    Scanner scnr = new Scanner(System.in);
     while (true) {
-      message = scnr.nextLine().trim();
+      message = ui.nextLine().trim();
       if (message.length() == 0) {
         if (isPrevEmpty) {
-          System.out.printf("[sender] caught two empty messages, exiting....\n");
+          System.out.printf("[%s] caught two empty messages, exiting....\n", LOG_TAG);
           break;
         }
 
         isPrevEmpty = true;
-        System.out.printf("[sender] press enter again to exit normally.\n");
+        System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
       }
       msgIndex++;
 
@@ -154,13 +131,55 @@ public class SendReceiveSocket {
           buffer, message.length(),
           destIP, destPort);
 
-      System.out.printf("[sender] sending message #%03d: '%s'\n", msgIndex, message);
+      System.out.printf("[%s] sending message #%03d: '%s'\n", LOG_TAG, msgIndex, message);
       try {
-        outSocket.send(packet);
+        this.socket.send(packet);
       } catch (Exception e) {
-        System.err.printf("[sender] failed sending '%s':\n%s\n", message, e);
+        System.err.printf("[%s] failed sending '%s':\n%s\n", LOG_TAG, message, e);
         System.exit(1);
       }
+    }
+  }
+}
+
+class RecvClient implements Runnable {
+  private static final String LOG_TAG = "recv'r";
+
+  DatagramSocket inSock = null;
+  public RecvClient(DatagramSocket inSocket) {
+    this.inSock = inSocket;
+  }
+
+  public void listenInThread() {
+    Thread recvrThred = new Thread(this);
+    recvrThred.setName("Receive Thread");
+    recvrThred.start();
+  }
+
+  /** blocking receiver that accepts packets on inSocket. */
+  public void run() {
+    byte[] inBuffer = new byte[100];
+    DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
+
+    int receiptIndex = 0;
+    while (true) {
+      for ( int i = 0 ; i < inBuffer.length ; i++ ) {
+        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
+      }
+
+      System.out.printf("[%s] waiting for input...\n", LOG_TAG);
+      try {
+        this.inSock.receive(inPacket);
+      } catch (Exception e) {
+        System.err.printf("[%s] failed receiving packet %03d: %s\n", LOG_TAG, receiptIndex+1, e);
+        System.exit(1);
+      }
+      receiptIndex++;
+
+      System.out.printf(
+          "[%s] received #%03d: %s\n%s\n%s\n",
+          LOG_TAG, receiptIndex, "\"\"\"", "\"\"\"",
+          new String(inPacket.getData()));
     }
   }
 }

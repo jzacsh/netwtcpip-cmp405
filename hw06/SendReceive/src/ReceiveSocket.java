@@ -5,7 +5,6 @@ public class ReceiveSocket {
   private static InetAddress myAddress = null;
 
   public static void main(String[] args) {
-
     try {
       myAddress = InetAddress.getLocalHost();
     } catch (Exception e) {
