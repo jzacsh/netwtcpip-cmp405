@@ -95,6 +95,7 @@ class SendClient {
       if (message.length() == 0) {
         if (isPrevEmpty) {
           System.out.printf("[%s] caught two empty messages, exiting.... ", LOG_TAG);
+          ui.close();
           return;
         }
         isPrevEmpty = true;
