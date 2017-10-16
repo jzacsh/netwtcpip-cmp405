@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit;
 import java.lang.InterruptedException;
 
 public class SendReceiveSocket {
-  private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
+  private static final String usageDoc = "RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT";
   private static final int outSourcePort = 63000;
 
   public static void main(String[] args) {
-    final int expectedArgs = 3;
+    final int expectedArgs = 4;
     if (args.length != expectedArgs) {
       System.err.printf(
           "Error: got %d argument(s), but expected %d...\nusage: %s\n",
@@ -20,41 +20,33 @@ public class SendReceiveSocket {
       System.exit(1);
     }
 
-    final int receiptPort = BrittleNetwork.mustParsePort(args[0], "RECEIPT_PORT");
-    final String destHostName = args[1].trim();
-    final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
+    final String receiptHost = args[0].trim();
+    final int receiptPort = BrittleNetwork.mustParsePort(args[1], "RECEIPT_PORT");
+    final String destHostName = args[2].trim();
+    final int destPort = BrittleNetwork.mustParsePort(args[3], "DEST_PORT");
 
 
-    InetAddress destIP = null;
-    try {
-      destIP = InetAddress.getByName(destHostName);
-    } catch (UnknownHostException e) {
-      System.out.printf("[setup] failed resolving destination host '%s': %s\n", destHostName, e);
-      System.exit(1);
-    }
-    System.out.printf("[setup] successfully resolved DESTINATION_HOST: %s\n", destIP);
+    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
+        destHostName, "[setup] failed resolving destination host '%s': %s\n");
 
-
-    InetAddress receiptHost = null;
-    try {
-      receiptHost = InetAddress.getLocalHost();
-    } catch (UnknownHostException e) {
-      System.out.printf("[setup] failed finding current host address: %s\n", e);
-      System.exit(1);
-    }
+    final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
+        "localhost", "[setup] failed finding %s address: %s\n");
 
     final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
-        receiptHost, outSourcePort,
+        receiptAddr, outSourcePort,
         "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
 
     final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
-        receiptHost, receiptPort,
-        "[setup] failed opening receiving socket on %s:%d: %s\n");
-    System.out.printf("[setup] successfully resolved current host as: %s\n", receiptHost);
+        receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
 
     System.out.printf("[setup] listener & sender setups complete.\n\n");
-    RecvClient receiver = new RecvClient(inSocket).report().listenInThread();
-    new SendClient(destIP, destPort, outSock).report().sendMessagePerLine(new Scanner(System.in));
+
+    RecvClient receiver = new RecvClient(inSocket)
+        .report(receiptAddr.toString())
+        .listenInThread();
+    new SendClient(destAddr, destPort, outSock)
+        .report()
+        .sendMessagePerLine(new Scanner(System.in));
 
     // TODO(zacsh) figure out why two [enter]s fail to stop thread, but an error sending *out* on
     // socket succeeds
@@ -135,10 +127,10 @@ class RecvClient implements Runnable {
     this.inSock = inSocket;
   }
 
-  public RecvClient report() {
+  public RecvClient report(String hostName) {
     System.out.printf(
-        "[%s] READY to spawn thread, consuming from socket %s\n",
-        LOG_TAG, this.inSock.getLocalSocketAddress());
+        "[%s] READY to spawn thread on %s, consuming from socket %s\n",
+        LOG_TAG, hostName, this.inSock.getLocalSocketAddress());
     return this;
   }
 
@@ -224,5 +216,21 @@ class BrittleNetwork {
     }
 
     return port;
+  }
+
+  /**
+   * failMessage should accept a hostname(%s), and error (%s).
+   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
+  public static final InetAddress mustResolveHostName(
+      final String hostName,
+      final String failMessage) {
+    InetAddress addr = null;
+    try {
+      addr = InetAddress.getByName(hostName);
+    } catch (UnknownHostException e) {
+      System.err.printf(failMessage, hostName, e);
+      System.exit(1);
+    }
+    return addr;
   }
 }
