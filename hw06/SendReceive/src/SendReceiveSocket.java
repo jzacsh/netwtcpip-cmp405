@@ -72,10 +72,12 @@ class SendClient {
   }
 
   public void sendMessagePerLine(Scanner ui) {
-    System.out.printf("[%s] usage instructions:\n%s", LOG_TAG, senderUXInstruction);
-    boolean isPrevEmpty = false;
+    DatagramPacket packet;
     String message;
     byte[] buffer = new byte[100];
+
+    System.out.printf("[%s] usage instructions:\n%s", LOG_TAG, senderUXInstruction);
+    boolean isPrevEmpty = false;
     int msgIndex = 0;
     while (true) {
       message = ui.nextLine().trim();
@@ -84,16 +86,13 @@ class SendClient {
           System.out.printf("[%s] caught two empty messages, exiting....\n", LOG_TAG);
           break;
         }
-
         isPrevEmpty = true;
         System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
       }
       msgIndex++;
 
       buffer = message.getBytes();
-      DatagramPacket packet = new DatagramPacket(
-          buffer, message.length(),
-          destIP, destPort);
+      packet = new DatagramPacket(buffer, message.length(), destIP, destPort);
 
       System.out.printf("[%s] sending message #%03d: '%s'\n", LOG_TAG, msgIndex, message);
       try {
