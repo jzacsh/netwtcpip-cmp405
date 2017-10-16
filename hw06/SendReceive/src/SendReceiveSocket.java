@@ -2,137 +2,165 @@
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class SendReceiveSocket {
-  private static final String usageDoc = "DESTINATION_HOST DEST_PORT";
+  private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
+  private static final int outSourcePort = 63000;
 
-  private static InetAddress myAddress = null;
+  private static final String senderUXInstruction =
+      "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
 
-  public static void receiveMethod() {
-
-    DatagramSocket inSocket = null;
+  /** blocking receiver that accepts packets on inSocket. */
+  public static void receivePacketsSync(DatagramSocket inSocket) {
     byte[] inBuffer = new byte[100];
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
 
-
-    try {
-      inSocket = new DatagramSocket(64000, myAddress);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(-1);
-    }
-
-    do {
+    int receiptIndex = 0;
+    while (true) {
       for ( int i = 0 ; i < inBuffer.length ; i++ ) {
-        inBuffer[i] = ' ';
+        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
 
+      System.out.println("[recv'r] waiting for input...");
       try {
-        // this thread will block in the receive call
-        // until a message is received
-        System.out.println("Waiting for input...");
         inSocket.receive(inPacket);
       } catch (Exception e) {
         e.printStackTrace();
         System.exit(-1);
       }
+      receiptIndex++;
 
-      String message = new String(inPacket.getData());
-      System.out.println("Received message = " + message);
+      System.out.printf(
+          "[recv'r] received #%03d: %s\n%s\n%s\n",
+          receiptIndex, "\"\"\"", "\"\"\"",
+          new String(inPacket.getData()));
 
-    } while(true);
+    }
+  }
+
+  /**
+   * failMessage should accept a host(%s), port (%d), and error (%s).
+   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
+  private static final DatagramSocket mustOpenSocket(
+      final InetAddress host,
+      final int port,
+      final String failMessage) {
+    DatagramSocket outSocket = null;
+    try {
+      outSocket = new DatagramSocket(port, host);
+    } catch (SocketException e) {
+      System.err.printf(failMessage, port, host, e);
+      System.exit(1);
+    }
+    return outSocket;
+  }
+
+  private static final int mustParsePort(String portRaw, String label) {
+    final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
+
+    int port = -1;
+    try {
+      port = Integer.parseInt(portRaw.trim());
+    } catch (NumberFormatException e) {
+      System.err.printf(errContext + ", but got: %s\n", e);
+      System.exit(1);
+    }
+
+    if (port < 0 || port > 0xFFFF) {
+      System.err.printf(errContext + ", but got %d\n", port);
+      System.exit(1);
+    }
+
+    return port;
   }
 
   public static void main(String[] args) {
-    if (args.length != 2) {
+    final int expectedArgs = 3;
+    if (args.length != expectedArgs) {
       System.err.printf(
-          "Error: got %d argument(s), but expected 2:\nusage: %s\n",
-          args.length, usageDoc);
+          "Error: got %d argument(s), but expected %d...\nusage: %s\n",
+          args.length, expectedArgs, usageDoc);
       System.exit(1);
     }
 
-    final String destHostName = args[0];
-    final int destPort = Integer.parseInt(args[1]); // eg: 64000
-    if (destPort < 0 || destPort > 0xFFFF) {
-      System.err.printf("DEST_PORT must be an unsigned 2-byte integer; got %d\n", destPort);
-      System.exit(1);
-    }
+    final int receiptPort = mustParsePort(args[0], "RECEIPT_PORT");
+    final String destHostName = args[1].trim();
+    final int destPort = mustParsePort(args[2], "DEST_PORT");
 
 
     InetAddress destIP = null;
     try {
       destIP = InetAddress.getByName(destHostName);
     } catch (UnknownHostException e) {
-      System.out.printf("failed to find host at, '%s'\n%s\n", destHostName, e);
+      System.out.printf("[setup] failed resolving destination host '%s': %s\n", destHostName, e);
       System.exit(1);
     }
-    System.out.printf("successfully resolved DESTINATION_HOST: %s\n", destIP);
+    System.out.printf("[setup] successfully resolved DESTINATION_HOST: %s\n", destIP);
 
 
+    InetAddress receiptHost = null;
     try {
-      myAddress = InetAddress.getLocalHost();
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(-1);
+      receiptHost = InetAddress.getLocalHost();
+    } catch (UnknownHostException e) {
+      System.out.printf("[setup] failed finding current host address: %s\n", e);
+      System.exit(1);
     }
 
-    System.out.println("My Address = " + myAddress.getHostAddress());
-
-    DatagramSocket outSocket = null;
-
-    try {
-      outSocket = new DatagramSocket(63000, myAddress);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(-1);
-    }
+    final DatagramSocket inSocket = mustOpenSocket(
+        receiptHost, receiptPort,
+        "[setup] failed opening receiving socket on %s:%d: %s\n");
+    System.out.printf("[setup] successfully resolved current host as: %s\n", receiptHost);
 
     Thread receiveThread = new Thread(new Runnable () {
       public void run() {
-        receiveMethod();
+        receivePacketsSync(inSocket);
       }
     });
     receiveThread.setName("Receive Thread");
     receiveThread.start();
 
-    Scanner scnr = new Scanner(System.in);
-    System.out.println("Start Sending? Press Enter...");
-    scnr.nextLine();
-    scnr.close();
+    final DatagramSocket outSocket = mustOpenSocket(
+        receiptHost, outSourcePort,
+        "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
 
-    String prefix = "Message number ";
+    System.out.printf("[setup] listener & sender setups complete.\n\n");
+
+
+    System.out.printf("[sender] usage instructions:\n%s", senderUXInstruction);
+    boolean isPrevEmpty = false;
+    String message;
     byte[] buffer = new byte[100];
+    int msgIndex = 0;
+    Scanner scnr = new Scanner(System.in);
+    while (true) {
+      message = scnr.nextLine().trim();
+      if (message.length() == 0) {
+        if (isPrevEmpty) {
+          System.out.printf("[sender] caught two empty messages, exiting....\n");
+          break;
+        }
 
-//  for ( int i = 1 ; i <= 10 ; i++ ) { // TODO remove this
-      String message = "jon zacsh here\n";
-      buffer = message.getBytes();
-
-      try {
-        DatagramPacket packet = new DatagramPacket(buffer,
-           message.length(),
-           destIP,
-           destPort);
-
-        System.out.println("Sending message = " + message);
-        outSocket.send(packet);
-        TimeUnit.SECONDS.sleep(5);
-      } catch (Exception e) {
-        e.printStackTrace();
-        System.exit(-1);
+        isPrevEmpty = true;
+        System.out.printf("[sender] press enter again to exit normally.\n");
       }
-//  }
+      msgIndex++;
 
-    try {
-      TimeUnit.MINUTES.sleep(1);
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.exit(-1);
+      buffer = message.getBytes();
+      DatagramPacket packet = new DatagramPacket(
+          buffer, message.length(),
+          destIP, destPort);
+
+      System.out.printf("[sender] sending message #%03d: '%s'\n", msgIndex, message);
+      try {
+        outSocket.send(packet);
+      } catch (Exception e) {
+        System.err.printf("[sender] failed sending '%s':\n%s\n", message, e);
+        System.exit(1);
+      }
     }
-
-    System.out.println("Main method exiting.... Bye Bye....");
-    System.exit(0);
   }
 }
