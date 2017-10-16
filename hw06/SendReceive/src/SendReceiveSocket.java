@@ -88,6 +88,7 @@ class SendClient {
         }
         isPrevEmpty = true;
         System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
+        continue;
       }
       msgIndex++;
 
