@@ -83,7 +83,7 @@ class SendClient {
       message = ui.nextLine().trim();
       if (message.length() == 0) {
         if (isPrevEmpty) {
-          System.out.printf("[%s] caught two empty messages, exiting....\n", LOG_TAG);
+          System.out.printf("[%s] caught two empty messages, exiting.... ", LOG_TAG);
           break;
         }
         isPrevEmpty = true;
