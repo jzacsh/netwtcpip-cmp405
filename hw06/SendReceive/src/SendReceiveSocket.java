@@ -49,6 +49,7 @@ public class SendReceiveSocket {
     SendClient sender = new SendClient(destAddr, destPort, outSock).report();
     boolean wasSendOk = sender.sendMessagePerLine(new Scanner(System.in));
 
+    System.out.printf("\n...cleaning up\n");
     try {
       receiver.stop().join(RecvClient.SOCKET_WAIT_MILLIS * 2 /*millis*/);
     } catch(InterruptedException e) {
