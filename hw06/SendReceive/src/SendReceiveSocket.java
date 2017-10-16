@@ -52,8 +52,8 @@ public class SendReceiveSocket {
     System.out.printf("[setup] successfully resolved current host as: %s\n", receiptHost);
 
     System.out.printf("[setup] listener & sender setups complete.\n\n");
-    new RecvClient(inSocket).listenInThread();
-    new SendClient(destIP, destPort, outSock).sendMessagePerLine(new Scanner(System.in));
+    RecvClient receiver = new RecvClient(inSocket).report().listenInThread();
+    new SendClient(destIP, destPort, outSock).report().sendMessagePerLine(new Scanner(System.in));
   }
 }
 
@@ -69,6 +69,15 @@ class SendClient {
     this.destIP = destIP;
     this.destPort = destPort;
     this.socket = outSock;
+  }
+
+  public SendClient report() {
+    System.out.printf(
+        "[%s] READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n", LOG_TAG,
+        this.destIP,
+        this.destPort,
+        this.socket.getLocalSocketAddress());
+    return this;
   }
 
   public void sendMessagePerLine(Scanner ui) {
@@ -119,6 +128,12 @@ class RecvClient implements Runnable {
     recvrThred.setName("Receive Thread");
     recvrThred.start();
   }
+  public RecvClient report() {
+    System.out.printf(
+        "[%s] READY to spawn thread, consuming from socket %s\n",
+        LOG_TAG, this.inSock.getLocalSocketAddress());
+    return this;
+  }
 
   /** blocking receiver that accepts packets on inSocket. */
   public void run() {
@@ -127,21 +142,21 @@ class RecvClient implements Runnable {
 
     int receiptIndex = 0;
     while (true) {
-      for ( int i = 0 ; i < inBuffer.length ; i++ ) {
+      for (int i = 0; i < inBuffer.length; ++i) {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
 
-      System.out.printf("[%s] waiting for input...\n", LOG_TAG);
+      System.out.printf("[%s:thread] waiting for input...\n", LOG_TAG);
       try {
         this.inSock.receive(inPacket);
       } catch (Exception e) {
-        System.err.printf("[%s] failed receiving packet %03d: %s\n", LOG_TAG, receiptIndex+1, e);
+        System.err.printf("[%s:thread] failed receiving packet %03d: %s\n", LOG_TAG, receiptIndex+1, e);
         System.exit(1);
       }
       receiptIndex++;
 
       System.out.printf(
-          "[%s] received #%03d: %s\n%s\n%s\n",
+          "[%s:thread] received #%03d: %s\n%s\n%s\n",
           LOG_TAG, receiptIndex, "\"\"\"", "\"\"\"",
           new String(inPacket.getData()));
     }
