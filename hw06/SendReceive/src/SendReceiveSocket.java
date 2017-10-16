@@ -2,10 +2,13 @@
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class SendReceiveSocket {
+  private static final String usageDoc = "DESTINATION_HOST DEST_PORT";
+
   private static InetAddress myAddress = null;
 
   public static void receiveMethod() {
@@ -43,24 +46,31 @@ public class SendReceiveSocket {
     } while(true);
   }
 
-
-
-
-
   public static void main(String[] args) {
-
-    /*
-    InetAddress appleAddress = null;
-
-    try {
-    appleAddress = InetAddress.getByName("apple.com");
-    } catch (Exception e) {
-    e.printStackTrace();
-    System.exit(-1);
+    if (args.length != 2) {
+      System.err.printf(
+          "Error: got %d argument(s), but expected 2:\nusage: %s\n",
+          args.length, usageDoc);
+      System.exit(1);
     }
 
-    System.out.println("Apple Address = " + appleAddress.getHostAddress());
-    */
+    final String destHostName = args[0];
+    final int destPort = Integer.parseInt(args[1]); // eg: 64000
+    if (destPort < 0 || destPort > 0xFFFF) {
+      System.err.printf("DEST_PORT must be an unsigned 2-byte integer; got %d\n", destPort);
+      System.exit(1);
+    }
+
+
+    InetAddress destIP = null;
+    try {
+      destIP = InetAddress.getByName(destHostName);
+    } catch (UnknownHostException e) {
+      System.out.printf("failed to find host at, '%s'\n%s\n", destHostName, e);
+      System.exit(1);
+    }
+    System.out.printf("successfully resolved DESTINATION_HOST: %s\n", destIP);
+
 
     try {
       myAddress = InetAddress.getLocalHost();
@@ -101,16 +111,10 @@ public class SendReceiveSocket {
       buffer = message.getBytes();
 
       try {
-        byte[] octs = new byte[4];
-        octs[0] = (byte)192;
-        octs[1] = (byte)168;
-        octs[2] = (byte)1;
-        octs[3] = (byte)112;
-        InetAddress fakhouri = InetAddress.getByAddress(octs);
         DatagramPacket packet = new DatagramPacket(buffer,
            message.length(),
-           fakhouri,
-           64000);
+           destIP,
+           destPort);
 
         System.out.println("Sending message = " + message);
         outSocket.send(packet);
