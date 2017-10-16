@@ -2,6 +2,7 @@ import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -44,17 +45,18 @@ public class SendReceiveSocket {
     RecvClient receiver = new RecvClient(inSocket)
         .report(receiptAddr.toString())
         .listenInThread();
-    new SendClient(destAddr, destPort, outSock)
-        .report()
-        .sendMessagePerLine(new Scanner(System.in));
 
-    // TODO(zacsh) figure out why two [enter]s fail to stop thread, but an error sending *out* on
-    // socket succeeds
-    System.out.printf("\n\n[dbg] tried stopping thread....\n");
+    SendClient sender = new SendClient(destAddr, destPort, outSock).report();
+    boolean wasSendOk = sender.sendMessagePerLine(new Scanner(System.in));
+
     try {
-      receiver.stop().join();
+      receiver.stop().join(RecvClient.SOCKET_WAIT_MILLIS * 2 /*millis*/);
     } catch(InterruptedException e) {
       System.err.printf("problem stopping receiver: %s\n", e);
+    }
+
+    if (!wasSendOk) {
+      System.exit(1);
     }
   }
 }
@@ -82,12 +84,13 @@ class SendClient {
     return this;
   }
 
-  public void sendMessagePerLine(Scanner ui) {
+  public boolean sendMessagePerLine(Scanner ui) {
     DatagramPacket packet;
     String message;
     byte[] buffer = new byte[100];
 
     System.out.printf("[%s] usage instructions:\n%s", LOG_TAG, senderUXInstruction);
+    boolean isOk = true;
     boolean isPrevEmpty = false;
     int msgIndex = 0;
     while (true) {
@@ -95,8 +98,7 @@ class SendClient {
       if (message.length() == 0) {
         if (isPrevEmpty) {
           System.out.printf("[%s] caught two empty messages, exiting.... ", LOG_TAG);
-          ui.close();
-          return;
+          break;
         }
         isPrevEmpty = true;
         System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
@@ -112,13 +114,18 @@ class SendClient {
         this.socket.send(packet);
       } catch (Exception e) {
         System.err.printf("[%s] failed sending '%s':\n%s\n", LOG_TAG, message, e);
-        System.exit(1);
+        isOk = false;
+        break;
       }
     }
+
+    ui.close();
+    return isOk;
   }
 }
 
 class RecvClient implements Runnable {
+  public static final int SOCKET_WAIT_MILLIS = 5;
   private static final String LOG_TAG = "recv'r";
 
   boolean stopped = false;
@@ -154,6 +161,15 @@ class RecvClient implements Runnable {
     byte[] inBuffer = new byte[100];
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
 
+    try {
+      this.inSock.setSoTimeout(SOCKET_WAIT_MILLIS);
+    } catch (SocketException e) {
+      System.err.printf("[%s] failed configuring socket timeout\n", LOG_TAG);
+      this.stop();
+      return;
+    }
+
+    System.out.printf("[%s:thread] waiting for input...\n", LOG_TAG);
     int receiptIndex = 0;
     while (true) {
       if (stopped) {
@@ -164,9 +180,10 @@ class RecvClient implements Runnable {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
 
-      System.out.printf("[%s:thread] waiting for input...\n", LOG_TAG);
       try {
         this.inSock.receive(inPacket);
+      } catch (SocketTimeoutException e) {
+        continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
         System.err.printf("[%s:thread] failed receiving packet %03d: %s\n", LOG_TAG, receiptIndex+1, e);
         System.exit(1);
