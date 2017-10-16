@@ -10,42 +10,6 @@ public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
   private static final int outSourcePort = 63000;
 
-  /**
-   * failMessage should accept a host(%s), port (%d), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  private static final DatagramSocket mustOpenSocket(
-      final InetAddress host,
-      final int port,
-      final String failMessage) {
-    DatagramSocket sock = null;
-    try {
-      sock = new DatagramSocket(port, host);
-    } catch (SocketException e) {
-      System.err.printf(failMessage, port, host, e);
-      System.exit(1);
-    }
-    return sock;
-  }
-
-  private static final int mustParsePort(String portRaw, String label) {
-    final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
-
-    int port = -1;
-    try {
-      port = Integer.parseInt(portRaw.trim());
-    } catch (NumberFormatException e) {
-      System.err.printf(errContext + ", but got: %s\n", e);
-      System.exit(1);
-    }
-
-    if (port < 0 || port > 0xFFFF) {
-      System.err.printf(errContext + ", but got %d\n", port);
-      System.exit(1);
-    }
-
-    return port;
-  }
-
   public static void main(String[] args) {
     final int expectedArgs = 3;
     if (args.length != expectedArgs) {
@@ -55,9 +19,9 @@ public class SendReceiveSocket {
       System.exit(1);
     }
 
-    final int receiptPort = mustParsePort(args[0], "RECEIPT_PORT");
+    final int receiptPort = BrittleNetwork.mustParsePort(args[0], "RECEIPT_PORT");
     final String destHostName = args[1].trim();
-    final int destPort = mustParsePort(args[2], "DEST_PORT");
+    final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
 
 
     InetAddress destIP = null;
@@ -78,11 +42,11 @@ public class SendReceiveSocket {
       System.exit(1);
     }
 
-    final DatagramSocket outSock = mustOpenSocket(
+    final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
         receiptHost, outSourcePort,
         "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
 
-    final DatagramSocket inSocket = mustOpenSocket(
+    final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
         receiptHost, receiptPort,
         "[setup] failed opening receiving socket on %s:%d: %s\n");
     System.out.printf("[setup] successfully resolved current host as: %s\n", receiptHost);
@@ -181,5 +145,44 @@ class RecvClient implements Runnable {
           LOG_TAG, receiptIndex, "\"\"\"", "\"\"\"",
           new String(inPacket.getData()));
     }
+  }
+}
+
+/** Fast-failing, program-exiting, loud, tiny utils. */
+class BrittleNetwork {
+  /**
+   * failMessage should accept a host(%s), port (%d), and error (%s).
+   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
+  public static final DatagramSocket mustOpenSocket(
+      final InetAddress host,
+      final int port,
+      final String failMessage) {
+    DatagramSocket sock = null;
+    try {
+      sock = new DatagramSocket(port, host);
+    } catch (SocketException e) {
+      System.err.printf(failMessage, port, host, e);
+      System.exit(1);
+    }
+    return sock;
+  }
+
+  public static final int mustParsePort(String portRaw, String label) {
+    final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
+
+    int port = -1;
+    try {
+      port = Integer.parseInt(portRaw.trim());
+    } catch (NumberFormatException e) {
+      System.err.printf(errContext + ", but got: %s\n", e);
+      System.exit(1);
+    }
+
+    if (port < 0 || port > 0xFFFF) {
+      System.err.printf(errContext + ", but got %d\n", port);
+      System.exit(1);
+    }
+
+    return port;
   }
 }
