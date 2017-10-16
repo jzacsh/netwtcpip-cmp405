@@ -2,6 +2,22 @@
 
 .sample run
 ----
-$ make bin/SendReceiveSocket.class
+$ make all # or explicitly, the target: bin/SendReceiveSocket.class
+
 $ java -classpath bin SendReceiveSocket
+Error: got 0 argument(s), but expected 4...
+usage: RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT
+
+$ java -cp bin SendReceiveSocket localhost 3321 thepearl.lan 2228
+[setup] listener & sender setups complete.
+
+[recv'r] READY to spawn thread on localhost/127.0.0.1, consuming from socket /127.0.0.1:3321
+[recv'r] spawning receiver thread... Done.
+[recv'r:thread] waiting for input...
+[sender] READY to capture messages
+        bound for thepearl.lan/192.168.86.112 on port 2228
+        via socket: /127.0.0.1:63000
+[sender] usage instructions:
+        Type messages & [enter] to send
+        [enter] twice to exit.
 ----
