@@ -36,7 +36,6 @@ public class SendReceiveSocket {
         "localhost", "[setup] failed finding %s address: %s\n");
 
     final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
-        receiptAddr, outSourcePort,
         "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
 
     final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
@@ -262,6 +261,17 @@ class RecvClient implements Runnable {
 
 /** Fast-failing, program-exiting, loud, tiny utils. */
 class BrittleNetwork {
+  public static final DatagramSocket mustOpenSocket(final String failMessage) {
+    DatagramSocket sock = null;
+    try {
+      sock = new DatagramSocket();
+    } catch (SocketException e) {
+      System.err.printf(failMessage, "[default]", "[default]", e);
+      System.exit(1);
+    }
+    return sock;
+  }
+
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
    */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
