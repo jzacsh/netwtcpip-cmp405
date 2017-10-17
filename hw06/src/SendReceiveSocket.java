@@ -236,12 +236,13 @@ class RecvClient implements Runnable {
 
     this.log.printf("thread: waiting for input...\n");
     long receiptIndex = 0;
+    int lenLastRecvd = inBuffer.length;
     while (true) {
       if (stopped) {
         return;
       }
 
-      for (int i = 0; i < inBuffer.length; ++i) {
+      for (int i = 0; i < lenLastRecvd; ++i) {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
 
@@ -259,6 +260,7 @@ class RecvClient implements Runnable {
           "thread: received #%03d: %s\n%s\n%s\n",
           receiptIndex, "\"\"\"", "\"\"\"",
           new String(inPacket.getData()));
+      lenLastRecvd = inPacket.getLength();
     }
   }
 }
