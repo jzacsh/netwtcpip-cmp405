@@ -173,6 +173,7 @@ class SendClient {
         this.log.printf("press enter again to exit normally.\n");
         continue;
       }
+      isPrevEmpty = false;
       msgIndex++;
 
       packet = new DatagramPacket(message.getBytes(), message.length(), destIP, destPort);
