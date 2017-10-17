@@ -13,7 +13,6 @@ import java.io.PrintWriter;
 
 public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
-  private static final int outSourcePort = 63000;
 
   public static void main(String[] args) {
     final int expectedArgs = 3;
