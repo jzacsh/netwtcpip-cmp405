@@ -1,5 +1,29 @@
-= hw6
+= SendReceive Project Usage
 :hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
+
+.sample run
+----
+$ make all # or explicitly, the target: bin/SendReceiveSocket.class
+
+$ java -classpath bin SendReceiveSocket
+Error: got 0 argument(s), but expected 4...
+usage: RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT
+
+$ java -cp bin SendReceiveSocket localhost 3321 thepearl.lan 2228
+[setup] listener & sender setups complete.
+
+[recv'r] READY to spawn thread on localhost/127.0.0.1, consuming from socket /127.0.0.1:3321
+[recv'r] spawning receiver thread... Done.
+[recv'r:thread] waiting for input...
+[sender] READY to capture messages
+        bound for thepearl.lan/192.168.86.112 on port 2228
+        via socket: /127.0.0.1:63000
+[sender] usage instructions:
+        Type messages & [enter] to send
+        [enter] twice to exit.
+----
+
+== instructions
 
 <<hw6instruct, below>> is a dump of {hw6url}[homework 6 instructions] as of
 2017-10-08 21:17:40-04:00.
