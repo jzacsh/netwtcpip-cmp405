@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.lang.InterruptedException;
@@ -156,7 +157,13 @@ class SendClient {
     boolean isPrevEmpty = false;
     long msgIndex = 0;
     while (true) {
-      message = ui.nextLine().trim();
+      try {
+        message = ui.nextLine().trim();
+      } catch (NoSuchElementException e) {
+        this.log.printf("caught EOF, exiting...\n");
+        break;
+      }
+
       if (message.length() == 0) {
         if (isPrevEmpty) {
           this.log.printf("caught two empty messages, exiting.... ");
