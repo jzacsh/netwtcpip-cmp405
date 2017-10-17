@@ -28,17 +28,17 @@ public class SendReceiveSocket {
     final String destHostName = args[1].trim();
     final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
 
-    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
-        destHostName, "[setup] failed resolving destination host '%s': %s\n");
-
     final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
         "localhost", "[setup] failed finding %s address: %s\n");
 
     final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
-        "[setup] failed to open a sending socket [via %s] on port %d: %s\n");
+        "[setup] failed opening socket to send [via %s] from port %d: %s\n");
 
     final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
         receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
+
+    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
+        destHostName, "[setup] failed resolving destination host '%s': %s\n");
 
     System.out.printf("[setup] listener & sender setups complete.\n\n");
 
