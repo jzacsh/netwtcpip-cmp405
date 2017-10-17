@@ -198,7 +198,7 @@ class RecvClient implements Runnable {
     return this.running;
   }
 
-  /** blocking receiver that accepts packets on inSocket. */
+  /** non-blocking receiver that accepts packets on inSocket. */
   public void run() {
     byte[] inBuffer = new byte[100];
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
