@@ -150,7 +150,7 @@ class SendClient {
     this.log.printf("usage instructions:\n%s", senderUXInstruction);
     boolean isOk = true;
     boolean isPrevEmpty = false;
-    int msgIndex = 0;
+    long msgIndex = 0;
     while (true) {
       message = ui.nextLine().trim();
       if (message.length() == 0) {
@@ -234,7 +234,7 @@ class RecvClient implements Runnable {
     }
 
     this.log.printf("thread: waiting for input...\n");
-    int receiptIndex = 0;
+    long receiptIndex = 0;
     while (true) {
       if (stopped) {
         return;
