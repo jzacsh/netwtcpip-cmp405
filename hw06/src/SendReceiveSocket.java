@@ -12,11 +12,11 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 public class SendReceiveSocket {
-  private static final String usageDoc = "RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT";
+  private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
   private static final int outSourcePort = 63000;
 
   public static void main(String[] args) {
-    final int expectedArgs = 4;
+    final int expectedArgs = 3;
     if (args.length != expectedArgs) {
       System.err.printf(
           "Error: got %d argument(s), but expected %d...\nusage: %s\n",
@@ -24,10 +24,9 @@ public class SendReceiveSocket {
       System.exit(1);
     }
 
-    final String receiptHost = args[0].trim();
-    final int receiptPort = BrittleNetwork.mustParsePort(args[1], "RECEIPT_PORT");
-    final String destHostName = args[2].trim();
-    final int destPort = BrittleNetwork.mustParsePort(args[3], "DEST_PORT");
+    final int receiptPort = BrittleNetwork.mustParsePort(args[0], "RECEIPT_PORT");
+    final String destHostName = args[1].trim();
+    final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
 
     final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
         destHostName, "[setup] failed resolving destination host '%s': %s\n");
