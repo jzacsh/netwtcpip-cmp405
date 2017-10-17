@@ -7,6 +7,9 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.lang.InterruptedException;
+import java.io.PrintStream;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT";
@@ -25,7 +28,6 @@ public class SendReceiveSocket {
     final int receiptPort = BrittleNetwork.mustParsePort(args[1], "RECEIPT_PORT");
     final String destHostName = args[2].trim();
     final int destPort = BrittleNetwork.mustParsePort(args[3], "DEST_PORT");
-
 
     final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
         destHostName, "[setup] failed resolving destination host '%s': %s\n");
