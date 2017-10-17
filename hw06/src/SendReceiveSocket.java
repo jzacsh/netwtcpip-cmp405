@@ -45,10 +45,13 @@ public class SendReceiveSocket {
     System.out.printf("[setup] listener & sender setups complete.\n\n");
 
     RecvClient receiver = new RecvClient(inSocket)
+        .setLogLevel(Logger.Level.DEBUG)
         .report(receiptAddr.toString())
         .listenInThread();
 
-    SendClient sender = new SendClient(destAddr, destPort, outSock).report();
+    SendClient sender = new SendClient(destAddr, destPort, outSock)
+        .setLogLevel(Logger.Level.DEBUG)
+        .report();
     boolean wasSendOk = sender.sendMessagePerLine(new Scanner(System.in));
 
     System.out.printf("\n...cleaning up\n");
@@ -105,8 +108,11 @@ class Logger {
   public void setLevel(final Logger.Level lvl) { this.lvl = lvl; }
 }
 
+// TODO(zacsh) refactor to have both [Foo]Client classes "implement"
+// `ClientChannel` that demands a report()
+
 class SendClient {
-  private static final String LOG_TAG = "sender";
+  private static final Logger log = new Logger("sender");
   private static final String senderUXInstruction =
       "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
 
@@ -119,9 +125,14 @@ class SendClient {
     this.socket = outSock;
   }
 
+  public SendClient setLogLevel(final Logger.Level lvl) {
+    this.log.setLevel(lvl);
+    return this;
+  }
+
   public SendClient report() {
-    System.out.printf(
-        "[%s] READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n", LOG_TAG,
+    this.log.printf(
+        "READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n",
         this.destIP,
         this.destPort,
         this.socket.getLocalSocketAddress());
@@ -133,7 +144,7 @@ class SendClient {
     String message;
     byte[] buffer = new byte[100];
 
-    System.out.printf("[%s] usage instructions:\n%s", LOG_TAG, senderUXInstruction);
+    this.log.printf("usage instructions:\n%s", senderUXInstruction);
     boolean isOk = true;
     boolean isPrevEmpty = false;
     int msgIndex = 0;
@@ -141,11 +152,11 @@ class SendClient {
       message = ui.nextLine().trim();
       if (message.length() == 0) {
         if (isPrevEmpty) {
-          System.out.printf("[%s] caught two empty messages, exiting.... ", LOG_TAG);
+          this.log.printf("caught two empty messages, exiting.... ");
           break;
         }
         isPrevEmpty = true;
-        System.out.printf("[%s] press enter again to exit normally.\n", LOG_TAG);
+        this.log.printf("press enter again to exit normally.\n");
         continue;
       }
       msgIndex++;
@@ -153,11 +164,13 @@ class SendClient {
       buffer = message.getBytes();
       packet = new DatagramPacket(buffer, message.length(), destIP, destPort);
 
-      System.out.printf("[%s] sending message #%03d: '%s'\n", LOG_TAG, msgIndex, message);
+      this.log.printf("sending message #%03d: '%s'...", msgIndex, message);
       try {
         this.socket.send(packet);
+        System.out.printf(" Done.\n");
       } catch (Exception e) {
-        System.err.printf("[%s] failed sending '%s':\n%s\n", LOG_TAG, message, e);
+        System.out.printf("\n");
+        this.log.errorf(e, "\nfailed sending '%s'", message);
         isOk = false;
         break;
       }
@@ -170,7 +183,7 @@ class SendClient {
 
 class RecvClient implements Runnable {
   public static final int SOCKET_WAIT_MILLIS = 5;
-  private static final String LOG_TAG = "recv'r";
+  private static final Logger log = new Logger("recv'r");
 
   boolean stopped = false;
   Thread running = null;
@@ -179,15 +192,20 @@ class RecvClient implements Runnable {
     this.inSock = inSocket;
   }
 
+  public RecvClient setLogLevel(final Logger.Level lvl) {
+    this.log.setLevel(lvl);
+    return this;
+  }
+
   public RecvClient report(String hostName) {
-    System.out.printf(
-        "[%s] READY to spawn thread on %s, consuming from socket %s\n",
-        LOG_TAG, hostName, this.inSock.getLocalSocketAddress());
+    this.log.printf(
+        "READY to spawn thread on %s, consuming from socket %s\n",
+        hostName, this.inSock.getLocalSocketAddress());
     return this;
   }
 
   public RecvClient listenInThread() {
-    System.out.printf("[%s] spawning receiver thread... ", LOG_TAG);
+    this.log.printf("spawning receiver thread... ");
     this.running = new Thread(this);
     this.running.setName("Receive Thread");
     this.running.start();
@@ -208,12 +226,12 @@ class RecvClient implements Runnable {
     try {
       this.inSock.setSoTimeout(SOCKET_WAIT_MILLIS);
     } catch (SocketException e) {
-      System.err.printf("[%s] failed configuring socket timeout\n", LOG_TAG);
+      this.log.errorf(e, "failed configuring socket timeout");
       this.stop();
       return;
     }
 
-    System.out.printf("[%s:thread] waiting for input...\n", LOG_TAG);
+    this.log.printf("thread: waiting for input...\n");
     int receiptIndex = 0;
     while (true) {
       if (stopped) {
@@ -229,14 +247,14 @@ class RecvClient implements Runnable {
       } catch (SocketTimeoutException e) {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
-        System.err.printf("[%s:thread] failed receiving packet %03d: %s\n", LOG_TAG, receiptIndex+1, e);
+        this.log.errorf(e, ":thread failed receiving packet %03d", receiptIndex+1);
         System.exit(1);
       }
       receiptIndex++;
 
-      System.out.printf(
-          "[%s:thread] received #%03d: %s\n%s\n%s\n",
-          LOG_TAG, receiptIndex, "\"\"\"", "\"\"\"",
+      this.log.printf(
+          "thread: received #%03d: %s\n%s\n%s\n",
+          receiptIndex, "\"\"\"", "\"\"\"",
           new String(inPacket.getData()));
     }
   }
