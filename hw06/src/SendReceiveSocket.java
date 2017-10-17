@@ -12,8 +12,6 @@ import java.io.StringWriter;
 import java.io.PrintWriter;
 
 public class SendReceiveSocket {
-  private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
-
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
   private RecvClient receiver = null;
@@ -41,6 +39,7 @@ public class SendReceiveSocket {
   }
 
   private static SendReceiveSocket parseFromCli(String[] args) {
+    final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
     final int expectedArgs = 3;
     if (args.length != expectedArgs) {
       System.err.printf(
