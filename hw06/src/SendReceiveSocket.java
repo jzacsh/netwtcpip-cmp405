@@ -186,6 +186,7 @@ class SendClient {
 class RecvClient implements Runnable {
   public static final int SOCKET_WAIT_MILLIS = 5;
   private static final Logger log = new Logger("recv'r");
+  private static final int MAX_RECEIVE_BYTES = 1000;
 
   boolean stopped = false;
   Thread running = null;
@@ -222,7 +223,7 @@ class RecvClient implements Runnable {
 
   /** non-blocking receiver that accepts packets on inSocket. */
   public void run() {
-    byte[] inBuffer = new byte[100];
+    byte[] inBuffer = new byte[MAX_RECEIVE_BYTES];
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
 
     try {
