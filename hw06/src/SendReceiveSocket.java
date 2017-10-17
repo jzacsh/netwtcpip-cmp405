@@ -31,9 +31,16 @@ public class SendReceiveSocket {
     final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
         "localhost", "[setup] failed finding %s address: %s\n");
 
+    // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
+    // original zip provided for the project
+    // [1] fix: https://github.com/jzacsh/netwtcpip-cmp405/issues/1
     final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
         "[setup] failed opening socket to send [via %s] from port %d: %s\n");
 
+    // TODO(zacsh) confirm with fakhouri: the original zip's manual setting of receipt addr/port is
+    // a bug; ie: are we expecting not only main *server* addr/port (eg: fakhouri laptop) to be
+    // hardcoded/known by user? Or ALSO server is expecting entire classroom of clients to be
+    // receiving replies (from fakhouri's laptop) on a designated port?
     final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
         receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
 
