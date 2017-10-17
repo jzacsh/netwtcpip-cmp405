@@ -14,7 +14,33 @@ import java.io.PrintWriter;
 public class SendReceiveSocket {
   private static final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
 
-  public static void main(String[] args) {
+  private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
+
+  private RecvClient receiver = null;
+  private SendClient sender = null;
+  public SendReceiveSocket(final int receiptPort, final String destHostName, final int destPort) {
+    final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
+        "localhost", "[setup] failed finding %s address: %s\n");
+    // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
+    // original zip provided for the project
+    // [1] fix: https://github.com/jzacsh/netwtcpip-cmp405/issues/1
+    final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
+        "[setup] failed opening socket to send [via %s] from port %d: %s\n");
+    // TODO(zacsh) confirm with fakhouri: the original zip's manual setting of receipt addr/port is
+    // a bug; ie: are we expecting not only main *server* addr/port (eg: fakhouri laptop) to be
+    // hardcoded/known by user? Or ALSO server is expecting entire classroom of clients to be
+    // receiving replies (from fakhouri's laptop) on a designated port?
+    final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
+        receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
+    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
+        destHostName, "[setup] failed resolving destination host '%s': %s\n");
+
+    this.receiver = new RecvClient(inSocket).setLogLevel(LOG_LEVEL);
+    this.sender = new SendClient(destAddr, destPort, outSock).setLogLevel(LOG_LEVEL);
+    System.out.printf("[setup] listener & sender setups complete.\n\n");
+  }
+
+  private static SendReceiveSocket parseFromCli(String[] args) {
     final int expectedArgs = 3;
     if (args.length != expectedArgs) {
       System.err.printf(
@@ -27,40 +53,19 @@ public class SendReceiveSocket {
     final String destHostName = args[1].trim();
     final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
 
-    final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
-        "localhost", "[setup] failed finding %s address: %s\n");
+    return new SendReceiveSocket(receiptPort, destHostName, destPort);
+  }
 
-    // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
-    // original zip provided for the project
-    // [1] fix: https://github.com/jzacsh/netwtcpip-cmp405/issues/1
-    final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
-        "[setup] failed opening socket to send [via %s] from port %d: %s\n");
+  public static void main(String[] args) {
+    SendReceiveSocket sendRecvClient = SendReceiveSocket.parseFromCli(args);
 
-    // TODO(zacsh) confirm with fakhouri: the original zip's manual setting of receipt addr/port is
-    // a bug; ie: are we expecting not only main *server* addr/port (eg: fakhouri laptop) to be
-    // hardcoded/known by user? Or ALSO server is expecting entire classroom of clients to be
-    // receiving replies (from fakhouri's laptop) on a designated port?
-    final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
-        receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
-
-    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
-        destHostName, "[setup] failed resolving destination host '%s': %s\n");
-
-    System.out.printf("[setup] listener & sender setups complete.\n\n");
-
-    RecvClient receiver = new RecvClient(inSocket)
-        .setLogLevel(Logger.Level.DEBUG)
-        .report(receiptAddr.toString())
-        .listenInThread();
-
-    SendClient sender = new SendClient(destAddr, destPort, outSock)
-        .setLogLevel(Logger.Level.DEBUG)
-        .report();
-    boolean wasSendOk = sender.sendMessagePerLine(new Scanner(System.in));
+    sendRecvClient.receiver.report().listenInThread();
+    sendRecvClient.sender.report();
+    boolean wasSendOk = sendRecvClient.sender.sendMessagePerLine(new Scanner(System.in));
 
     System.out.printf("\n...cleaning up\n");
     try {
-      receiver.stop().join(RecvClient.SOCKET_WAIT_MILLIS * 2 /*millis*/);
+      sendRecvClient.receiver.stop().join(RecvClient.SOCKET_WAIT_MILLIS * 2 /*millis*/);
     } catch(InterruptedException e) {
       System.err.printf("problem stopping receiver: %s\n", e);
     }
@@ -200,10 +205,10 @@ class RecvClient implements Runnable {
     return this;
   }
 
-  public RecvClient report(String hostName) {
+  public RecvClient report() {
     this.log.printf(
-        "READY to spawn thread on %s, consuming from socket %s\n",
-        hostName, this.inSock.getLocalSocketAddress());
+        "READY to spawn thread consuming from local socket %s\n",
+        this.inSock.getLocalSocketAddress());
     return this;
   }
 
