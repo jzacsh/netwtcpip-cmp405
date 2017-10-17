@@ -146,7 +146,6 @@ class SendClient {
   public boolean sendMessagePerLine(Scanner ui) {
     DatagramPacket packet;
     String message;
-    byte[] buffer = new byte[100];
 
     this.log.printf("usage instructions:\n%s", senderUXInstruction);
     boolean isOk = true;
@@ -165,8 +164,7 @@ class SendClient {
       }
       msgIndex++;
 
-      buffer = message.getBytes();
-      packet = new DatagramPacket(buffer, message.length(), destIP, destPort);
+      packet = new DatagramPacket(message.getBytes(), message.length(), destIP, destPort);
 
       this.log.printf("sending message #%03d: '%s'...", msgIndex, message);
       try {
