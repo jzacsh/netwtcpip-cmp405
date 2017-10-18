@@ -3,7 +3,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -15,20 +14,20 @@ public class Chatterbox {
   private RecvClient receiver = null;
   private SendClient sender = null;
   public Chatterbox(final int receiptPort, final String destHostName, final int destPort) {
-    final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
+    final InetAddress receiptAddr = AssertNetwork.mustResolveHostName(
         "localhost", "[setup] failed finding %s address: %s\n");
     // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
     // original zip provided for the project
     // [1] fix: https://github.com/jzacsh/netwtcpip-cmp405/issues/1
-    final DatagramSocket outSock = BrittleNetwork.mustOpenSocket(
+    final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
         "[setup] failed opening socket to send [via %s] from port %d: %s\n");
     // TODO(zacsh) confirm with fakhouri: the original zip's manual setting of receipt addr/port is
     // a bug; ie: are we expecting not only main *server* addr/port (eg: fakhouri laptop) to be
     // hardcoded/known by user? Or ALSO server is expecting entire classroom of clients to be
     // receiving replies (from fakhouri's laptop) on a designated port?
-    final DatagramSocket inSocket = BrittleNetwork.mustOpenSocket(
+    final DatagramSocket inSocket = AssertNetwork.mustOpenSocket(
         receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
-    final InetAddress destAddr = BrittleNetwork.mustResolveHostName(
+    final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "[setup] failed resolving destination host '%s': %s\n");
 
     this.receiver = new RecvClient(inSocket).setLogLevel(LOG_LEVEL);
@@ -46,9 +45,9 @@ public class Chatterbox {
       System.exit(1);
     }
 
-    final int receiptPort = BrittleNetwork.mustParsePort(args[0], "RECEIPT_PORT");
+    final int receiptPort = AssertNetwork.mustParsePort(args[0], "RECEIPT_PORT");
     final String destHostName = args[1].trim();
-    final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
+    final int destPort = AssertNetwork.mustParsePort(args[2], "DEST_PORT");
 
     return new Chatterbox(receiptPort, destHostName, destPort);
   }
@@ -230,71 +229,5 @@ class RecvClient implements Runnable {
           new String(inPacket.getData()));
       lenLastRecvd = inPacket.getLength();
     }
-  }
-}
-
-/** Fast-failing, program-exiting, loud, tiny utils. */
-class BrittleNetwork {
-  public static final DatagramSocket mustOpenSocket(final String failMessage) {
-    DatagramSocket sock = null;
-    try {
-      sock = new DatagramSocket();
-    } catch (SocketException e) {
-      System.err.printf(failMessage, "[default]", "[default]", e);
-      System.exit(1);
-    }
-    return sock;
-  }
-
-  /**
-   * failMessage should accept a host(%s), port (%d), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  public static final DatagramSocket mustOpenSocket(
-      final InetAddress host,
-      final int port,
-      final String failMessage) {
-    DatagramSocket sock = null;
-    try {
-      sock = new DatagramSocket(port, host);
-    } catch (SocketException e) {
-      System.err.printf(failMessage, port, host, e);
-      System.exit(1);
-    }
-    return sock;
-  }
-
-  public static final int mustParsePort(String portRaw, String label) {
-    final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
-
-    int port = -1;
-    try {
-      port = Integer.parseInt(portRaw.trim());
-    } catch (NumberFormatException e) {
-      System.err.printf(errContext + ", but got: %s\n", e);
-      System.exit(1);
-    }
-
-    if (port < 0 || port > 0xFFFF) {
-      System.err.printf(errContext + ", but got %d\n", port);
-      System.exit(1);
-    }
-
-    return port;
-  }
-
-  /**
-   * failMessage should accept a hostname(%s), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  public static final InetAddress mustResolveHostName(
-      final String hostName,
-      final String failMessage) {
-    InetAddress addr = null;
-    try {
-      addr = InetAddress.getByName(hostName);
-    } catch (UnknownHostException e) {
-      System.err.printf(failMessage, hostName, e);
-      System.exit(1);
-    }
-    return addr;
   }
 }
