@@ -1,8 +1,6 @@
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
@@ -10,12 +8,12 @@ import java.lang.InterruptedException;
 public class Chatterbox {
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
-  private RecvClient receiver = null;
-  private SendClient sender = null;
+  private RecvChannel receiver = null;
+  private SendChannel sender = null;
   public Chatterbox(final String destHostName, final int destPort) {
     final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
         "[setup] failed opening socket to send [via %s] from port %d: %s\n");
-    // TODO(zacsh) refactor split into SendClient and ReceiveClient, and just have single-looper
+    // TODO(zacsh) refactor split into SendChannel and ReceiveClient, and just have single-looper
     // that golang-esque selects on the current situation:
     // - an outgoing message is ready, so send()
     // -- internal data struct api to enqueue currently composed, out-bound messages
@@ -27,8 +25,8 @@ public class Chatterbox {
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "[setup] failed resolving destination host '%s': %s\n");
 
-    this.receiver = new RecvClient(inSocket).setLogLevel(LOG_LEVEL);
-    this.sender = new SendClient(destAddr, destPort, outSock).setLogLevel(LOG_LEVEL);
+    this.receiver = new RecvChannel(inSocket).setLogLevel(LOG_LEVEL);
+    this.sender = new SendChannel(destAddr, destPort, outSock).setLogLevel(LOG_LEVEL);
     System.out.printf("[setup] listener & sender setups complete.\n\n");
   }
 
@@ -49,15 +47,15 @@ public class Chatterbox {
   }
 
   public static void main(String[] args) {
-    Chatterbox sendRecvClient = Chatterbox.parseFromCli(args);
+    Chatterbox sendRecvChannel = Chatterbox.parseFromCli(args);
 
-    sendRecvClient.receiver.report().listenInThread();
-    sendRecvClient.sender.report();
-    boolean wasSendOk = sendRecvClient.sender.sendMessagePerLine(new Scanner(System.in));
+    sendRecvChannel.receiver.report().listenInThread();
+    sendRecvChannel.sender.report();
+    boolean wasSendOk = sendRecvChannel.sender.sendMessagePerLine(new Scanner(System.in));
 
     System.out.printf("\n...cleaning up\n");
     try {
-      sendRecvClient.receiver.stop().join(RecvClient.SOCKET_WAIT_MILLIS * 2 /*millis*/);
+      sendRecvChannel.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
     } catch(InterruptedException e) {
       System.err.printf("problem stopping receiver: %s\n", e);
     }
@@ -68,10 +66,11 @@ public class Chatterbox {
   }
 }
 
-// TODO(zacsh) refactor to have both [Foo]Client classes "implement"
-// `ClientChannel` that demands a report()
-
-class SendClient {
+// TODO(zacsh) refactor to have both [Foo]Client classes "implement" `ClientChannel` that demands a
+// report(); eg: turn SendChannel#sendMessagePerLine into a Runnable#run() block of logic, and pass
+// its requisite Scanner before hand.
+// eg: see newly started LocalChannel.java
+class SendChannel {
   private static final Logger log = new Logger("sender");
   private static final String senderUXInstruction =
       "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
@@ -79,18 +78,18 @@ class SendClient {
   private InetAddress destIP;
   private int destPort;
   private DatagramSocket socket = null;
-  public SendClient(final InetAddress destIP, final int destPort, DatagramSocket outSock) {
+  public SendChannel(final InetAddress destIP, final int destPort, DatagramSocket outSock) {
     this.destIP = destIP;
     this.destPort = destPort;
     this.socket = outSock;
   }
 
-  public SendClient setLogLevel(final Logger.Level lvl) {
+  public SendChannel setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
     return this;
   }
 
-  public SendClient report() {
+  public SendChannel report() {
     this.log.printf(
         "READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n",
         this.destIP,
@@ -143,87 +142,5 @@ class SendClient {
 
     ui.close();
     return isOk;
-  }
-}
-
-class RecvClient implements Runnable {
-  public static final int SOCKET_WAIT_MILLIS = 5;
-  private static final Logger log = new Logger("recv'r");
-  private static final int MAX_RECEIVE_BYTES = 1000;
-
-  boolean stopped = false;
-  Thread running = null;
-  DatagramSocket inSock = null;
-  public RecvClient(DatagramSocket inSocket) {
-    this.inSock = inSocket;
-  }
-
-  public RecvClient setLogLevel(final Logger.Level lvl) {
-    this.log.setLevel(lvl);
-    return this;
-  }
-
-  public RecvClient report() {
-    this.log.printf(
-        "READY to spawn thread consuming from local socket %s\n",
-        this.inSock.getLocalSocketAddress());
-    return this;
-  }
-
-  public RecvClient listenInThread() {
-    this.log.printf("spawning receiver thread... ");
-    this.running = new Thread(this);
-    this.running.setName("Receive Thread");
-    this.running.start();
-    System.out.printf("Done.\n");
-    return this;
-  }
-
-  public Thread stop() {
-    this.stopped = true;
-    return this.running;
-  }
-
-  /** non-blocking receiver that accepts packets on inSocket. */
-  public void run() {
-    byte[] inBuffer = new byte[MAX_RECEIVE_BYTES];
-    DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
-
-    try {
-      this.inSock.setSoTimeout(SOCKET_WAIT_MILLIS);
-    } catch (SocketException e) {
-      this.log.errorf(e, "failed configuring socket timeout");
-      this.stop();
-      return;
-    }
-
-    this.log.printf("thread: waiting for input...\n");
-    long receiptIndex = 0;
-    int lenLastRecvd = inBuffer.length;
-    while (true) {
-      if (stopped) {
-        return;
-      }
-
-      for (int i = 0; i < lenLastRecvd; ++i) {
-        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
-      }
-
-      try {
-        this.inSock.receive(inPacket);
-      } catch (SocketTimeoutException e) {
-        continue; // expected exception; just continue from the top, to remain responsive.
-      } catch (Exception e) {
-        this.log.errorf(e, ":thread failed receiving packet %03d", receiptIndex+1);
-        System.exit(1);
-      }
-      receiptIndex++;
-
-      this.log.printf(
-          "thread: received #%03d: %s\n%s\n%s\n",
-          receiptIndex, "\"\"\"", "\"\"\"",
-          new String(inPacket.getData()));
-      lenLastRecvd = inPacket.getLength();
-    }
   }
 }
