@@ -5,7 +5,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 import java.lang.InterruptedException;
 
 public class Chatterbox {
