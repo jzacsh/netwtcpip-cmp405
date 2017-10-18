@@ -7,7 +7,7 @@ JVOBJ  :=  $(patsubst %.java, $(OUTD)/%.class, $(KLSS))
 all: $(JVOBJ)
 
 $(OUTD)/%.class: $(SRCD)/%.java
-	javac $< -d $(OUTD)/
+	javac -cp $(SRCD) $< -d $(OUTD)/
 
 clean:
 	$(RM) $(OUTD)/*.class

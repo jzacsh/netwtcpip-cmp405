@@ -8,16 +8,13 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.lang.InterruptedException;
-import java.io.PrintStream;
-import java.io.StringWriter;
-import java.io.PrintWriter;
 
-public class SendReceiveSocket {
+public class Chatterbox {
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
   private RecvClient receiver = null;
   private SendClient sender = null;
-  public SendReceiveSocket(final int receiptPort, final String destHostName, final int destPort) {
+  public Chatterbox(final int receiptPort, final String destHostName, final int destPort) {
     final InetAddress receiptAddr = BrittleNetwork.mustResolveHostName(
         "localhost", "[setup] failed finding %s address: %s\n");
     // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
@@ -39,7 +36,7 @@ public class SendReceiveSocket {
     System.out.printf("[setup] listener & sender setups complete.\n\n");
   }
 
-  private static SendReceiveSocket parseFromCli(String[] args) {
+  private static Chatterbox parseFromCli(String[] args) {
     final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
     final int expectedArgs = 3;
     if (args.length != expectedArgs) {
@@ -53,11 +50,11 @@ public class SendReceiveSocket {
     final String destHostName = args[1].trim();
     final int destPort = BrittleNetwork.mustParsePort(args[2], "DEST_PORT");
 
-    return new SendReceiveSocket(receiptPort, destHostName, destPort);
+    return new Chatterbox(receiptPort, destHostName, destPort);
   }
 
   public static void main(String[] args) {
-    SendReceiveSocket sendRecvClient = SendReceiveSocket.parseFromCli(args);
+    Chatterbox sendRecvClient = Chatterbox.parseFromCli(args);
 
     sendRecvClient.receiver.report().listenInThread();
     sendRecvClient.sender.report();
@@ -74,47 +71,6 @@ public class SendReceiveSocket {
       System.exit(1);
     }
   }
-}
-
-class Logger {
-  public enum Level { DEBUG, INFO, WARN, ERROR }
-
-  private final String tag;
-  private final Level DEFAULT_LEVEL = Level.INFO;
-
-  private Level lvl = DEFAULT_LEVEL;
-  public Logger(final String tag) { this.tag = tag; }
-
-  private void fprintf(PrintStream out, String fmt, Object... args) {
-    out.printf(String.format("[%s] %s", this.tag, fmt), args);
-  }
-
-  public void errorf(String fmt, Object... args) {
-    this.fprintf(System.err, String.format("ERROR: %s", fmt), args);
-  }
-
-  /**
-   * NOTE: this method appends its own newline to the end of all logs.
-   */
-  public void errorf(Exception e, String fmt, Object... args) {
-    String error;
-    if (this.lvl == Level.DEBUG) {
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      e.printStackTrace(pw);
-      error = sw.toString();
-    } else {
-      error = e.toString();
-    }
-    this.errorf(String.format("%s: %s\n", fmt, error), args);
-  }
-
-  public void printf(String fmt, Object... args) {
-    if (this.lvl == Level.ERROR) { return; } // ignore
-    this.fprintf(System.out, fmt, args);
-  }
-
-  public void setLevel(final Logger.Level lvl) { this.lvl = lvl; }
 }
 
 // TODO(zacsh) refactor to have both [Foo]Client classes "implement"
