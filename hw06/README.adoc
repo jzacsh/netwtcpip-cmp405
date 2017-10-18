@@ -1,26 +1,38 @@
 = SendReceive Project Usage
 :hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
+:todoRefactorChannel: https://github.com/jzacsh/netwtcpip-cmp405/blob/82a7253aa566/hw06/src/Chatterbox.java#L69-L73
+:todoRefactorSinglePort: https://github.com/jzacsh/netwtcpip-cmp405/blob/82a7253aa566/hw06/src/Chatterbox.java#L16
+
+.TODO
+. stop accepting dest port/addr; instead build UI to take from user arbitrary
+number of these (and maybe a default port) to correspond to an arbitrary number
+of peer-to-peer chats
+. finish porting {todoRefactorChannel}[SendChannel into a proper threaded runnable]
+. remove the {todoRefactorSinglePort}[inSocket being built]
 
 .sample run
 ----
-$ make all # or explicitly, the target: bin/SendReceiveSocket.class
+$ make all # or explicitly, the target: bin/Chatterbox.class
 
-$ java -classpath bin SendReceiveSocket
-Error: got 0 argument(s), but expected 4...
-usage: RECEIPT_HOST RECEIPT_PORT DESTINATION_HOST DEST_PORT
+$ java -classpath bin Chatterbox
+Error: got 0 argument(s), but expected 2...
+usage: DESTINATION_HOST DEST_PORT
 
-$ java -cp bin SendReceiveSocket localhost 3321 thepearl.lan 2228
+$ java -cp bin Chatterbox someone.elses.target.machine 2231
 [setup] listener & sender setups complete.
 
-[recv'r] READY to spawn thread on localhost/127.0.0.1, consuming from socket /127.0.0.1:3321
+[recv'r] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:59644
 [recv'r] spawning receiver thread... Done.
-[recv'r:thread] waiting for input...
 [sender] READY to capture messages
-        bound for thepearl.lan/192.168.86.112 on port 2228
-        via socket: /127.0.0.1:63000
+        bound for someone.elsese.target.machine/183.255.7.90 on port 2231
+        via socket: 0.0.0.0/0.0.0.0:41750
+[recv'r] thread: waiting for input...
 [sender] usage instructions:
         Type messages & [enter] to send
         [enter] twice to exit.
+[sender] caught EOF, exiting...
+
+...cleaning up
 ----
 
 == instructions
