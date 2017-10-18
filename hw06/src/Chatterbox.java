@@ -12,20 +12,18 @@ public class Chatterbox {
 
   private RecvClient receiver = null;
   private SendClient sender = null;
-  public Chatterbox(final int receiptPort, final String destHostName, final int destPort) {
-    final InetAddress receiptAddr = AssertNetwork.mustResolveHostName(
-        "localhost", "[setup] failed finding %s address: %s\n");
-    // TODO(zacsh) confirm fix[1] is not explicitly breaking some behavior fakhouri intended with
-    // original zip provided for the project
-    // [1] fix: https://github.com/jzacsh/netwtcpip-cmp405/issues/1
+  public Chatterbox(final String destHostName, final int destPort) {
     final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
         "[setup] failed opening socket to send [via %s] from port %d: %s\n");
-    // TODO(zacsh) confirm with fakhouri: the original zip's manual setting of receipt addr/port is
-    // a bug; ie: are we expecting not only main *server* addr/port (eg: fakhouri laptop) to be
-    // hardcoded/known by user? Or ALSO server is expecting entire classroom of clients to be
-    // receiving replies (from fakhouri's laptop) on a designated port?
+    // TODO(zacsh) refactor split into SendClient and ReceiveClient, and just have single-looper
+    // that golang-esque selects on the current situation:
+    // - an outgoing message is ready, so send()
+    // -- internal data struct api to enqueue currently composed, out-bound messages
+    //    (eg: windowing/UI-thread should be able to pass a new message over to cause this select
+    //    case to trigger (when the next selection happens in some SOCKET_WAIT_MILLIS milliseconds
+    // - an we've spent SOCKET_WAIT_MILLIS receive()ing messages
     final DatagramSocket inSocket = AssertNetwork.mustOpenSocket(
-        receiptAddr, receiptPort, "[setup] failed opening receiving socket on %s:%d: %s\n");
+        "[setup] failed opening receiving socket on %s:%d: %s\n");
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "[setup] failed resolving destination host '%s': %s\n");
 
@@ -35,8 +33,8 @@ public class Chatterbox {
   }
 
   private static Chatterbox parseFromCli(String[] args) {
-    final String usageDoc = "RECEIPT_PORT DESTINATION_HOST DEST_PORT";
-    final int expectedArgs = 3;
+    final String usageDoc = "DESTINATION_HOST DEST_PORT";
+    final int expectedArgs = 2;
     if (args.length != expectedArgs) {
       System.err.printf(
           "Error: got %d argument(s), but expected %d...\nusage: %s\n",
@@ -44,11 +42,10 @@ public class Chatterbox {
       System.exit(1);
     }
 
-    final int receiptPort = AssertNetwork.mustParsePort(args[0], "RECEIPT_PORT");
-    final String destHostName = args[1].trim();
-    final int destPort = AssertNetwork.mustParsePort(args[2], "DEST_PORT");
+    final String destHostName = args[0].trim();
+    final int destPort = AssertNetwork.mustParsePort(args[1], "DEST_PORT");
 
-    return new Chatterbox(receiptPort, destHostName, destPort);
+    return new Chatterbox(destHostName, destPort);
   }
 
   public static void main(String[] args) {

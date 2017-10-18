@@ -6,29 +6,15 @@ import java.net.UnknownHostException;
 
 /** Fast-failing, program-exiting, loud, tiny utils. */
 class AssertNetwork {
+  /**
+   * failMessage should accept a host(%s), port (%d), and error (%s).
+   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
   public static final DatagramSocket mustOpenSocket(final String failMessage) {
     DatagramSocket sock = null;
     try {
       sock = new DatagramSocket();
     } catch (SocketException e) {
       System.err.printf(failMessage, "[default]", "[default]", e);
-      System.exit(1);
-    }
-    return sock;
-  }
-
-  /**
-   * failMessage should accept a host(%s), port (%d), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  public static final DatagramSocket mustOpenSocket(
-      final InetAddress host,
-      final int port,
-      final String failMessage) {
-    DatagramSocket sock = null;
-    try {
-      sock = new DatagramSocket(port, host);
-    } catch (SocketException e) {
-      System.err.printf(failMessage, port, host, e);
       System.exit(1);
     }
     return sock;
