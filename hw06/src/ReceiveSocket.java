@@ -1,7 +1,6 @@
 import java.net.*;
 
 public class ReceiveSocket {
-
   private static InetAddress myAddress = null;
 
   public static void main(String[] args) {

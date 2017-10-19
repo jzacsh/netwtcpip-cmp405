@@ -5,7 +5,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 /** Fast-failing, program-exiting, loud, tiny utils. */
-class AssertNetwork {
+public class AssertNetwork {
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
    */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
