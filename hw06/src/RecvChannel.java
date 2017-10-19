@@ -8,9 +8,10 @@ public class RecvChannel implements LocalChannel {
   private static final Logger log = new Logger("recv'r");
   private static final int MAX_RECEIVE_BYTES = 1000;
 
-  boolean stopped = false;
-  Thread running = null;
-  DatagramSocket inSock = null;
+  private boolean stopped = false;
+  private Thread running = null;
+  private DatagramSocket inSock = null;
+  private boolean isOk = true;
   public RecvChannel(DatagramSocket inSocket) {
     this.inSock = inSocket;
   }
@@ -27,8 +28,9 @@ public class RecvChannel implements LocalChannel {
     return this;
   }
 
-  public RecvChannel listenInThread() {
+  public RecvChannel start() {
     this.log.printf("spawning receiver thread... ");
+    this.stopped = false;
     this.running = new Thread(this);
     this.running.setName("Receive Thread");
     this.running.start();
@@ -40,6 +42,10 @@ public class RecvChannel implements LocalChannel {
     this.stopped = true;
     return this.running;
   }
+
+  public boolean isActive() { return !this.stopped; }
+  public boolean isFailed() { return this.isOk; }
+  public Thread thread() { return this.running; }
 
   /** non-blocking receiver that accepts packets on inSocket. */
   public void run() {
@@ -72,7 +78,9 @@ public class RecvChannel implements LocalChannel {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
         this.log.errorf(e, ":thread failed receiving packet %03d", receiptIndex+1);
-        System.exit(1);
+        this.stop();
+        this.isOk = false;
+        break;
       }
       receiptIndex++;
 

@@ -7,7 +7,7 @@
 . stop accepting dest port/addr; instead build UI to take from user arbitrary
 number of these (and maybe a default port) to correspond to an arbitrary number
 of peer-to-peer chats
-. finish porting {todoRefactorChannel}[SendChannel into a proper threaded runnable]
+. [line-through]#finish porting {todoRefactorChannel}[SendChannel into a proper threaded runnable]#
 . remove the {todoRefactorSinglePort}[inSocket being built]
 
 .sample run

@@ -1,0 +1,111 @@
+import java.net.InetAddress;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+
+public class SendChannel implements LocalChannel {
+  private static final Logger log = new Logger("sender");
+  private static final String senderUXInstruction =
+      "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
+
+  private boolean isOk = true;
+  private boolean stopped = false;
+
+  private InetAddress destIP;
+  private int destPort;
+  private Scanner msgSrc;
+  private DatagramSocket socket;
+  private Thread running;
+  public SendChannel(
+      final Scanner src,
+      final InetAddress destIP,
+      final int destPort,
+      DatagramSocket outSock) {
+    this.msgSrc = src;
+    this.destIP = destIP;
+    this.destPort = destPort;
+    this.socket = outSock;
+  }
+
+  public SendChannel setLogLevel(final Logger.Level lvl) {
+    this.log.setLevel(lvl);
+    return this;
+  }
+
+  public SendChannel start() {
+    this.log.printf("spawning thread... ");
+    this.stopped = false;
+    this.running = new Thread(this);
+    this.running.setName("sender");
+    this.running.start();
+    System.out.printf("Done.\n");
+    return this;
+  }
+
+  public SendChannel report() {
+    this.log.printf(
+        "READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n",
+        this.destIP,
+        this.destPort,
+        this.socket.getLocalSocketAddress());
+    return this;
+  }
+
+  public boolean isActive() { return !this.stopped; }
+  public boolean isFailed() { return this.isOk; }
+  public Thread thread() { return this.running; }
+
+  public Thread stop() {
+    this.stopped = true;
+    return this.running;
+  }
+
+  public void run() {
+    DatagramPacket packet;
+    String message;
+
+    this.log.printf("usage instructions:\n%s", senderUXInstruction);
+    boolean isPrevEmpty = false;
+    long msgIndex = 0;
+    while (true) {
+      if (this.stopped) {
+        break;
+      }
+
+      try {
+        message = this.msgSrc.nextLine().trim();
+      } catch (NoSuchElementException e) {
+        this.log.printf("caught EOF, exiting...\n");
+        break;
+      }
+
+      if (message.length() == 0) {
+        if (isPrevEmpty) {
+          this.log.printf("caught two empty messages, exiting.... ");
+          break;
+        }
+        isPrevEmpty = true;
+        this.log.printf("press enter again to exit normally.\n");
+        continue;
+      }
+      isPrevEmpty = false;
+      msgIndex++;
+
+      packet = new DatagramPacket(message.getBytes(), message.length(), destIP, destPort);
+
+      this.log.printf("sending message #%03d: '%s'...", msgIndex, message);
+      try {
+        this.socket.send(packet);
+        System.out.printf(" Done.\n");
+      } catch (Exception e) {
+        System.out.printf("\n");
+        this.log.errorf(e, "\nfailed sending '%s'", message);
+        this.isOk = false;
+        break;
+      }
+    }
+
+    this.msgSrc.close();
+  }
+}
