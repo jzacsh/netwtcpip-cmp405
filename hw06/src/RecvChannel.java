@@ -64,8 +64,8 @@ public class RecvChannel implements LocalChannel {
     long receiptIndex = 0;
     int lenLastRecvd = inBuffer.length;
     while (true) {
-      if (stopped) {
-        return;
+      if (this.stopped) {
+        break;
       }
 
       for (int i = 0; i < lenLastRecvd; ++i) {
