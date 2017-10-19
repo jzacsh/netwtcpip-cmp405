@@ -84,10 +84,11 @@ public class RecvChannel implements LocalChannel {
       }
       receiptIndex++;
 
+      String message = new String(inPacket.getData());
       this.log.printf(
-          "received #%03d: %s\n%s\n%s\n",
-          receiptIndex, "\"\"\"", "\"\"\"",
-          new String(inPacket.getData()));
+          "received #%03d [%03d chars] %s\n%s\n%s\n",
+          receiptIndex, message.length(),
+          "\"\"\"", message, "\"\"\"");
       lenLastRecvd = inPacket.getLength();
     }
   }
