@@ -49,12 +49,12 @@ public class Chatterbox {
   }
 
   public static void main(String[] args) {
-    Chatterbox sendRecvChannel = Chatterbox.parseFromCli(args);
+    Chatterbox chatter = Chatterbox.parseFromCli(args);
 
-    sendRecvChannel.receiver.report().start();
-    sendRecvChannel.sender.report().start();
+    chatter.receiver.report().start();
+    chatter.sender.report().start();
     try {
-      sendRecvChannel.sender.thread().join(); // block on send channel's own exit
+      chatter.sender.thread().join(); // block on send channel's own exit
     } catch(InterruptedException e) {
       Chatterbox.log.errorf(e, "failed waiting on sender thread\n");
     }
@@ -62,12 +62,12 @@ public class Chatterbox {
     System.out.printf("\n");
     Chatterbox.log.printf("cleaning up recvr thread\n");
     try {
-      sendRecvChannel.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
+      chatter.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
     } catch(InterruptedException e) {
       Chatterbox.log.errorf(e, "problem stopping receiver");
     }
 
-    if (!sendRecvChannel.sender.isFailed()) {
+    if (!chatter.sender.isFailed()) {
       System.exit(1);
     }
   }
