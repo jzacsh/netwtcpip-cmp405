@@ -11,7 +11,7 @@ public class Chatterbox {
   private SendChannel sender = null;
   public Chatterbox(final java.io.InputStream messages, final String destHostName, final int destPort) {
     final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
-        "[setup] failed opening socket to send [via %s] from port %d: %s\n");
+        "setup: failed opening socket to send [via %s] from port %d: %s\n");
     // TODO(zacsh) refactor split into SendChannel and ReceiveClient, and just have single-looper
     // that golang-esque selects on the current situation:
     // - an outgoing message is ready, so send()
@@ -20,9 +20,9 @@ public class Chatterbox {
     //    case to trigger (when the next selection happens in some SOCKET_WAIT_MILLIS milliseconds
     // - an we've spent SOCKET_WAIT_MILLIS receive()ing messages
     final DatagramSocket inSocket = AssertNetwork.mustOpenSocket(
-        "[setup] failed opening receiving socket on %s:%d: %s\n");
+        "setup: failed opening receiving socket on %s:%d: %s\n");
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
-        destHostName, "[setup] failed resolving destination host '%s': %s\n");
+        destHostName, "setup: failed resolving destination host '%s': %s\n");
 
     this.receiver = new RecvChannel(inSocket).setLogLevel(LOG_LEVEL);
     this.sender = new SendChannel(
