@@ -5,7 +5,8 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class SendChannel implements LocalChannel {
-  private static final Logger log = new Logger("sender");
+  private static final String TAG = "sender thrd";
+  private static final Logger log = new Logger(TAG);
   private static final String senderUXInstruction =
       "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
 
@@ -34,12 +35,11 @@ public class SendChannel implements LocalChannel {
   }
 
   public SendChannel start() {
-    this.log.printf("spawning thread... ");
     this.stopped = false;
     this.running = new Thread(this);
-    this.running.setName("sender");
+    this.running.setName(TAG);
     this.running.start();
-    System.out.printf("Done.\n");
+    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.running);
     return this;
   }
 

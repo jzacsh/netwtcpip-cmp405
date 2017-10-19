@@ -5,7 +5,8 @@ import java.net.SocketTimeoutException;
 
 public class RecvChannel implements LocalChannel {
   public static final int SOCKET_WAIT_MILLIS = 5;
-  private static final Logger log = new Logger("recv'r");
+  private static final String TAG = "recv'r";
+  private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;
 
   private boolean stopped = false;
@@ -29,12 +30,11 @@ public class RecvChannel implements LocalChannel {
   }
 
   public RecvChannel start() {
-    this.log.printf("spawning receiver thread... ");
     this.stopped = false;
     this.running = new Thread(this);
-    this.running.setName("Receive Thread");
+    this.running.setName(TAG);
     this.running.start();
-    System.out.printf("Done.\n");
+    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.running);
     return this;
   }
 
