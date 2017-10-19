@@ -35,6 +35,38 @@ $ java -cp bin Chatterbox someone.elses.target.machine 2231
 ...cleaning up
 ----
 
+== testing receipt on another machine: a -> b
+
+.1: testing receipt on another machine; `a` -> `b`
+----
+you@b $ nc -ul 6400 # eg: in another terminal
+----
+
+.2: send data from `a` to `b`
+----
+you@a $ java -cp bin Chatterbox b.lan 6400
+[chatter] setup: listener & sender setups complete.
+
+[recv'r] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:58390
+[recv'r] spawning receiver thread... Done.
+[sender] READY to capture messages
+        bound for b.lan/192.168.86.111 on port 6400
+        via socket: 0.0.0.0/0.0.0.0:42896
+[sender] spawning thread... [recv'r] thread: waiting for input...
+Done.
+[sender] usage instructions:
+        Type messages & [enter] to send
+        [enter] twice to exit.
+booooOOop
+[sender] sending message #001: 'booooOOop'... Done.
+----
+
+.3: expect output on `b`
+----
+you@b $ nc -ul 6400
+booooOOop
+----
+
 == instructions
 
 <<hw6instruct, below>> is a dump of {hw6url}[homework 6 instructions] as of
