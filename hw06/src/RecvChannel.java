@@ -60,7 +60,7 @@ public class RecvChannel implements LocalChannel {
       return;
     }
 
-    this.log.printf("thread: waiting for input...\n");
+    this.log.printf("waiting for input...\n");
     long receiptIndex = 0;
     int lenLastRecvd = inBuffer.length;
     while (true) {
@@ -77,7 +77,7 @@ public class RecvChannel implements LocalChannel {
       } catch (SocketTimeoutException e) {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
-        this.log.errorf(e, ":thread failed receiving packet %03d", receiptIndex+1);
+        this.log.errorf(e, "failed receiving packet %03d", receiptIndex+1);
         this.stop();
         this.isOk = false;
         break;
@@ -85,7 +85,7 @@ public class RecvChannel implements LocalChannel {
       receiptIndex++;
 
       this.log.printf(
-          "thread: received #%03d: %s\n%s\n%s\n",
+          "received #%03d: %s\n%s\n%s\n",
           receiptIndex, "\"\"\"", "\"\"\"",
           new String(inPacket.getData()));
       lenLastRecvd = inPacket.getLength();
