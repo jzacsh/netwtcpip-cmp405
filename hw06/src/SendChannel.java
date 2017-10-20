@@ -3,6 +3,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
 
 public class SendChannel implements LocalChannel {
   private static final String TAG = "sender thrd";
@@ -61,9 +63,16 @@ public class SendChannel implements LocalChannel {
     return this.running;
   }
 
+  private void fatalf(Exception e, String format, Object... args) {
+    this.log.errorf(e, format, args);
+    this.stop();
+    this.isOk = false;
+  }
+
   public void run() {
     DatagramPacket packet;
-    String message;
+    String rawMsg = null;
+    String message = null;
 
     this.log.printf("usage instructions:\n%s", senderUXInstruction);
     boolean isPrevEmpty = false;
@@ -74,9 +83,13 @@ public class SendChannel implements LocalChannel {
       }
 
       try {
-        message = this.msgSrc.nextLine().trim();
+        rawMsg = this.msgSrc.nextLine().trim();
+        message = URLEncoder.encode(rawMsg, "UTF-8");
       } catch (NoSuchElementException e) {
         this.log.printf("caught EOF, exiting...\n");
+        break;
+      } catch (UnsupportedEncodingException e) {
+        this.fatalf(e, "failed encoding message %03d '%s'", rawMsg);
         break;
       }
 
@@ -100,8 +113,7 @@ public class SendChannel implements LocalChannel {
         System.out.printf(" Done.\n");
       } catch (Exception e) {
         System.out.printf("\n");
-        this.log.errorf(e, "\nfailed sending '%s'", message);
-        this.isOk = false;
+        this.fatalf(e, "\nfailed sending '%s'", message);
         break;
       }
     }
