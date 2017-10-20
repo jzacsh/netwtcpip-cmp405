@@ -47,6 +47,13 @@ public class RecvChannel implements LocalChannel {
   public boolean isFailed() { return this.isOk; }
   public Thread thread() { return this.running; }
 
+  // TODO(zacsh) implement this inline as part of the LocalChannel spec
+  private void fatalf(Exception e, String format, Object... args) {
+    this.log.errorf(e, format, args);
+    this.stop();
+    this.isOk = false;
+  }
+
   /** non-blocking receiver that accepts packets on inSocket. */
   public void run() {
     byte[] inBuffer = new byte[MAX_RECEIVE_BYTES];
@@ -72,9 +79,7 @@ public class RecvChannel implements LocalChannel {
       } catch (SocketTimeoutException e) {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
-        this.log.errorf(e, "failed receiving packet %03d", receiptIndex+1);
-        this.stop();
-        this.isOk = false;
+        this.fatalf(e, "failed receiving packet %03d", receiptIndex+1);
         break;
       }
       receiptIndex++;
