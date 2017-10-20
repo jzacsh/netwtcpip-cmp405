@@ -35,36 +35,62 @@ $ java -cp bin Chatterbox someone.elses.target.machine 2231
 ...cleaning up
 ----
 
-== testing receipt on another machine: a -> b
+== testing receipt on remote machine, `b.lan`
 
-.1: testing receipt on another machine; `a` -> `b`
+.3 terminals are described below, which you should setup first:
+1. on remote `b`, listen for messages: `nc -ul 6400`
+2. on local `a`, start app pointing to `b`: `java -cp bin Chatterbox b.lan 6400`
+3. second empty/ready terminal on `b` _(to cat into a UDP port; more below)_
+
+... Assume the first two terminals are started, and third blank is opening and
+waiting, do the following:
+
+.1: (test) receipt *from* machine `b`
 ----
-you@b $ nc -ul 6400 # eg: in another terminal
+you@b $ printf '%s\n' i%0Aam%0Athe%0Awalrus > /dev/udp/a.lan/59105
 ----
 
-.2: send data from `a` to `b`
+.2: confirm that `a` receives "i am the walrus" on newlines
 ----
 you@a $ java -cp bin Chatterbox b.lan 6400
 [chatter] setup: listener & sender setups complete.
 
-[recv'r] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:58390
-[recv'r] spawning receiver thread... Done.
-[sender] READY to capture messages
+[recv'r thrd] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:59105
+[recv'r thrd] spawned "recv'r thrd" thread: Thread[recv'r thrd,5,main]
+[sender thrd] READY to capture messages
         bound for b.lan/192.168.86.111 on port 6400
-        via socket: 0.0.0.0/0.0.0.0:42896
-[sender] spawning thread... [recv'r] thread: waiting for input...
-Done.
-[sender] usage instructions:
+        via socket: 0.0.0.0/0.0.0.0:36772
+[recv'r thrd] waiting for input...
+[sender thrd] spawned "sender thrd" thread: Thread[sender thrd,5,main]
+[sender thrd] usage instructions:
         Type messages & [enter] to send
         [enter] twice to exit.
-booooOOop
-[sender] sending message #001: 'booooOOop'... Done.
+[recv'r thrd] received #001 [994 chars] """
+i
+am
+the
+walrus
+
+"""
 ----
 
-.3: expect output on `b`
+.3: (test) sending *to* remote `b`
+----
+you @a $ java # ... cli & output snipped from step 2 above
+
+kookoo... kachu??
+[sender thrd] sending message #001: 'kookoo... kachu??'... Done.
+
+[sender thrd] press enter again to exit normally.
+
+[sender thrd] caught two empty messages, exiting....
+[chatter] cleaning up recvr thread
+----
+
+.4: confirm that `b` received step 3 test
 ----
 you@b $ nc -ul 6400
-booooOOop
+kookoo... kachu??
 ----
 
 == instructions
