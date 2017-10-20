@@ -62,14 +62,9 @@ public class RecvChannel implements LocalChannel {
 
     this.log.printf("waiting for input...\n");
     long receiptIndex = 0;
-    int lenLastRecvd = inBuffer.length;
     while (true) {
       if (this.stopped) {
         break;
-      }
-
-      for (int i = 0; i < lenLastRecvd; ++i) {
-        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
       }
 
       try {
@@ -89,7 +84,10 @@ public class RecvChannel implements LocalChannel {
           "received #%03d [%03d chars] %s\n%s\n%s\n",
           receiptIndex, message.length(),
           "\"\"\"", message, "\"\"\"");
-      lenLastRecvd = inPacket.getLength();
+
+      for (int i = 0; i < inPacket.getLength(); ++i) {
+        inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this
+      }
     }
   }
 }
