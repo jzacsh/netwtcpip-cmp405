@@ -49,7 +49,6 @@ public class RecvChannel implements LocalChannel {
   public boolean isFailed() { return this.isOk; }
   public Thread thread() { return this.running; }
 
-  // TODO(zacsh) implement this inline as part of the LocalChannel spec
   private void fatalf(Exception e, String format, Object... args) {
     this.log.errorf(e, format, args);
     this.stop();
@@ -64,8 +63,7 @@ public class RecvChannel implements LocalChannel {
     try {
       this.inSock.setSoTimeout(SOCKET_WAIT_MILLIS);
     } catch (SocketException e) {
-      this.log.errorf(e, "failed configuring socket timeout");
-      this.stop();
+      this.fatalf(e, "failed configuring socket timeout");
       return;
     }
 
