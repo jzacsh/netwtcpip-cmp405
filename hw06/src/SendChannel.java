@@ -55,7 +55,7 @@ public class SendChannel implements LocalChannel {
   }
 
   public boolean isActive() { return !this.stopped; }
-  public boolean isFailed() { return this.isOk; }
+  public boolean isFailed() { return !this.isOk; }
   public Thread thread() { return this.running; }
 
   public Thread stop() {
