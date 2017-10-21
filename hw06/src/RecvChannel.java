@@ -46,7 +46,7 @@ public class RecvChannel implements LocalChannel {
   }
 
   public boolean isActive() { return !this.stopped; }
-  public boolean isFailed() { return this.isOk; }
+  public boolean isFailed() { return !this.isOk; }
   public Thread thread() { return this.running; }
 
   private void fatalf(Exception e, String format, Object... args) {
