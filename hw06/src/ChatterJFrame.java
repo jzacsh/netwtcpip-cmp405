@@ -216,7 +216,6 @@ class ChatStart {
   }
 
   public void launchChat(DatagramSocket sock) {
-    // TODO(zacsh) pass socket here instead
     new MessagingJFrame(sock, this.host, this.port);
   }
 }
