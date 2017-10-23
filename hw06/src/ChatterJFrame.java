@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.swing.GroupLayout;
@@ -49,10 +50,13 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
   private ChatStart start = null;
 
-  public ChatterJFrame(String title) {
+  private DatagramSocket sock;
+
+  public ChatterJFrame(String title, DatagramSocket sock) {
     super(title);
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    this.sock = sock;
 
     this.startChatBtn = new JButton("start chat");
     this.startChatBtn.addActionListener(this);
@@ -99,8 +103,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     return labeledField;
   }
 
-  public static ChatterJFrame startDisplay(String appTitle, WindowAdapter teardown) {
-    ChatterJFrame w = new ChatterJFrame(appTitle);
+  public static ChatterJFrame startDisplay(
+      String appTitle,
+      DatagramSocket sock,
+      WindowAdapter teardown) {
+    ChatterJFrame w = new ChatterJFrame(appTitle, sock);
     w.addCleanupHandler(teardown);
     return w;
   }
@@ -157,7 +164,8 @@ public class ChatterJFrame extends JFrame implements ActionListener {
           return;
         }
 
-        this.start.launchChat();
+        this.start.launchChat(this.sock);
+        // TODO(zacsh) still need mutexes and history store
         this.log.printf(
             "NOT YET IMPLEMENTED: starting valid chat\n\tdest: '%s', port: '%s'...\n",
             this.destAddr.getText(), this.destPort.getText());
@@ -207,7 +215,8 @@ class ChatStart {
     return new ChatStart(host, port);
   }
 
-  public void launchChat() {
-    new MessagingJFrame(String.format("chat with %s on %d", this.host, this.port));
+  public void launchChat(DatagramSocket sock) {
+    // TODO(zacsh) pass socket here instead
+    new MessagingJFrame(sock, this.host, this.port);
   }
 }

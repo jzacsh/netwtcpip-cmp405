@@ -1,6 +1,8 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.BorderLayout;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,8 +20,15 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   private JButton sendBtn;
   private JTextArea chatLog;
 
-  public MessagingJFrame(String title) {
-    super(title);
+  private final DatagramSocket sock;
+  private final InetAddress host;
+  private final int port;
+
+  public MessagingJFrame(final DatagramSocket sock, final InetAddress host, int port) {
+    super(String.format("chat with %s on %d", host, port));
+    this.sock = sock;
+    this.host = host;
+    this.port = port;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 

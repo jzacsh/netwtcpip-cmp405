@@ -10,6 +10,8 @@ public class Chatterbox {
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
+  private final DatagramSocket inSocket;
+
   private RecvChannel receiver = null;
   private SendChannel sender = null;
   private ChatterJFrame jframe = null;
@@ -26,12 +28,12 @@ public class Chatterbox {
     //    (eg: windowing/UI-thread should be able to pass a new message over to cause this select
     //    case to trigger (when the next selection happens in some SOCKET_WAIT_MILLIS milliseconds
     // - an we've spent SOCKET_WAIT_MILLIS receive()ing messages
-    final DatagramSocket inSocket = AssertNetwork.mustOpenSocket(
+    this.inSocket = AssertNetwork.mustOpenSocket(
         "setup: failed opening receiving socket on %s:%d: %s\n");
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "setup: failed resolving destination host '%s': %s\n");
 
-    this.receiver = new RecvChannel(inSocket).setLogLevel(LOG_LEVEL);
+    this.receiver = new RecvChannel(this.inSocket).setLogLevel(LOG_LEVEL);
     this.sender = new SendChannel(
         new Scanner(messages),
         destAddr,
@@ -90,7 +92,7 @@ public class Chatterbox {
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if chatter.receiver thread fails
-    ChatterJFrame.startDisplay("Chatterbox", new WindowAdapter() {
+    ChatterJFrame.startDisplay("Chatterbox", chatter.inSocket, new WindowAdapter() {
       @Override public void windowClosing(WindowEvent e) {
         chatter.log.printf("handling window closing: %s\n", e);
         chatter.teardown();
