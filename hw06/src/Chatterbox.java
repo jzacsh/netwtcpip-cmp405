@@ -10,15 +10,25 @@ public class Chatterbox {
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
-  private final DatagramSocket inSocket;
+  private final DatagramSocket sock;
 
   private RecvChannel receiver = null;
   private SendChannel sender = null;
-  private ChatterJFrame jframe = null;
+
+  public Chatterbox() {
+    this.sock = AssertNetwork.mustOpenSocket(
+        "setup: failed opening receiving socket on %s:%d: %s\n");
+    this.receiver = new RecvChannel(this.sock).setLogLevel(LOG_LEVEL);
+  }
+
   public Chatterbox(
       final java.io.InputStream messages,
       final String destHostName,
       final int destPort) {
+    this();
+    if (FORUM_MODE) {
+      throw new Error("only no-arg constructor designed for forum-mode");
+    }
     final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
         "setup: failed opening socket to send [via %s] from port %d: %s\n");
     // TODO(zacsh) refactor split into SendChannel and ReceiveClient, and just have single-looper
@@ -28,20 +38,21 @@ public class Chatterbox {
     //    (eg: windowing/UI-thread should be able to pass a new message over to cause this select
     //    case to trigger (when the next selection happens in some SOCKET_WAIT_MILLIS milliseconds
     // - an we've spent SOCKET_WAIT_MILLIS receive()ing messages
-    this.inSocket = AssertNetwork.mustOpenSocket(
-        "setup: failed opening receiving socket on %s:%d: %s\n");
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "setup: failed resolving destination host '%s': %s\n");
 
-    this.receiver = new RecvChannel(this.inSocket).setLogLevel(LOG_LEVEL);
     this.sender = new SendChannel(
         new Scanner(messages),
         destAddr,
         destPort, outSock).setLogLevel(LOG_LEVEL);
-    Chatterbox.log.printf("setup: listener & sender setups complete.\n\n");
+    this.log.printf("setup: listener & sender setups complete.\n\n");
   }
 
   private static Chatterbox parseFromCli(String[] args) {
+    if (FORUM_MODE) {
+      return new Chatterbox();
+    }
+
     final String usageDoc = "DESTINATION_HOST DEST_PORT";
     final int expectedArgs = 2;
     if (args.length != expectedArgs) {
@@ -92,7 +103,7 @@ public class Chatterbox {
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if chatter.receiver thread fails
-    ChatterJFrame.startDisplay("Chatterbox", chatter.inSocket, new WindowAdapter() {
+    ChatterJFrame.startDisplay("Chatterbox", chatter.sock, new WindowAdapter() {
       @Override public void windowClosing(WindowEvent e) {
         chatter.log.printf("handling window closing: %s\n", e);
         chatter.teardown();
