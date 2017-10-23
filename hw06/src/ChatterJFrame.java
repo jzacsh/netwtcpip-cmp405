@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 
 // TODO(zacsh) rename SendChannel to DirectTextChannel
 // TODO(zacsh) morph ChatterJFrame into a `ForumGUIChannel implements LocalChannel` whose internal
@@ -80,6 +81,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
     this.resetDashBrds();
 
+    this.setLocationRelativeTo(null);
     this.setVisible(true);
   }
 
@@ -155,9 +157,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
           return;
         }
 
+        this.start.launchChat();
         this.log.printf(
             "NOT YET IMPLEMENTED: starting valid chat\n\tdest: '%s', port: '%s'...\n",
             this.destAddr.getText(), this.destPort.getText());
+        this.resetDashBrds();
         break;
       default:
         this.log.printf(
@@ -201,5 +205,9 @@ class ChatStart {
       return new ChatStart(e.toString());
     }
     return new ChatStart(host, port);
+  }
+
+  public void launchChat() {
+    new MessagingJFrame(String.format("chat with %s on %d", this.host, this.port));
   }
 }
