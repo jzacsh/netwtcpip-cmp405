@@ -4,6 +4,8 @@ SRCS   :=  $(wildcard $(SRCD)/*.java)
 KLSS   :=  $(patsubst $(SRCD)/%.java, %.java, $(SRCS))
 JVOBJ  :=  $(patsubst %.java, $(OUTD)/%.class, $(KLSS))
 
+Chatterbox: $(OUTD)/Chatterbox.class
+
 all: $(JVOBJ)
 
 $(OUTD)/%.class: $(SRCD)/%.java
