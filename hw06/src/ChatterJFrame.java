@@ -212,6 +212,11 @@ class ChatStart {
     } catch (NumberFormatException e) {
       return new ChatStart(e.toString());
     }
+
+    if (!AssertNetwork.isValidPort(port)) {
+      return new ChatStart(String.format("%d is an invalid port number", port));
+    }
+
     return new ChatStart(host, port);
   }
 

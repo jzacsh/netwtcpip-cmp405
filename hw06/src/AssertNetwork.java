@@ -6,6 +6,9 @@ import java.net.UnknownHostException;
 
 /** Fast-failing, program-exiting, loud, tiny utils. */
 public class AssertNetwork {
+  /* Maximum possible port number bound by field size: two bytes. */
+  public static final int MAX_POSSIBLE_PORT = 0xFFFF;
+
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
    */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
@@ -53,5 +56,9 @@ public class AssertNetwork {
       System.exit(1);
     }
     return addr;
+  }
+
+  public static final boolean isValidPort(final int port) {
+    return port > 0 && port <= MAX_POSSIBLE_PORT;
   }
 }
