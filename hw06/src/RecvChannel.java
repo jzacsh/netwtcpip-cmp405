@@ -31,7 +31,7 @@ public class RecvChannel implements LocalChannel {
     return this;
   }
 
-  public RecvChannel start() {
+  public RecvChannel startChannel() {
     this.stopped = false;
     this.running = new Thread(this);
     this.running.setName(TAG);

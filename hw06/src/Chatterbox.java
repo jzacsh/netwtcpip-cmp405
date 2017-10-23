@@ -1,15 +1,22 @@
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.util.Scanner;
 import java.lang.InterruptedException;
 
 public class Chatterbox {
+  private static boolean FORUM_MODE = true;
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
 
   private RecvChannel receiver = null;
   private SendChannel sender = null;
-  public Chatterbox(final java.io.InputStream messages, final String destHostName, final int destPort) {
+  private ChatterJFrame jframe = null;
+  public Chatterbox(
+      final java.io.InputStream messages,
+      final String destHostName,
+      final int destPort) {
     final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
         "setup: failed opening socket to send [via %s] from port %d: %s\n");
     // TODO(zacsh) refactor split into SendChannel and ReceiveClient, and just have single-looper
@@ -48,27 +55,46 @@ public class Chatterbox {
     return new Chatterbox(System.in, destHostName, destPort);
   }
 
+  public boolean waitOnDirectText() {
+    try {
+      // block on user interaction to exit
+      this.sender.report().startChannel().thread().join();
+    } catch(InterruptedException e) {
+      this.log.errorf(e, "failed waiting on UX to exit\n");
+      return true;
+    }
+
+    return this.sender.isFailed();
+  }
+
+  public boolean teardown() {
+    try {
+      this.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
+    } catch(InterruptedException e) {
+      this.log.errorf(e, "problem stopping receiver");
+      return false;
+    }
+    return true;
+  }
+
   public static void main(String[] args) {
     Chatterbox chatter = Chatterbox.parseFromCli(args);
 
-    chatter.receiver.report().start();
-    chatter.sender.report().start();
-    try {
-      chatter.sender.thread().join(); // block on send channel's own exit
-    } catch(InterruptedException e) {
-      Chatterbox.log.errorf(e, "failed waiting on sender thread\n");
+    chatter.receiver.report().startChannel();
+    chatter.log.printf("children spawned, continuing with user task\n");
+
+    if (!FORUM_MODE) {
+      System.exit(chatter.waitOnDirectText() & chatter.teardown() ? 1 : 0);
     }
 
-    System.out.printf("\n");
-    Chatterbox.log.printf("cleaning up recvr thread\n");
-    try {
-      chatter.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
-    } catch(InterruptedException e) {
-      Chatterbox.log.errorf(e, "problem stopping receiver");
-    }
-
-    if (!chatter.sender.isFailed()) {
-      System.exit(1);
-    }
+    // TODO(zacsh) fix to either:
+    // 1) properly block on swing gui to exit
+    // 2) or shutdown gui from here if chatter.receiver thread fails
+    ChatterJFrame.startDisplay("Chatterbox", new WindowAdapter() {
+      @Override public void windowClosing(WindowEvent e) {
+        chatter.log.printf("handling window closing: %s\n", e);
+        chatter.teardown();
+      }
+    });
   }
 }

@@ -36,7 +36,7 @@ public class SendChannel implements LocalChannel {
     return this;
   }
 
-  public SendChannel start() {
+  public SendChannel startChannel() {
     this.stopped = false;
     this.running = new Thread(this);
     this.running.setName(TAG);
