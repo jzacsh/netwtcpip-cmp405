@@ -1,3 +1,5 @@
+import java.net.DatagramPacket;
+
 public class Message {
   private Remote r = null;
   private String message;
@@ -10,4 +12,12 @@ public class Message {
   public Remote getRemote() { return this.r; }
   public String getMessage() { return this.message; }
   public boolean isReceived() { return this.isReceived; }
+
+  public DatagramPacket toPacket() {
+    return new DatagramPacket(
+        this.message.getBytes(),
+        this.message.length(),
+        this.r.getHost(),
+        this.r.getPort());
+  }
 }
