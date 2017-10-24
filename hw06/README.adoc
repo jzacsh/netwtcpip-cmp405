@@ -91,6 +91,9 @@ kookoo... kachu??
 ----
 you@b $ nc -ul 6400
 kookoo... kachu??
+
+# or just a `tail`esque version
+you@ while true; do echo | nc -ul 6400;done
 ----
 
 == instructions
