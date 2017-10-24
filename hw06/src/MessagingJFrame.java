@@ -59,9 +59,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
       return;
     }
 
-    Message m = new Message(this.remote, rawMsg, false /*isReceived*/);
-
-    this.hist.safeEnqueueSend(this.remote, m);
+    this.hist.safeEnqueueSend(this.remote, new Message(this.remote, rawMsg, false /*isReceived*/));
     this.log.printf("enqueued message '%s' to send to %s\n", rawMsg, this.remote);
     this.composeField.setText("");
   }
