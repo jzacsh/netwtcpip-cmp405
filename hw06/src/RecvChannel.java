@@ -6,7 +6,7 @@ import java.net.SocketTimeoutException;
 import java.io.UnsupportedEncodingException;
 
 public class RecvChannel implements LocalChannel {
-  public static final int SOCKET_WAIT_MILLIS = 5;
+  public static final int SOCKET_WAIT_MILLIS = 30;
   private static final String TAG = "recv'r thrd";
   private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;

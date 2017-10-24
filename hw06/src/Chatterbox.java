@@ -6,6 +6,7 @@ import java.util.Scanner;
 import java.lang.InterruptedException;
 
 public class Chatterbox {
+  private static final int MAX_THREAD_GRACE_MILLIS = SOCKET_WAIT_MILLIS * 2;
   private static boolean FORUM_MODE = true;
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
@@ -82,11 +83,12 @@ public class Chatterbox {
 
   public boolean teardown() {
     try {
-      this.receiver.stop().join(RecvChannel.SOCKET_WAIT_MILLIS * 2 /*millis*/);
+      this.receiver.stop().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
     } catch(InterruptedException e) {
       this.log.errorf(e, "problem stopping receiver");
       return false;
     }
+
     return true;
   }
 
