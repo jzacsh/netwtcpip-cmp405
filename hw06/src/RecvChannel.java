@@ -101,12 +101,7 @@ public class RecvChannel implements LocalChannel {
           "\"\"\"", message, "\"\"\"");
 
       Remote dest = new Remote(inPacket.getAddress(), inPacket.getPort());
-      this.hist.receiptLock.lock();
-      try {
-        this.hist.enqueueReceived(dest, new Message(dest, message, true /*isReceived*/));
-      } finally {
-        this.hist.receiptLock.unlock();
-      }
+      this.hist.safeEnqueueReceived(dest, new Message(dest, message, true /*isReceived*/));
 
       for (int i = 0; i < inPacket.getLength(); ++i) {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this

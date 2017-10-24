@@ -28,9 +28,19 @@ public class History {
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
-  public void enqueueReceived(Remote r, Message received) {
+  private void enqueueReceived(Remote r, Message received) {
     Queue<Message> receiving = getNonEmptyFIFO(this.receiptFIFOs, r.toString());
     receiving.add(received);
+  }
+
+  /** safe version of {@link #enqueueReceived}. */
+  public void safeEnqueueReceived(final Remote r, final Message received) {
+    this.receiptLock.lock();
+    try {
+      this.enqueueReceived(r, received);
+    } finally {
+      this.receiptLock.unlock();
+    }
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
@@ -39,9 +49,19 @@ public class History {
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
-  public void enqueueToSend(Remote r, Message sending) {
+  private void enqueueToSend(Remote r, Message sending) {
     Queue<Message> sendingQueue = getNonEmptyFIFO(this.sendingFIFOs, r.toString());
     sendingQueue.add(sending);
+  }
+
+  /** safe version of {@link #enqueueToSend} */
+  public void safeEnqueueSend(final Remote r, final Message sending) {
+    this.sendingLock.lock();
+    try {
+      this.enqueueToSend(r, sending);
+    } finally {
+      this.sendingLock.unlock();
+    }
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
