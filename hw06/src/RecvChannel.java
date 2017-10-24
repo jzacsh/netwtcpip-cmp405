@@ -96,9 +96,8 @@ public class RecvChannel implements LocalChannel {
       }
 
       this.log.printf(
-          "enqueuing received #%03d [%03d chars] %s\n%s\n%s\n",
-          receiptIndex, message.length(),
-          "\"\"\"", message, "\"\"\"");
+          "enqueuing received #%03d [%03d chars]: %s%s%s\n",
+          receiptIndex, message.length(), "\"\"\"", message, "\"\"\"");
 
       Remote dest = new Remote(inPacket.getAddress(), inPacket.getPort());
       this.hist.safeEnqueueReceived(dest, new Message(dest, message, true /*isReceived*/));
