@@ -1,4 +1,5 @@
 import java.net.DatagramSocket;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,15 @@ public class History {
     this.sendingFIFOs = new HashMap<String, Queue<Message>>();
   }
 
+  private static void safeRun(Lock locker, Runnable toRun) {
+    locker.lock();
+    try {
+      toRun.run();
+    } finally {
+      locker.unlock();
+    }
+  }
+
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {
     return m.containsKey(key) ? m.get(key) : new LinkedList<Message>();
   }
@@ -35,12 +45,7 @@ public class History {
 
   /** safe version of {@link #enqueueReceived}. */
   public void safeEnqueueReceived(final Remote r, final Message received) {
-    this.receiptLock.lock();
-    try {
-      this.enqueueReceived(r, received);
-    } finally {
-      this.receiptLock.unlock();
-    }
+    History.safeRun(this.receiptLock, () -> this.enqueueReceived(r, received));
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
@@ -56,12 +61,7 @@ public class History {
 
   /** safe version of {@link #enqueueToSend} */
   public void safeEnqueueSend(final Remote r, final Message sending) {
-    this.sendingLock.lock();
-    try {
-      this.enqueueToSend(r, sending);
-    } finally {
-      this.sendingLock.unlock();
-    }
+    History.safeRun(this.sendingLock, () -> this.enqueueToSend(r, sending));
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
