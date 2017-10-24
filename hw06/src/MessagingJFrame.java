@@ -54,6 +54,19 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   }
 
   public void actionPerformed(ActionEvent e) {
-    this.log.printf("TODO: actionPerformed: %s\n", e.getSource());
+    final String rawMsg = this.composeField.getText();
+    if (rawMsg.trim().length() == 0) {
+      return;
+    }
+
+    Message m = new Message(this.remote, rawMsg, false /*isReceived*/);
+
+    this.log.printf("enqueuing messaging '%s' to send to %s\n", rawMsg, this.remote);
+    this.hist.sendingLock.lock();
+    try {
+      this.hist.enqueueToSend(this.remote, m);
+    } finally {
+      this.hist.sendingLock.unlock();
+    }
   }
 }
