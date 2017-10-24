@@ -49,13 +49,14 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
   private ChatStart start = null;
 
+  private History hist;
   private DatagramSocket sock;
 
-  public ChatterJFrame(String title, DatagramSocket sock) {
+  public ChatterJFrame(String title, History hist) {
     super(title);
+    this.hist = hist;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    this.sock = sock;
 
     this.startChatBtn = new JButton("start chat");
     this.startChatBtn.addActionListener(this);
@@ -104,9 +105,9 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
   public static ChatterJFrame startDisplay(
       String appTitle,
-      DatagramSocket sock,
+      History hist,
       WindowAdapter teardown) {
-    ChatterJFrame w = new ChatterJFrame(appTitle, sock);
+    ChatterJFrame w = new ChatterJFrame(appTitle, hist);
     w.addCleanupHandler(teardown);
     return w;
   }
@@ -163,7 +164,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
           return;
         }
 
-        this.start.launchChat(this.sock);
+        this.start.launchChat(this.hist);
         // TODO(zacsh) still need mutexes and history store
         this.log.printf(
             "NOT YET IMPLEMENTED: starting valid chat\n\tdest: '%s', port: '%s'...\n",
@@ -205,7 +206,7 @@ class ChatStart extends Remote {
     return new ChatStart(r.getHost(), r.getPort());
   }
 
-  public void launchChat(DatagramSocket sock) {
-    new MessagingJFrame(sock, this.host, this.port);
+  public void launchChat(History hist) {
+    new MessagingJFrame(hist, this);
   }
 }

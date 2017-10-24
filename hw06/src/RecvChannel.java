@@ -15,12 +15,9 @@ public class RecvChannel implements LocalChannel {
 
   private boolean stopped = false;
   private Thread running = null;
-  private DatagramSocket inSock = null;
   private boolean isOk = true;
-  public RecvChannel(History hist, DatagramSocket inSocket) {
-    this.hist = hist;
-    this.inSock = inSocket;
-  }
+
+  public RecvChannel(History hist) { this.hist = hist; }
 
   public RecvChannel setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
@@ -30,7 +27,7 @@ public class RecvChannel implements LocalChannel {
   public RecvChannel report() {
     this.log.printf(
         "READY to spawn thread consuming from local socket %s\n",
-        this.inSock.getLocalSocketAddress());
+        this.hist.source.getLocalSocketAddress());
     return this;
   }
 
@@ -64,7 +61,7 @@ public class RecvChannel implements LocalChannel {
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
 
     try {
-      this.inSock.setSoTimeout(SOCKET_WAIT_MILLIS);
+      this.hist.source.setSoTimeout(SOCKET_WAIT_MILLIS);
     } catch (SocketException e) {
       this.fatalf(e, "failed configuring socket timeout");
       return;
@@ -79,7 +76,7 @@ public class RecvChannel implements LocalChannel {
       }
 
       try {
-        this.inSock.receive(inPacket);
+        this.hist.source.receive(inPacket);
       } catch (SocketTimeoutException e) {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {

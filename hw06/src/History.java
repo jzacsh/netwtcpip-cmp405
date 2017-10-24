@@ -1,3 +1,4 @@
+import java.net.DatagramSocket;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.HashMap;
 import java.util.Map;
@@ -5,13 +6,16 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 public class History {
+  public final DatagramSocket source;
+
   public final ReentrantLock receiptLock;
   private Map<String, Queue<Message>> receiptFIFOs = null;
 
   public final ReentrantLock sendingLock;
   private Map<String, Queue<Message>> sendingFIFOs = null;
 
-  public History() {
+  public History(final DatagramSocket source) {
+    this.source = source;
     this.receiptLock = new ReentrantLock();
     this.receiptFIFOs = new HashMap<String, Queue<Message>>();
 

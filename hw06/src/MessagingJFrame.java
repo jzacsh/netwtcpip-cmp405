@@ -20,15 +20,13 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   private JButton sendBtn;
   private JTextArea chatLog;
 
-  private final DatagramSocket sock;
-  private final InetAddress host;
-  private final int port;
+  private History hist;
+  private final Remote remote;
 
-  public MessagingJFrame(final DatagramSocket sock, final InetAddress host, int port) {
-    super(String.format("chat with %s on %d", host, port));
-    this.sock = sock;
-    this.host = host;
-    this.port = port;
+  public MessagingJFrame(History hist, final Remote r) {
+    super(String.format("chat with %s", r.toString()));
+    this.hist = hist;
+    this.remote = r;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
