@@ -17,7 +17,7 @@ public class Chatterbox {
   public Chatterbox() {
     DatagramSocket sock = AssertNetwork.mustOpenSocket(
         "setup: failed opening receiving socket on %s:%d: %s\n");
-    this.hist = new History(sock);
+    this.hist = new History(sock).setLogLevel(LOG_LEVEL);
     this.receiver = new RecvChannel(this.hist).setLogLevel(LOG_LEVEL);
   }
 

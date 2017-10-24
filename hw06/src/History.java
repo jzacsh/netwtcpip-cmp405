@@ -7,6 +7,8 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 public class History {
+  private static final String TAG = "history thrd";
+  private static final Logger log = new Logger(TAG);
   public final DatagramSocket source;
 
   public final ReentrantLock receiptLock;
@@ -22,6 +24,11 @@ public class History {
 
     this.sendingLock = new ReentrantLock();
     this.sendingFIFOs = new HashMap<String, Queue<Message>>();
+  }
+
+  public History setLogLevel(final Logger.Level lvl) {
+    this.log.setLevel(lvl);
+    return this;
   }
 
   private static void safeRun(Lock locker, Runnable toRun) {
