@@ -56,8 +56,8 @@ public class Chatterbox {
     final String usageDoc = "DESTINATION_HOST DEST_PORT";
     final int expectedArgs = 2;
     if (args.length != expectedArgs) {
-      Chatterbox.log.printf(
-          "Error: got %d argument(s), but expected %d...\nusage: %s\n",
+      Chatterbox.log.errorf(
+          "got %d argument(s), but expected %d...\nusage: %s\n",
           args.length, expectedArgs, usageDoc);
       System.exit(1);
     }
