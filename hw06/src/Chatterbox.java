@@ -6,7 +6,7 @@ import java.util.Scanner;
 import java.lang.InterruptedException;
 
 public class Chatterbox {
-  private static final int MAX_THREAD_GRACE_MILLIS = SOCKET_WAIT_MILLIS * 2;
+  private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
   private static boolean FORUM_MODE = true;
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
