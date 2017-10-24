@@ -7,6 +7,7 @@ public class Message {
     this.message = message;
     this.isReceived = isReceived;
   }
+  public Remote getRemote() { return this.r; }
   public String getMessage() { return this.message; }
   public boolean isReceived() { return this.isReceived; }
 }
