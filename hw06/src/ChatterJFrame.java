@@ -92,8 +92,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private JPanel addLabeled(
       JTextField subject, String label,
       String cmd) {
-    this.log.printf("label not yet handled: '%s'\n", label);
-
     JPanel labeledField = new JPanel();
     labeledField.add(new JLabel(label), BorderLayout.LINE_END);
 
