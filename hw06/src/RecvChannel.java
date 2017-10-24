@@ -11,11 +11,14 @@ public class RecvChannel implements LocalChannel {
   private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;
 
+  private History hist;
+
   private boolean stopped = false;
   private Thread running = null;
   private DatagramSocket inSock = null;
   private boolean isOk = true;
-  public RecvChannel(DatagramSocket inSocket) {
+  public RecvChannel(History hist, DatagramSocket inSocket) {
+    this.hist = hist;
     this.inSock = inSocket;
   }
 
@@ -96,9 +99,17 @@ public class RecvChannel implements LocalChannel {
       }
 
       this.log.printf(
-          "received #%03d [%03d chars] %s\n%s\n%s\n",
+          "enqueuing received #%03d [%03d chars] %s\n%s\n%s\n",
           receiptIndex, message.length(),
           "\"\"\"", message, "\"\"\"");
+
+      Remote dest = new Remote(inPacket.getAddress(), inPacket.getPort());
+      this.hist.receiptLock.lock();
+      try {
+        this.hist.enqueueReceived(dest, new Message(dest, message, true /*isReceived*/));
+      } finally {
+        this.hist.receiptLock.unlock();
+      }
 
       for (int i = 0; i < inPacket.getLength(); ++i) {
         inBuffer[i] = ' '; // TODO(zacsh) find out why fakhouri does this

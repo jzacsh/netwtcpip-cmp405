@@ -12,13 +12,15 @@ public class Chatterbox {
 
   private final DatagramSocket sock;
 
+  private History hist = null;
   private RecvChannel receiver = null;
   private SendChannel sender = null;
 
   public Chatterbox() {
+    this.hist = new History();
     this.sock = AssertNetwork.mustOpenSocket(
         "setup: failed opening receiving socket on %s:%d: %s\n");
-    this.receiver = new RecvChannel(this.sock).setLogLevel(LOG_LEVEL);
+    this.receiver = new RecvChannel(this.hist, this.sock).setLogLevel(LOG_LEVEL);
   }
 
   public Chatterbox(

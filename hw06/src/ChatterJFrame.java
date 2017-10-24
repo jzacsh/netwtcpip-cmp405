@@ -9,7 +9,6 @@ import java.awt.Font;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -123,7 +122,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     if (host.length() == 0 || port.length() == 0) {
       return "host & port required";
     }
-    this.start = ChatStart.fromStrings(host, port);
+    this.start = ChatStart.parseFrom(host, port);
     return this.start.isValid() ? null : this.start.getFailReason();
   }
 
@@ -183,41 +182,27 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 }
 
-class ChatStart {
-  private InetAddress host;
-  private int port;
-  private String failure;
+class ChatStart extends Remote {
+  private String failure = null;
 
-  private ChatStart(String failure) { this.failure = failure; }
-  public ChatStart(final InetAddress host, int port) {
-    this.host = host;
-    this.port = port;
-    this.failure = null;
+  private ChatStart(final InetAddress host, int port) { super(host, port); }
+
+  private ChatStart(String fail) {
+    this(null /*host*/, -1 /*port*/);
+    this.failure = fail;
   }
-  public InetAddress getHost() { return this.host; }
-  public int getPort() { return this.port; }
 
   public boolean isValid() { return this.failure == null; }
   public String getFailReason() { return this.failure; }
-  public static ChatStart fromStrings(String hostRaw, String portRaw) {
-    InetAddress host = null;
+
+  public static ChatStart parseFrom(String hostRaw, String portRaw) {
+    Remote r = null;
     try {
-      host = InetAddress.getByName(hostRaw);
-    } catch (UnknownHostException e) {
+      r = Remote.parseFrom(hostRaw, portRaw);
+    } catch (Exception e) {
       return new ChatStart(e.toString());
     }
-    int port;
-    try {
-      port = Integer.parseUnsignedInt(portRaw);
-    } catch (NumberFormatException e) {
-      return new ChatStart(e.toString());
-    }
-
-    if (!AssertNetwork.isValidPort(port)) {
-      return new ChatStart(String.format("%d is an invalid port number", port));
-    }
-
-    return new ChatStart(host, port);
+    return new ChatStart(r.getHost(), r.getPort());
   }
 
   public void launchChat(DatagramSocket sock) {
