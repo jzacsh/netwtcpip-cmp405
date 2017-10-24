@@ -36,8 +36,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String DASH_DEFAULT_MESSAGE = "all fields required";
   private static final String DASH_PROCESSING_MESSAGE = "loading...";
 
-  private static final String DASH_DEFAULT_PORT = "6400";
-
   private JButton startChatBtn;
   private JLabel dashMessaging;
   private JTextField destAddr;
@@ -52,8 +50,10 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private History hist;
   private DatagramSocket sock;
 
-  public ChatterJFrame(String title, History hist) {
+  private final int defaultRemotePort;
+  public ChatterJFrame(String title, int defaultRemotePort, History hist) {
     super(title);
+    this.defaultRemotePort = defaultRemotePort;
     this.hist = hist;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -101,11 +101,13 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     return labeledField;
   }
 
+  // TODO(zacsh) remove this in favor of straight-forward constructor
   public static ChatterJFrame startDisplay(
       String appTitle,
+      int defaultRemotePort,
       History hist,
       WindowAdapter teardown) {
-    ChatterJFrame w = new ChatterJFrame(appTitle, hist);
+    ChatterJFrame w = new ChatterJFrame(appTitle, defaultRemotePort, hist);
     w.addCleanupHandler(teardown);
     return w;
   }
@@ -134,7 +136,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.dashMessaging.setText(DASH_DEFAULT_MESSAGE);
     this.dashMessaging.setForeground(Color.black);
     this.destAddr.setText("");
-    this.destPort.setText(DASH_DEFAULT_PORT);
+    this.destPort.setText(String.valueOf(this.defaultRemotePort));
   }
 
   private void dashNoteFailure(final String currentID, final String reason) {

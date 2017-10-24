@@ -9,13 +9,17 @@ public class AssertNetwork {
   /* Maximum possible port number bound by field size: two bytes. */
   public static final int MAX_POSSIBLE_PORT = 0xFFFF;
 
+  public static final DatagramSocket mustOpenSocket(final String failMessage) {
+    return mustOpenSocket(-1 /*port*/, failMessage);
+  }
+
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
    */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  public static final DatagramSocket mustOpenSocket(final String failMessage) {
+  public static final DatagramSocket mustOpenSocket(int port, final String failMessage) {
     DatagramSocket sock = null;
     try {
-      sock = new DatagramSocket();
+      sock = port == -1 ? new DatagramSocket() : new DatagramSocket(port);
     } catch (SocketException e) {
       System.err.printf(failMessage, "[default]", "[default]", e);
       System.exit(1);
