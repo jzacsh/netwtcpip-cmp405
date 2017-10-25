@@ -60,7 +60,9 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     }
 
     this.hist.safeEnqueueSend(this.remote, new Message(this.remote, rawMsg, false /*isReceived*/));
-    this.log.printf("enqueued message '%s' to send to %s\n", rawMsg, this.remote);
+    this.log.debugf(
+        "enqueued message '%s' to send to %s [now history: isLocked=%s]\n",
+        rawMsg, this.remote, this.hist.sendingLock.isLocked());
     this.composeField.setText("");
   }
 }

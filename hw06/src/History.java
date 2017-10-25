@@ -132,6 +132,9 @@ public class History implements Runnable {
         }
 
         chatHist.add(toSend);
+        this.log.debugf(
+            "socket.send()d: %s message %03d: '%s'\n",
+            toSend.getRemote(), chatHist.size(), toSend.getMessage());
       }
     });
   }
@@ -144,6 +147,11 @@ public class History implements Runnable {
       List<Message> chatHist = this.getNonEmptyRemoteHist(remoteID);
       while (!q.isEmpty()) {
         chatHist.add(q.poll());
+        this.log.debugf(
+            "saved message #%03d from %s: '%s'\n",
+            chatHist.size() - 1,
+            chatHist.get(chatHist.size() - 1).getRemote(),
+            chatHist.get(chatHist.size() - 1).getMessage());
       }
     });
   }
