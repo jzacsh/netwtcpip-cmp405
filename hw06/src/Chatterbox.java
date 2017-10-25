@@ -84,6 +84,7 @@ public class Chatterbox {
 
   public boolean teardown() {
     try {
+      this.hist.stopPlumber().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
       this.receiver.stop().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
     } catch(InterruptedException e) {
       this.log.errorf(e, "problem stopping receiver");
@@ -97,6 +98,8 @@ public class Chatterbox {
     Chatterbox chatter = Chatterbox.parseFromCli(args);
 
     chatter.receiver.report().startChannel();
+    chatter.hist.startPlumber();
+
     chatter.log.printf("children spawned, continuing with user task\n");
 
     if (!FORUM_MODE) {

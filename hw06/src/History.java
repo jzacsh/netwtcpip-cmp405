@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-public class History {
+public class History implements Runnable {
   private static final long MAX_BLOCK_MILLIS = 25;
   private static final String TAG = "history thrd";
   private static final Logger log = new Logger(TAG);
@@ -20,6 +20,9 @@ public class History {
 
   public final ReentrantLock sendingLock;
   private Map<String, Queue<Message>> sendingFIFOs = null;
+
+  private Thread plumber;
+  private boolean isPlumbing = false;
 
   private Map<String, List<Message>> full = null;
   public History(final DatagramSocket source) {
@@ -110,5 +113,59 @@ public class History {
       this.full.put(remoteID, new ArrayList<Message>());
     }
     return this.full.get(remoteID);
+  }
+
+  /** unsafe; calls should be wrapped in sendingLock.lock(). */
+  private void flushSends() {
+    this.sendingFIFOs.forEach((final String remoteID, Queue<Message> q) -> {
+      if (!this.isPlumbing) { return; }
+
+      List<Message> chatHist = this.getNonEmptyRemoteHist(remoteID);
+      Message toSend;
+      while ((toSend = q.poll()) != null) {
+        try {
+          this.source.send(toSend.toPacket());
+        } catch(Exception e) {
+          this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.size() + 1);
+          this.stopPlumber();
+          return;
+        }
+
+        chatHist.add(toSend);
+      }
+    });
+  }
+
+  /** unsafe; calls should be wrapped in receiptLock.lock(). */
+  private void flushReceives() {
+    this.receiptFIFOs.forEach((String remoteID, Queue<Message> q) -> {
+      if (!this.isPlumbing) { return; }
+
+      List<Message> chatHist = this.getNonEmptyRemoteHist(remoteID);
+      while (!q.isEmpty()) {
+        chatHist.add(q.poll());
+      }
+    });
+  }
+
+  public void run() {
+    while (this.isPlumbing) {
+      History.safeRunTry(this.sendingLock, () -> this.flushSends());
+      History.safeRunTry(this.receiptLock, () -> this.flushReceives());
+    }
+  }
+
+  public void startPlumber() {
+    this.isPlumbing = true;
+    this.plumber = new Thread(this);
+    this.plumber.setName(TAG);
+    this.plumber.start();
+    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.plumber);
+  }
+
+  // Idempotent halter to the plumber's internal logic
+  public Thread stopPlumber() {
+    this.isPlumbing = false;
+    return this.plumber;
   }
 }
