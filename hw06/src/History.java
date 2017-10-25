@@ -6,8 +6,10 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class History {
+  private static final long MAX_BLOCK_MILLIS = 25;
   private static final String TAG = "history thrd";
   private static final Logger log = new Logger(TAG);
   public final DatagramSocket source;
@@ -42,6 +44,25 @@ public class History {
     } finally {
       locker.unlock();
     }
+  }
+
+  private static boolean safeRunTry(Lock locker, Runnable toRun) {
+    boolean isLocked = false;
+    try {
+      isLocked = locker.tryLock(MAX_BLOCK_MILLIS, TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      return false;
+    }
+    if (!isLocked) {
+      return isLocked;
+    }
+
+    try {
+      toRun.run();
+    } finally {
+      locker.unlock();
+    }
+    return true;
   }
 
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {
