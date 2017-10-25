@@ -19,6 +19,11 @@ public class Logger {
     this.fprintf(System.err, String.format("ERROR: %s", fmt), args);
   }
 
+  public void debugf(String fmt, Object... args) {
+    if (this.lvl != DEBUG) { return; } // ignore
+    this.printf(fmt, args);
+  }
+
   /**
    * NOTE: this method appends its own newline to the end of all logs.
    */
