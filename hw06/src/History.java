@@ -15,10 +15,10 @@ public class History implements Runnable {
   private static final Logger log = new Logger(TAG);
   public final DatagramSocket source;
 
-  public final ReentrantLock receiptLock;
+  public final Lock receiptLock;
   private Map<String, Queue<Message>> receiptFIFOs = null;
 
-  public final ReentrantLock sendingLock;
+  public final Lock sendingLock;
   private Map<String, Queue<Message>> sendingFIFOs = null;
 
   private Thread plumber;
