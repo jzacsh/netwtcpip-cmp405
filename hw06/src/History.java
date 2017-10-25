@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.List;
 
 public class History {
   private static final String TAG = "history thrd";
@@ -17,6 +18,7 @@ public class History {
   public final ReentrantLock sendingLock;
   private Map<String, Queue<Message>> sendingFIFOs = null;
 
+  private Map<String, List<Message>> full = null;
   public History(final DatagramSocket source) {
     this.source = source;
     this.receiptLock = new ReentrantLock();
@@ -24,6 +26,8 @@ public class History {
 
     this.sendingLock = new ReentrantLock();
     this.sendingFIFOs = new HashMap<String, Queue<Message>>();
+
+    this.full = new HashMap<String, List<Message>>();
   }
 
   public History setLogLevel(final Logger.Level lvl) {
