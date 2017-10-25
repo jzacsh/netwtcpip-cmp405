@@ -45,7 +45,10 @@ public class History {
   }
 
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {
-    return m.containsKey(key) ? m.get(key) : new LinkedList<Message>();
+    if (!m.containsKey(key)) {
+      m.put(key, new LinkedList<Message>());
+    }
+    return m.get(key);
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
@@ -78,5 +81,12 @@ public class History {
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
   public Queue<Message> getSendQueue(Remote r) {
     return this.sendingFIFOs.get(r.toString());
+  }
+
+  private List<Message> getNonEmptyRemoteHist(final String remoteID) {
+    if (!this.full.containsKey(remoteID)) {
+      this.full.put(remoteID, new ArrayList<Message>());
+    }
+    return this.full.get(remoteID);
   }
 }
