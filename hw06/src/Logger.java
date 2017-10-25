@@ -20,7 +20,7 @@ public class Logger {
   }
 
   public void debugf(String fmt, Object... args) {
-    if (this.lvl != DEBUG) { return; } // ignore
+    if (this.lvl != Level.DEBUG) { return; } // ignore
     this.printf(fmt, args);
   }
 
