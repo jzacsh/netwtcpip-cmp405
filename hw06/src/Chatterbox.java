@@ -7,7 +7,7 @@ import java.lang.InterruptedException;
 
 public class Chatterbox {
   private static final String CLI_USAGE =
-      "[DESTINATION_HOST DEST_PORT]\n\timplies a CLI-only one-to-one mode";
+      "[--help] [-v*] [ -1:1 DEST[:PORT] ]\n\t-1:1 is a CLI-mode for direct chat with one other host";
 
   private static final int DEFAULT_UDP_PORT = 6400;
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
@@ -34,8 +34,9 @@ public class Chatterbox {
   private Chatterbox(
       final java.io.InputStream messages,
       final String destHostName,
-      final int baselinePort) {
-    this(baselinePort, Logger.Level.DEBUG);
+      final int baselinePort,
+      final Logger.Level lvl) {
+    this(baselinePort, lvl);
     this.oneToOneMode = true;
 
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
@@ -46,7 +47,7 @@ public class Chatterbox {
         destAddr, baselinePort,
         this.hist.source);
 
-    this.sender.setLogLevel(Logger.Level.DEBUG);
+    this.sender.setLogLevel(lvl);
     this.log.printf("setup: listener & sender setups complete.\n\n");
   }
 
@@ -57,18 +58,42 @@ public class Chatterbox {
       return new Chatterbox();
     }
 
-    final int expectedArgs = 2;
-    if (args.length != expectedArgs) {
-      Chatterbox.log.errorf(
-          "got %d argument(s), but expected %d...\nusage: %s\n",
-          args.length, expectedArgs, CLI_USAGE);
-      System.exit(1);
+    String destHostName = null;
+    Logger.Level cliVerbosity = Logger.Level.DEBUG;
+    int destPort = DEFAULT_UDP_PORT;
+    for (int i = 0; i < args.length; ++i) {
+      switch (args[i]) {
+        case "-h":
+        case "-help":
+        case "--help":
+        case "help":
+          System.out.printf("usage: %s\n", Chatterbox.CLI_USAGE);
+          System.exit(0);
+        case "-v":
+          cliVerbosity = Logger.Level.INFO;
+          break;
+        case "-vv":
+          cliVerbosity = Logger.Level.DEBUG;
+          break;
+        case "-1:1":
+          i++;
+          if (i >= args.length) {
+            System.err.printf("missing parameter for flag -1:1 DEST[:PORT]\n");
+            System.exit(1);
+          }
+
+          String[] hostPort = args[i].trim().split(":");
+          destHostName = hostPort[0];
+          if (hostPort.length > 1) {
+            destPort = AssertNetwork.mustParsePort(hostPort[1], "DEST_PORT");
+          }
+          break;
+      }
     }
 
-    final String destHostName = args[0].trim();
-    final int destPort = AssertNetwork.mustParsePort(args[1], "DEST_PORT");
-
-    return new Chatterbox(System.in, destHostName, destPort);
+    return destHostName == null
+        ? new Chatterbox(destPort, cliVerbosity)
+        : new Chatterbox(System.in, destHostName, destPort, cliVerbosity);
   }
 
   public void report() {
