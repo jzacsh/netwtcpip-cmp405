@@ -20,7 +20,6 @@ public class MessagingJFrame extends JFrame implements ActionListener {
 
   private JTextField composeField;
   private JButton sendBtn;
-  private ChatLogTextArea chatLog;
 
   private History hist;
   private final Remote remote;
@@ -32,12 +31,11 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    this.chatLog = new ChatLogTextArea(
+    ChatLogScrollPane chatLog = new ChatLogScrollPane(
         20 /*rows*/,
         DEFAULT_COLUMN_WIDTH /*cols*/,
         this.hist.getHistoryWith(this.remote) /*warning: blocking*/);
-    this.chatLog.setEnabled(false);
-    this.hist.registerRemoteListener(this.remote, this.chatLog);
+    this.hist.registerRemoteListener(this.remote, chatLog);
     this.getContentPane().add(chatLog, BorderLayout.CENTER);
 
     JPanel composePanel = new JPanel();
