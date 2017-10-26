@@ -1,13 +1,13 @@
 import java.net.DatagramSocket;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.Queue;
 
 public class History implements Runnable {
   private static final long MAX_BLOCK_MILLIS = 25;
