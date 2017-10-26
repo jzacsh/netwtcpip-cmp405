@@ -113,7 +113,7 @@ public class History implements Runnable {
         try {
           this.source.send(toSend.toPacket());
         } catch(Exception e) {
-          this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.size() + 1);
+          this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.size() - 1);
           this.stopPlumber();
           return;
         }
@@ -121,7 +121,7 @@ public class History implements Runnable {
         chatHist.add(toSend);
         this.log.debugf(
             "socket.send()d: %s message %03d: '%s'\n",
-            toSend.getRemote(), chatHist.size(), toSend.getMessage());
+            toSend.getRemote(), chatHist.size() - 1, toSend.getMessage());
       });
 
       RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));

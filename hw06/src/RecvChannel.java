@@ -80,7 +80,7 @@ public class RecvChannel implements LocalChannel {
       } catch (SocketTimeoutException e) {
         continue; // expected exception; just continue from the top, to remain responsive.
       } catch (Exception e) {
-        this.fatalf(e, "failed receiving packet %03d", receiptIndex+1);
+        this.fatalf(e, "failed receiving packet %03d", receiptIndex);
         break;
       }
       receiptIndex++;
@@ -91,13 +91,13 @@ public class RecvChannel implements LocalChannel {
       try {
         message = URLDecoder.decode(rawMsg, "UTF-8");
       } catch (UnsupportedEncodingException e) {
-        this.fatalf(e, "protocol error: failed decoding message %03d", receiptIndex);
+        this.fatalf(e, "protocol error: failed decoding message %03d", receiptIndex - 1);
         break;
       }
 
       this.log.printf(
           "enqueuing received #%03d [%03d chars]: %s%s%s\n",
-          receiptIndex, message.length(), "\"\"\"", message, "\"\"\"");
+          receiptIndex - 1, message.length(), "\"\"\"", message, "\"\"\"");
 
       this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
 
