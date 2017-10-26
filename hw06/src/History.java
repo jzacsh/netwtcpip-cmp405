@@ -91,12 +91,12 @@ public class History implements Runnable {
     return m.get(key);
   }
 
-  public void safeEnqueueReceived(final Remote r, final Message received) {
-    this.receiptFIFOs.add(r.toString(), received);
+  public void safeEnqueueReceived(final Remote r, final String message) {
+    this.receiptFIFOs.add(r.toString(), new Message(r, message, true /*isReceived*/));
   }
 
-  public void safeEnqueueSend(final Remote r, final Message sending) {
-    this.sendingFIFOs.add(r.toString(), sending);
+  public void safeEnqueueSend(final Remote r, final String message) {
+    this.sendingFIFOs.add(r.toString(), new Message(r, message, false /*isReceived*/));
   }
 
   public LockedList<Message> getHistoryWith(final Remote remote) {

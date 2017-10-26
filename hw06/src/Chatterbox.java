@@ -44,8 +44,8 @@ public class Chatterbox {
 
     this.sender = new OneToOneChannel(
         new Scanner(messages),
-        destAddr, baselinePort,
-        this.hist.source);
+        new Remote(destAddr, baselinePort),
+        this.hist);
 
     this.sender.setLogLevel(lvl);
     this.log.printf("setup: listener & sender setups complete.\n\n");

@@ -15,20 +15,15 @@ public class OneToOneChannel implements LocalChannel {
   private boolean isOk = true;
   private boolean stopped = false;
 
-  private InetAddress destIP;
-  private int destPort;
+  private final Remote remote;
   private Scanner msgSrc;
-  private DatagramSocket socket;
+  private History hist;
   private Thread running;
-  public OneToOneChannel(
-      final Scanner src,
-      final InetAddress destIP,
-      final int destPort,
-      DatagramSocket outSock) {
+
+  public OneToOneChannel(final Scanner src, final Remote remote, History hist) {
     this.msgSrc = src;
-    this.destIP = destIP;
-    this.destPort = destPort;
-    this.socket = outSock;
+    this.remote = remote;
+    this.hist = hist;
   }
 
   public OneToOneChannel setLogLevel(final Logger.Level lvl) {
@@ -46,11 +41,7 @@ public class OneToOneChannel implements LocalChannel {
   }
 
   public OneToOneChannel report() {
-    this.log.printf(
-        "READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n",
-        this.destIP,
-        this.destPort,
-        this.socket.getLocalSocketAddress());
+    this.log.printf("READY to capture messages\n\tbound for %s\n", this.remote.toString());
     return this;
   }
 
@@ -96,17 +87,8 @@ public class OneToOneChannel implements LocalChannel {
       isPrevEmpty = false;
       msgIndex++;
 
-      packet = new DatagramPacket(message.getBytes(), message.length(), destIP, destPort);
-
-      this.log.printf("sending message #%03d: '%s'...", msgIndex, message);
-      try {
-        this.socket.send(packet);
-        System.out.printf(" Done.\n");
-      } catch (Exception e) {
-        System.out.printf("\n");
-        this.fatalf(e, "\nfailed sending '%s'", message);
-        break;
-      }
+      this.hist.safeEnqueueSend(this.remote, message);
+      this.log.printf("enqueued message #%03d: '%s'...", msgIndex, message);
     }
 
     this.msgSrc.close();
