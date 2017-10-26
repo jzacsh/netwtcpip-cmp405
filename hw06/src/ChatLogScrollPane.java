@@ -15,6 +15,7 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
   private JTextArea textLog;
 
   public ChatLogScrollPane(int rows, int cols, Pair<Lock, List<Message>> logs) {
+    super();
     this.src = logs;
     this.numMessagesSeen = 0;
 
@@ -50,7 +51,6 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
     JScrollBar vertical = this.getVerticalScrollBar();
     vertical.setValue(vertical.getMaximum());
-    // TODO(zacsh) figure out why this doesn't work as expected
   }
 
   private static final String toHistoryLine(final Message m) {
