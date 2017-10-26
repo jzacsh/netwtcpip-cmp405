@@ -14,7 +14,7 @@ public class Remote {
   public int getPort() { return this.port; }
 
   public String toString() {
-    return String.format("%s:%d", this.host, this.port);
+    return String.format("%s:%d", this.host.getHostAddress(), this.port);
   }
 
   public static Remote parseFrom(String hostRaw, String portRaw) throws Exception {
