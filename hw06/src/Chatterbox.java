@@ -6,61 +6,62 @@ import java.util.Scanner;
 import java.lang.InterruptedException;
 
 public class Chatterbox {
+  private static final String CLI_USAGE =
+      "[DESTINATION_HOST DEST_PORT]\n\timplies a CLI-only one-to-one mode";
+
   private static final int DEFAULT_UDP_PORT = 6400;
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
-  private static boolean FORUM_MODE = true;
   private static final Logger log = new Logger("chatter");
-  private static final Logger.Level LOG_LEVEL = Logger.Level.DEBUG;
+  private static final Logger.Level DEFAULT_LOG_LEVEL = Logger.Level.INFO;
 
   private History hist = null;
   private RecvChannel receiver = null;
   private SendChannel sender = null;
 
+  private boolean oneToOneMode = false;
+
   public Chatterbox() {
-    DatagramSocket sock = AssertNetwork.mustOpenSocket(
-        DEFAULT_UDP_PORT, "setup: failed opening receiving socket on %s:%d: %s\n");
-    this.hist = new History(sock).setLogLevel(LOG_LEVEL);
-    this.receiver = new RecvChannel(this.hist).setLogLevel(LOG_LEVEL);
+    this(DEFAULT_UDP_PORT, DEFAULT_LOG_LEVEL);
   }
 
-  public Chatterbox(
+  public Chatterbox(int baselinePort, Logger.Level lvl) {
+    DatagramSocket sock = AssertNetwork.mustOpenSocket(
+        baselinePort, "setup: failed opening receiving socket on %s:%d: %s\n");
+    this.hist = new History(sock).setLogLevel(lvl);
+    this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
+  }
+
+  private Chatterbox(
       final java.io.InputStream messages,
       final String destHostName,
-      final int destPort) {
-    this();
-    if (FORUM_MODE) {
-      throw new Error("only no-arg constructor designed for forum-mode");
-    }
-    final DatagramSocket outSock = AssertNetwork.mustOpenSocket(
-        "setup: failed opening socket to send [via %s] from port %d: %s\n");
-    // TODO(zacsh) refactor split into SendChannel and ReceiveClient, and just have single-looper
-    // that golang-esque selects on the current situation:
-    // - an outgoing message is ready, so send()
-    // -- internal data struct api to enqueue currently composed, out-bound messages
-    //    (eg: windowing/UI-thread should be able to pass a new message over to cause this select
-    //    case to trigger (when the next selection happens in some SOCKET_WAIT_MILLIS milliseconds
-    // - an we've spent SOCKET_WAIT_MILLIS receive()ing messages
+      final int baselinePort) {
+    this(baselinePort, Logger.Level.DEBUG);
+    this.oneToOneMode = true;
+
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "setup: failed resolving destination host '%s': %s\n");
 
     this.sender = new SendChannel(
         new Scanner(messages),
-        destAddr,
-        destPort, outSock).setLogLevel(LOG_LEVEL);
+        destAddr, baselinePort,
+        this.hist.source);
+
+    this.sender.setLogLevel(Logger.Level.DEBUG);
     this.log.printf("setup: listener & sender setups complete.\n\n");
   }
 
+  public boolean isOneToOne() { return this.oneToOneMode; }
+
   private static Chatterbox parseFromCli(String[] args) {
-    if (FORUM_MODE) {
+    if (args.length == 0) {
       return new Chatterbox();
     }
 
-    final String usageDoc = "DESTINATION_HOST DEST_PORT";
     final int expectedArgs = 2;
     if (args.length != expectedArgs) {
       Chatterbox.log.errorf(
           "got %d argument(s), but expected %d...\nusage: %s\n",
-          args.length, expectedArgs, usageDoc);
+          args.length, expectedArgs, CLI_USAGE);
       System.exit(1);
     }
 
@@ -68,6 +69,12 @@ public class Chatterbox {
     final int destPort = AssertNetwork.mustParsePort(args[1], "DEST_PORT");
 
     return new Chatterbox(System.in, destHostName, destPort);
+  }
+
+  public void report() {
+    this.log.printf(
+        "Running in %s mode\n",
+        this.isOneToOne() ? "one-to-one (CLI)" : "forum (GUI)");
   }
 
   public boolean waitOnDirectText() {
@@ -96,13 +103,14 @@ public class Chatterbox {
 
   public static void main(String[] args) {
     Chatterbox chatter = Chatterbox.parseFromCli(args);
+    chatter.report();
 
     chatter.receiver.report().startChannel();
     chatter.hist.startPlumber();
 
     chatter.log.printf("children spawned, continuing with user task\n");
 
-    if (!FORUM_MODE) {
+    if (chatter.isOneToOne()) {
       System.exit(chatter.waitOnDirectText() & chatter.teardown() ? 1 : 0);
     }
 

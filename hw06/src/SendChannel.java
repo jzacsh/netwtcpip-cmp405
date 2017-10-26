@@ -71,25 +71,16 @@ public class SendChannel implements LocalChannel {
 
   public void run() {
     DatagramPacket packet;
-    String rawMsg = null;
-    String message = null;
+    String message = null; // NOTE: no explicit consideration given to charset
 
-    this.log.printf("usage instructions:\n%s", senderUXInstruction);
+    this.log.printf("CLI usage instructions:\n%s", senderUXInstruction);
     boolean isPrevEmpty = false;
     long msgIndex = 0;
-    while (true) {
-      if (this.stopped) {
-        break;
-      }
-
+    while (!this.stopped) {
       try {
-        rawMsg = this.msgSrc.nextLine().trim();
-        message = URLEncoder.encode(rawMsg, "UTF-8");
+        message = this.msgSrc.nextLine().trim();
       } catch (NoSuchElementException e) {
         this.log.printf("caught EOF, exiting...\n");
-        break;
-      } catch (UnsupportedEncodingException e) {
-        this.fatalf(e, "failed encoding message %03d '%s'", rawMsg);
         break;
       }
 
