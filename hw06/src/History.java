@@ -14,11 +14,8 @@ public class History implements Runnable {
   private static final Logger log = new Logger(TAG);
   public final DatagramSocket source;
 
-  public final Lock receiptLock;
-  private Map<String, Queue<Message>> receiptFIFOs = null;
-
-  public final Lock sendingLock;
-  private Map<String, Queue<Message>> sendingFIFOs = null;
+  private LockedMapQueue<String, Message> receiptFIFOs = null;
+  private LockedMapQueue<String, Message> sendingFIFOs = null;
 
   private Thread plumber;
   private boolean isPlumbing = false;
@@ -26,18 +23,13 @@ public class History implements Runnable {
   private final Lock registryLock;
   private Map<String, List<Runnable>> registry;
 
-  private final Lock fullHistoryLock;
-  private Map<String, Pair<Lock, List<Message>>> full = null;
+  private LockedMapList<String, Message> full = null;
   public History(final DatagramSocket source) {
     this.source = source;
-    this.receiptLock = new ReentrantLock();
-    this.receiptFIFOs = new HashMap<String, Queue<Message>>();
 
-    this.sendingLock = new ReentrantLock();
-    this.sendingFIFOs = new HashMap<String, Queue<Message>>();
-
-    this.fullHistoryLock = new ReentrantLock();
-    this.full = new HashMap<String, Pair<Lock, List<Message>>>();
+    this.receiptFIFOs = new LockedMapQueue<String, Message>();
+    this.sendingFIFOs = new LockedMapQueue<String, Message>();
+    this.full = new LockedMapList<String, Message>();
 
     this.registryLock = new ReentrantLock();
     this.registry = new HashMap<String, List<Runnable>>();
@@ -83,84 +75,37 @@ public class History implements Runnable {
     return m.get(key);
   }
 
-  /** unsafe; calls should be wrapped in receiptLock.lock(). */
-  private void enqueueReceived(Remote r, Message received) {
-    Queue<Message> receiving = getNonEmptyFIFO(this.receiptFIFOs, r.toString());
-    receiving.add(received);
-  }
-
-  /** safe version of {@link #enqueueReceived}. */
   public void safeEnqueueReceived(final Remote r, final Message received) {
-    RunLocked.safeRun(this.receiptLock, () -> this.enqueueReceived(r, received));
+    this.receiptFIFOs.add(r.toString(), received);
   }
 
-  /** unsafe; calls should be wrapped in receiptLock.lock(). */
-  public Queue<Message> getRecvQueue(Remote r) {
-    return this.receiptFIFOs.get(r.toString());
-  }
-
-  /** unsafe; calls should be wrapped in sendingLock.lock(). */
-  private void enqueueToSend(Remote r, Message sending) {
-    Queue<Message> sendingQueue = getNonEmptyFIFO(this.sendingFIFOs, r.toString());
-    sendingQueue.add(sending);
-  }
-
-  /** safe version of {@link #enqueueToSend} */
   public void safeEnqueueSend(final Remote r, final Message sending) {
-    RunLocked.safeRun(this.sendingLock, () -> this.enqueueToSend(r, sending));
+    this.sendingFIFOs.add(r.toString(), sending);
   }
 
-  /** unsafe; calls should be wrapped in sendingLock.lock(). */
-  public Queue<Message> getSendQueue(Remote r) {
-    return this.sendingFIFOs.get(r.toString());
-  }
-
-  /** safe version of {@link #getNonEmptyRemoteHist}. */
-  public Pair<Lock, List<Message>> getHistoryWith(final Remote remote) {
-    Pair<Lock, List<Message>> historyWith = null;
-    try {
-      this.fullHistoryLock.lock();
-      historyWith = this.getNonEmptyRemoteHist(remote.toString());
-    } finally {
-      this.fullHistoryLock.unlock();
-    }
-    return historyWith;
-  }
-
-  private Pair<Lock, List<Message>> getNonEmptyRemoteHist(final String remoteID) {
-    if (!this.full.containsKey(remoteID)) {
-      this.full.put(
-          remoteID,
-          new Pair<Lock, List<Message>>(
-              new ReentrantLock(),
-              new ArrayList<Message>()));
-    }
-    return this.full.get(remoteID);
+  public LockedList<Message> getHistoryWith(final Remote remote) {
+    return this.full.getNonEmpty(remote.toString());
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
   private void flushSends() {
-    this.sendingFIFOs.forEach((final String remoteID, Queue<Message> q) -> {
-      if (!this.isPlumbing || q.isEmpty()) { return; }
+    this.sendingFIFOs.forEachNonEmpty((final String remoteID, LockedQ<Message> q) -> {
+      if (!this.isPlumbing) { return; }
 
-      Pair<Lock, List<Message>> chatHist = this.getNonEmptyRemoteHist(remoteID);
-
-      RunLocked.safeRun(chatHist.left, () -> {
-        Message toSend;
-        while ((toSend = q.poll()) != null) {
-          try {
-            this.source.send(toSend.toPacket());
-          } catch(Exception e) {
-            this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.right.size() + 1);
-            this.stopPlumber();
-            return;
-          }
-
-          chatHist.right.add(toSend);
-          this.log.debugf(
-              "socket.send()d: %s message %03d: '%s'\n",
-              toSend.getRemote(), chatHist.right.size(), toSend.getMessage());
+      LockedList<Message> chatHist = this.full.getNonEmpty(remoteID);
+      q.drain((Message toSend) -> {
+        try {
+          this.source.send(toSend.toPacket());
+        } catch(Exception e) {
+          this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.size() + 1);
+          this.stopPlumber();
+          return;
         }
+
+        chatHist.add(toSend);
+        this.log.debugf(
+            "socket.send()d: %s message %03d: '%s'\n",
+            toSend.getRemote(), chatHist.size(), toSend.getMessage());
       });
 
       RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));
@@ -169,20 +114,18 @@ public class History implements Runnable {
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
   private void flushReceives() {
-    this.receiptFIFOs.forEach((String remoteID, Queue<Message> q) -> {
-      if (!this.isPlumbing || q.isEmpty()) { return; } // fail a bit faster
+    this.receiptFIFOs.forEachNonEmpty((String remoteID, LockedQ<Message> q) -> {
+      if (!this.isPlumbing) { return; } // fail a bit faster
 
-      Pair<Lock, List<Message>> chatHist = this.getNonEmptyRemoteHist(remoteID);
+      LockedList<Message> chatHist = this.full.getNonEmpty(remoteID);
 
-      RunLocked.safeRun(chatHist.left, () -> {
-        while (!q.isEmpty()) {
-          chatHist.right.add(q.poll());
-          this.log.debugf(
-              "saved message #%03d from %s: '%s'\n",
-              chatHist.right.size() - 1,
-              chatHist.right.get(chatHist.right.size() - 1).getRemote(),
-              chatHist.right.get(chatHist.right.size() - 1).getMessage());
-        }
+      q.drain((Message received) -> {
+        chatHist.add(received);
+        this.log.debugf(
+            "saved message #%03d from %s: '%s'\n",
+            chatHist.size() - 1,
+            received.getRemote(),
+            received.getMessage());
       });
 
       RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));
@@ -191,8 +134,8 @@ public class History implements Runnable {
 
   public void run() {
     while (this.isPlumbing) {
-      RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.sendingLock, () -> this.flushSends());
-      RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.receiptLock, () -> this.flushReceives());
+      this.flushSends();
+      this.flushReceives();
     }
   }
 

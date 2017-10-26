@@ -10,11 +10,11 @@ import javax.swing.ScrollPaneConstants;
 
 class ChatLogScrollPane extends JScrollPane implements Runnable {
   private static final long MAX_BLOCK_MILLIS = 25;
-  private Pair<Lock, List<Message>> src;
+  private LockedList<Message> src;
   private int numMessagesSeen;
   private JTextArea textLog;
 
-  public ChatLogScrollPane(int rows, int cols, Pair<Lock, List<Message>> logs) {
+  public ChatLogScrollPane(int rows, int cols, LockedList<Message> logs) {
     super();
     this.src = logs;
     this.numMessagesSeen = 0;
@@ -35,14 +35,12 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
   }
 
   private void renderNewLogs() {
-    RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.src.left, () -> {
-      StringBuilder sb = new StringBuilder(this.textLog.getText());
-      for (int i = numMessagesSeen; i < this.src.right.size(); ++i) {
-        sb.append(ChatLogScrollPane.toHistoryLine(this.src.right.get(i)));
-      }
-      this.textLog.setText(sb.toString());
-      this.numMessagesSeen = this.src.right.size();
+    StringBuilder sb = new StringBuilder(this.textLog.getText());
+    this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
+        sb.append(ChatLogScrollPane.toHistoryLine(m));
     });
+    this.textLog.setText(sb.toString());
+    this.numMessagesSeen = this.src.size();
 
     // ensure as vertical scrollbars become necessary, we are *utilizing* them
     // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
@@ -51,7 +49,7 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
   }
 
   public void run() {
-    if (this.numMessagesSeen >= this.src.right.size()) {
+    if (this.numMessagesSeen >= this.src.size()) {
       return;
     }
     this.renderNewLogs();
