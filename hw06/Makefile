@@ -9,7 +9,7 @@ Chatterbox: $(OUTD)/Chatterbox.class
 all: $(JVOBJ)
 
 $(OUTD)/%.class: $(SRCD)/%.java
-	javac -cp $(SRCD) $< -d $(OUTD)/
+	javac -Xlint:unchecked -cp $(SRCD) $< -d $(OUTD)/
 
 clean:
 	$(RM) $(OUTD)/*.class
