@@ -3,12 +3,14 @@ import java.awt.event.ActionListener;
 import java.awt.BorderLayout;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.concurrent.BlockingQueue;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JTextArea;
 
 public class MessagingJFrame extends JFrame implements ActionListener {
   private static final String TAG = "MessagingJFrame";
@@ -18,7 +20,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
 
   private JTextField composeField;
   private JButton sendBtn;
-  private JTextArea chatLog;
+  private ChatLogTextArea chatLog;
 
   private History hist;
   private final Remote remote;
@@ -30,8 +32,12 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    this.chatLog = new JTextArea(20 /*rows*/, DEFAULT_COLUMN_WIDTH /*cols*/);
+    this.chatLog = new ChatLogTextArea(
+        20 /*rows*/,
+        DEFAULT_COLUMN_WIDTH /*cols*/,
+        this.hist.getHistoryWith(this.remote) /*warning: blocking*/);
     this.chatLog.setEnabled(false);
+    this.hist.registerRemoteListener(this.remote, this.chatLog);
     this.getContentPane().add(chatLog, BorderLayout.CENTER);
 
     JPanel composePanel = new JPanel();
@@ -60,9 +66,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     }
 
     this.hist.safeEnqueueSend(this.remote, new Message(this.remote, rawMsg, false /*isReceived*/));
-    this.log.debugf(
-        "enqueued message '%s' to send to %s [now history: isLocked=%s]\n",
-        rawMsg, this.remote, this.hist.sendingLock.isLocked());
+    this.log.debugf("enqueued message '%s' to send to %s\n", rawMsg, this.remote);
     this.composeField.setText("");
   }
 }
