@@ -23,6 +23,9 @@ public class History implements Runnable {
   private Thread plumber;
   private boolean isPlumbing = false;
 
+  private final Lock registryLock;
+  private Map<String, List<Runnable>> registry;
+
   private Map<String, List<Message>> full = null;
   public History(final DatagramSocket source) {
     this.source = source;
@@ -33,6 +36,9 @@ public class History implements Runnable {
     this.sendingFIFOs = new HashMap<String, Queue<Message>>();
 
     this.full = new HashMap<String, List<Message>>();
+
+    this.registryLock = new ReentrantLock();
+    this.registry = new HashMap<String, List<Runnable>>();
   }
 
   public History setLogLevel(final Logger.Level lvl) {
@@ -40,6 +46,33 @@ public class History implements Runnable {
     return this;
   }
 
+  /**
+   * Runs {@code listener} if any history updates occur on the duplex with
+   * remote host, {@code trigger}.
+   */
+  // TODO(zacsh) audit codebase, find anywhere else i'm naiively doing a
+  // `while(alwaysTrueThreadLifeStatus)` CPU-killing loop, and replace those
+  // with registry to something like this API
+  public void registerRemoteListener(Remote trigger, Runnable listener) {
+    RunLocked.safeRun(this.registryLock, () -> {
+      final String triggerID = trigger.toString();
+      List<Runnable> listeners;
+      if (!this.registry.containsKey(triggerID)) {
+        this.registry.put(triggerID, new ArrayList<Runnable>());
+      }
+      this.registry.get(triggerID).add(listener);
+    });
+  }
+
+  private void notifyListenersUnsafe(final String remoteID) {
+    this.log.debugf(
+        "notifying listeners on activity for '%s' [have listeners: %s]\n",
+        remoteID, this.registry.containsKey(remoteID));
+    if (!this.registry.containsKey(remoteID)) {
+      return; // noop
+    }
+    this.registry.get(remoteID).forEach((Runnable listener) -> listener.run());
+  }
 
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {
     if (!m.containsKey(key)) {
