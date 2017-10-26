@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.Map;
 import java.util.Queue;
 
@@ -131,8 +130,8 @@ public class History implements Runnable {
 
   public void run() {
     while (this.isPlumbing) {
-      RunLocked.safeRunTry(this.sendingLock, () -> this.flushSends());
-      RunLocked.safeRunTry(this.receiptLock, () -> this.flushReceives());
+      RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.sendingLock, () -> this.flushSends());
+      RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.receiptLock, () -> this.flushReceives());
     }
   }
 

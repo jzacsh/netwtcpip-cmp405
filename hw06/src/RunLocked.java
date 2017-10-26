@@ -1,4 +1,5 @@
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.TimeUnit;
 
 public class RunLocked {
   public static void safeRun(Lock locker, Runnable toRun) {
@@ -11,10 +12,10 @@ public class RunLocked {
   }
 
   /** Returns if {@code toRun} was ever executed.  */
-  public static boolean safeRunTry(Lock locker, Runnable toRun) {
+  public static boolean safeRunTry(long millis, Lock locker, Runnable toRun) {
     boolean isAcquired = false;
     try {
-      isAcquired = locker.tryLock(MAX_BLOCK_MILLIS, TimeUnit.MILLISECONDS);
+      isAcquired = locker.tryLock(millis, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
       return false;
     }
