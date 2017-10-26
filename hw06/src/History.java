@@ -50,9 +50,6 @@ public class History implements Runnable {
    * Runs {@code listener} if any history updates occur on the duplex with
    * remote host, {@code trigger}.
    */
-  // TODO(zacsh) audit codebase, find anywhere else i'm naiively doing a
-  // `while(alwaysTrueThreadLifeStatus)` CPU-killing loop, and replace those
-  // with registry to something like this API
   public void registerRemoteListener(Remote trigger, Runnable listener) {
     RunLocked.safeRun(this.registryLock, () -> {
       final String triggerID = trigger.toString();
@@ -149,6 +146,8 @@ public class History implements Runnable {
   }
 
   public void run() {
+    // TODO(zacsh) change this to an imperceivable timeout loop (eg: something like every 1/20th of
+    // a second). Will be fast enough, but not chomping up CPU time.
     while (this.isPlumbing) {
       this.flushSends();
       this.flushReceives();
