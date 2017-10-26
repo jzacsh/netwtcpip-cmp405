@@ -165,9 +165,8 @@ public class ChatterJFrame extends JFrame implements ActionListener {
         }
 
         this.start.launchChat(this.hist);
-        // TODO(zacsh) still need mutexes and history store
-        this.log.printf(
-            "NOT YET IMPLEMENTED: starting valid chat\n\tdest: '%s', port: '%s'...\n",
+        this.log.debugf(
+            "starting chat with dest: '%s', port: '%s'...\n",
             this.destAddr.getText(), this.destPort.getText());
         this.resetDashBrds();
         break;
