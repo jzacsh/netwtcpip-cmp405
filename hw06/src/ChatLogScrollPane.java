@@ -30,27 +30,31 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     this.textLog.setDisabledTextColor(Color.BLACK);
     this.textLog.setLineWrap(true);
     this.textLog.setWrapStyleWord(true);
+
+    this.renderNewLogs(); // initial rendering of loaded history
   }
 
   private void renderNewLogs() {
-    StringBuilder sb = new StringBuilder(this.textLog.getText());
-    for (int i = numMessagesSeen; i < this.src.right.size(); ++i) {
-      sb.append(ChatLogScrollPane.toHistoryLine(this.src.right.get(i)));
-    }
-    this.textLog.setText(sb.toString());
-    this.numMessagesSeen = this.src.right.size();
+    RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.src.left, () -> {
+      StringBuilder sb = new StringBuilder(this.textLog.getText());
+      for (int i = numMessagesSeen; i < this.src.right.size(); ++i) {
+        sb.append(ChatLogScrollPane.toHistoryLine(this.src.right.get(i)));
+      }
+      this.textLog.setText(sb.toString());
+      this.numMessagesSeen = this.src.right.size();
+    });
+
+    // ensure as vertical scrollbars become necessary, we are *utilizing* them
+    // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
+    JScrollBar vertical = this.getVerticalScrollBar();
+    vertical.setValue(vertical.getMaximum());
   }
 
   public void run() {
     if (this.numMessagesSeen >= this.src.right.size()) {
       return;
     }
-    RunLocked.safeRunTry(MAX_BLOCK_MILLIS, this.src.left, () -> this.renderNewLogs());
-
-    // ensure as vertical scrollbars become necessary, we are *utilizing* them
-    // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
-    JScrollBar vertical = this.getVerticalScrollBar();
-    vertical.setValue(vertical.getMaximum());
+    this.renderNewLogs();
   }
 
   private static final String toHistoryLine(final Message m) {
