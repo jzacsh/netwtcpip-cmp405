@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.Color;
 import java.util.concurrent.locks.Lock;
 import java.util.List;
 import javax.swing.JScrollBar;
@@ -25,6 +26,7 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     this.setViewportView(this.textLog);
 
     this.textLog.setFont(new Font("courier", Font.PLAIN, 14));
+    this.textLog.setDisabledTextColor(Color.BLACK);
     this.textLog.setLineWrap(true);
     this.textLog.setWrapStyleWord(true);
   }
