@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Consumer;
 
 public class History implements Runnable {
   private static final long MAX_BLOCK_MILLIS = 25;
@@ -22,6 +23,7 @@ public class History implements Runnable {
 
   private final Lock registryLock;
   private Map<String, List<Runnable>> registry;
+  private Consumer defaultListener = null;
 
   private LockedMapList<String, Message> full = null;
   public History(final DatagramSocket source) {
@@ -38,6 +40,10 @@ public class History implements Runnable {
   public History setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
     return this;
+  }
+
+  public void registerDefaultListener(Consumer<Remote> listener) {
+    this.defaultListener = listener;
   }
 
   /**
@@ -60,12 +66,22 @@ public class History implements Runnable {
 
   private void notifyListenersUnsafe(final String remoteID) {
     this.log.debugf(
-        "notifying listeners on activity for '%s' [have listeners: %s]\n",
-        remoteID, this.registry.containsKey(remoteID));
-    if (!this.registry.containsKey(remoteID)) {
-      return; // noop
+        "notifying listeners on activity for '%s' [have: listeners=%s, default=%s]\n",
+        remoteID, this.registry.containsKey(remoteID), this.defaultListener != null);
+    if (this.registry.containsKey(remoteID)) {
+      this.registry.get(remoteID).forEach((Runnable listener) -> listener.run());
+      return;
     }
-    this.registry.get(remoteID).forEach((Runnable listener) -> listener.run());
+    if (this.defaultListener == null) {
+      return;
+    }
+    this.log.debugf("passing '%s' activity to default listener\n", remoteID);
+    this.defaultListener.accept(this.determineRemote(remoteID));
+  }
+
+  private Remote determineRemote(String remoteID) {
+    // NOTE: get(0) should always return, otherwise we would not have been triggered
+    return this.full.getNonEmpty(remoteID).get(0).getRemote();
   }
 
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {

@@ -87,6 +87,8 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
     this.setLocationRelativeTo(null);
     this.setVisible(true);
+
+    this.hist.registerDefaultListener((Remote r) -> this.handleSolicitations(r));
   }
 
   private JPanel addLabeled(
@@ -177,6 +179,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     }
   }
 
+  private void handleSolicitations(Remote r) {
+    ChatStart s = new ChatStart(r.getHost(), r.getPort());
+    s.launchChat(this.hist);
+  }
+
   public void addCleanupHandler(WindowAdapter cleanup) {
     this.addWindowListener(cleanup);
   }
@@ -185,7 +192,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 class ChatStart extends Remote {
   private String failure = null;
 
-  private ChatStart(final InetAddress host, int port) { super(host, port); }
+  public ChatStart(final InetAddress host, int port) { super(host, port); }
 
   private ChatStart(String fail) {
     this(null /*host*/, -1 /*port*/);

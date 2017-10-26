@@ -21,6 +21,7 @@ public class LockedList<T> {
   }
 
   public int size() { return this.payload.size(); }
+  public T get(int i) { return this.payload.get(i); }
 
   /** {@Link List#forEach} esqueue API, but skips indices less than lowerBound. */
   public void getPastIndex(int lowerBound, Consumer<T> handler) {
