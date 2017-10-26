@@ -16,7 +16,7 @@ public class Chatterbox {
 
   private History hist = null;
   private RecvChannel receiver = null;
-  private SendChannel sender = null;
+  private OneToOneChannel sender = null;
 
   private boolean oneToOneMode = false;
 
@@ -42,7 +42,7 @@ public class Chatterbox {
     final InetAddress destAddr = AssertNetwork.mustResolveHostName(
         destHostName, "setup: failed resolving destination host '%s': %s\n");
 
-    this.sender = new SendChannel(
+    this.sender = new OneToOneChannel(
         new Scanner(messages),
         destAddr, baselinePort,
         this.hist.source);

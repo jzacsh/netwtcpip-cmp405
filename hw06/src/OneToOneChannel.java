@@ -6,8 +6,8 @@ import java.util.Scanner;
 import java.net.URLEncoder;
 import java.io.UnsupportedEncodingException;
 
-public class SendChannel implements LocalChannel {
-  private static final String TAG = "sender thrd";
+public class OneToOneChannel implements LocalChannel {
+  private static final String TAG = "1:1 thrd";
   private static final Logger log = new Logger(TAG);
   private static final String senderUXInstruction =
       "\tType messages & [enter] to send\n\t[enter] twice to exit.\n";
@@ -20,7 +20,7 @@ public class SendChannel implements LocalChannel {
   private Scanner msgSrc;
   private DatagramSocket socket;
   private Thread running;
-  public SendChannel(
+  public OneToOneChannel(
       final Scanner src,
       final InetAddress destIP,
       final int destPort,
@@ -31,12 +31,12 @@ public class SendChannel implements LocalChannel {
     this.socket = outSock;
   }
 
-  public SendChannel setLogLevel(final Logger.Level lvl) {
+  public OneToOneChannel setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
     return this;
   }
 
-  public SendChannel startChannel() {
+  public OneToOneChannel startChannel() {
     this.stopped = false;
     this.running = new Thread(this);
     this.running.setName(TAG);
@@ -45,7 +45,7 @@ public class SendChannel implements LocalChannel {
     return this;
   }
 
-  public SendChannel report() {
+  public OneToOneChannel report() {
     this.log.printf(
         "READY to capture messages\n\tbound for %s on port %s\n\tvia socket: %s\n",
         this.destIP,

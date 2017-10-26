@@ -17,7 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 
-// TODO(zacsh) rename SendChannel to DirectTextChannel
 // TODO(zacsh) morph ChatterJFrame into a `ForumGUIChannel implements LocalChannel` whose internal
 // thread `run()` is the below `launch()`er
 // TODO(zacsh) when basic swing api is down, decompose into mux problem:
