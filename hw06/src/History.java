@@ -41,33 +41,6 @@ public class History implements Runnable {
     return this;
   }
 
-  private static void safeRun(Lock locker, Runnable toRun) {
-    locker.lock();
-    try {
-      toRun.run();
-    } finally {
-      locker.unlock();
-    }
-  }
-
-  private static boolean safeRunTry(Lock locker, Runnable toRun) {
-    boolean isLocked = false;
-    try {
-      isLocked = locker.tryLock(MAX_BLOCK_MILLIS, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      return false;
-    }
-    if (!isLocked) {
-      return isLocked;
-    }
-
-    try {
-      toRun.run();
-    } finally {
-      locker.unlock();
-    }
-    return true;
-  }
 
   private static Queue<Message> getNonEmptyFIFO(Map<String, Queue<Message>> m, String key) {
     if (!m.containsKey(key)) {
@@ -84,7 +57,7 @@ public class History implements Runnable {
 
   /** safe version of {@link #enqueueReceived}. */
   public void safeEnqueueReceived(final Remote r, final Message received) {
-    History.safeRun(this.receiptLock, () -> this.enqueueReceived(r, received));
+    RunLocked.safeRun(this.receiptLock, () -> this.enqueueReceived(r, received));
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
@@ -100,7 +73,7 @@ public class History implements Runnable {
 
   /** safe version of {@link #enqueueToSend} */
   public void safeEnqueueSend(final Remote r, final Message sending) {
-    History.safeRun(this.sendingLock, () -> this.enqueueToSend(r, sending));
+    RunLocked.safeRun(this.sendingLock, () -> this.enqueueToSend(r, sending));
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
@@ -158,8 +131,8 @@ public class History implements Runnable {
 
   public void run() {
     while (this.isPlumbing) {
-      History.safeRunTry(this.sendingLock, () -> this.flushSends());
-      History.safeRunTry(this.receiptLock, () -> this.flushReceives());
+      RunLocked.safeRunTry(this.sendingLock, () -> this.flushSends());
+      RunLocked.safeRunTry(this.receiptLock, () -> this.flushReceives());
     }
   }
 
