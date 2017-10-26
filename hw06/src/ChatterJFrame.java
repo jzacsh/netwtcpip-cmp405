@@ -17,17 +17,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JOptionPane;
 
-// TODO(zacsh) morph ChatterJFrame into a `ForumGUIChannel implements LocalChannel` whose internal
-// thread `run()` is the below `launch()`er
-// TODO(zacsh) when basic swing api is down, decompose into mux problem:
-// - Chatterbox acts owns lifecycle of:
-// -- mutex lock to protect a `History<String, Array<Message<Timestamp, Author, String>>>`
-//    eg: see java.util.concurrent.locks.ReentrantLock
-// -- RecvChannel and ForumGUIChannel
-// -- Chatterbox tearsDown universe when ForumGUIChannel exits (or when anyone fatally exits)
-// - Chatterbox acts as multiplexer between RecvChannel & ForumGUIChannel:
-// -- RecvChannel: wants to grab lock & push onto `History`
-// -- ForumGUIChannel: wants to grab lock & push onto `History` ForumGUIChannel
 public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String TAG = "ChatterJFrame";
   private static final Logger log = new Logger(TAG);
