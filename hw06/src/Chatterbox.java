@@ -6,6 +6,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
+import java.io.InputStream;
 
 public class Chatterbox {
   private static final String CLI_USAGE =
@@ -36,7 +37,7 @@ public class Chatterbox {
   }
 
   private Chatterbox(
-      final java.io.InputStream messages,
+      final InputStream messages,
       final String destHostName,
       final int baselinePort,
       final Logger.Level lvl) {
