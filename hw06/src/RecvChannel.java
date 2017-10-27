@@ -1,7 +1,6 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.URLDecoder;
 import java.net.SocketTimeoutException;
 import java.io.UnsupportedEncodingException;
 
@@ -86,14 +85,7 @@ public class RecvChannel implements LocalChannel {
       receiptIndex++;
 
       // TODO(zacsh) add Logger#debugf to print rawMsg
-      String rawMsg = new String(inPacket.getData());
-
-      try {
-        message = URLDecoder.decode(rawMsg, "UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        this.fatalf(e, "protocol error: failed decoding message %03d", receiptIndex - 1);
-        break;
-      }
+      message  = new String(inPacket.getData());
 
       this.log.printf(
           "enqueuing received #%03d [%03d chars]: %s%s%s\n",
