@@ -1,4 +1,5 @@
 import java.net.DatagramPacket;
+import java.nio.charset.StandardCharsets;
 
 public class Message {
   private Remote r = null;
@@ -15,7 +16,7 @@ public class Message {
 
   public DatagramPacket toPacket() {
     return new DatagramPacket(
-        this.message.getBytes(),
+        this.message.getBytes(StandardCharsets.UTF_8),
         this.message.length(),
         this.r.getHost(),
         this.r.getPort());

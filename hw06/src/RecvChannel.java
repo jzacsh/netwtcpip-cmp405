@@ -3,6 +3,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class RecvChannel implements LocalChannel {
   public static final int SOCKET_WAIT_MILLIS = 30;
@@ -84,7 +85,7 @@ public class RecvChannel implements LocalChannel {
       }
       receiptIndex++;
 
-      message  = new String(inPacket.getData());
+      message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
 
       this.log.printf(
           "enqueuing received #%03d [%03d chars]: %s%s%s\n",
