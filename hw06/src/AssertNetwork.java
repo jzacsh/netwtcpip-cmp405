@@ -3,44 +3,43 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.function.Consumer;
 
-/** Fast-failing, program-exiting, loud, tiny utils. */
+/** Loud-failing, tiny utils. */
 public class AssertNetwork {
   /* Maximum possible port number bound by field size: two bytes. */
   public static final int MAX_POSSIBLE_PORT = 0xFFFF;
 
-  public static final DatagramSocket mustOpenSocket(final String failMessage) {
-    return mustOpenSocket(-1 /*port*/, failMessage);
+  public static final DatagramSocket mustOpenSocket(Consumer<SocketException> failHandler) {
+    return mustOpenSocket(-1 /*port*/, failHandler);
   }
 
   /**
    * failMessage should accept a host(%s), port (%d), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
-  public static final DatagramSocket mustOpenSocket(int port, final String failMessage) {
+   */
+  public static final DatagramSocket mustOpenSocket(int port, Consumer<SocketException> failHandler) {
     DatagramSocket sock = null;
     try {
       sock = port == -1 ? new DatagramSocket() : new DatagramSocket(port);
     } catch (SocketException e) {
-      System.err.printf(failMessage, "[default]", "[default]", e);
-      System.exit(1);
+      failHandler.accept(e);
     }
     return sock;
   }
 
-  public static final int mustParsePort(String portRaw, String label) {
+  public static final int mustParsePort(
+      String portRaw, String label, Consumer<String> failHandler) {
     final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
 
     int port = -1;
     try {
       port = Integer.parseInt(portRaw.trim());
     } catch (NumberFormatException e) {
-      System.err.printf(errContext + ", but got: %s\n", e);
-      System.exit(1);
+      failHandler.accept(String.format("%s, but got: %s\n", errContext, e));
     }
 
     if (port < 0 || port > 0xFFFF) {
-      System.err.printf(errContext + ", but got %d\n", port);
-      System.exit(1);
+      failHandler.accept(String.format("%s, but got %d\n", errContext, port));
     }
 
     return port;
@@ -48,16 +47,15 @@ public class AssertNetwork {
 
   /**
    * failMessage should accept a hostname(%s), and error (%s).
-   */ // TODO(zacsh) see about java8's lambdas instead of failMessage's current API
+   */
   public static final InetAddress mustResolveHostName(
       final String hostName,
-      final String failMessage) {
+      Consumer<UnknownHostException> failHandler) {
     InetAddress addr = null;
     try {
       addr = InetAddress.getByName(hostName);
     } catch (UnknownHostException e) {
-      System.err.printf(failMessage, hostName, e);
-      System.exit(1);
+      failHandler.accept(e);
     }
     return addr;
   }

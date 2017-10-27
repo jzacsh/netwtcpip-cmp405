@@ -2,6 +2,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
 
@@ -25,8 +27,10 @@ public class Chatterbox {
   }
 
   public Chatterbox(int baselinePort, Logger.Level lvl) {
-    DatagramSocket sock = AssertNetwork.mustOpenSocket(
-        baselinePort, "setup: failed opening receiving socket on %s:%d: %s\n");
+    DatagramSocket sock = AssertNetwork.mustOpenSocket(baselinePort, (SocketException e) -> {
+      this.log.errorf(e, "setup: failed opening receiving socket on %d", baselinePort);
+      System.exit(1);
+    });
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
   }
@@ -39,8 +43,11 @@ public class Chatterbox {
     this(baselinePort, lvl);
     this.oneToOneMode = true;
 
-    final InetAddress destAddr = AssertNetwork.mustResolveHostName(
-        destHostName, "setup: failed resolving destination host '%s': %s\n");
+    final InetAddress destAddr = AssertNetwork
+        .mustResolveHostName(destHostName, (UnknownHostException e) -> {
+          this.log.errorf(e, "setup: failed resolving destination host '%s'", destHostName);
+          System.exit(1);
+        });
 
     this.sender = new OneToOneChannel(
         new Scanner(messages),
@@ -85,7 +92,10 @@ public class Chatterbox {
           String[] hostPort = args[i].trim().split(":");
           destHostName = hostPort[0];
           if (hostPort.length > 1) {
-            destPort = AssertNetwork.mustParsePort(hostPort[1], "DEST_PORT");
+            destPort = AssertNetwork.mustParsePort(hostPort[1], "DEST_PORT", (String err) -> {
+              Chatterbox.log.errorf(err);
+              System.exit(1);
+            });
           }
           break;
       }
