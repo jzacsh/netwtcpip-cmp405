@@ -92,8 +92,8 @@ public class RecvChannel implements LocalChannel {
 
       this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
 
-      for (int i = 0; i < inPacket.getLength(); ++i) {
-        inBuffer[i] = ' ';
+      for (int i = 0; i < inPacket.getLength(); ++i) { // erase any trace of usage
+        inBuffer[i] = 0 /*default nil-value of a byte array*/;
       }
     }
   }
