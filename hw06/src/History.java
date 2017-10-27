@@ -26,7 +26,7 @@ public class History implements Runnable {
 
   private final Lock registryLock;
   private Map<String, List<Runnable>> registry;
-  private Consumer defaultListener = null;
+  private Consumer<Remote> defaultListener = null;
 
   private LockedMapList<String, Message> full = null;
   public History(final DatagramSocket source) {
