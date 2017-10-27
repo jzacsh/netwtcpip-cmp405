@@ -9,6 +9,7 @@ import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 
 class ChatLogScrollPane extends JScrollPane implements Runnable {
+  private final Logger log = new Logger("ChatLogScrollPane");
   private static final long MAX_BLOCK_MILLIS = 25;
   private LockedList<Message> src;
   private int numMessagesSeen;
@@ -35,7 +36,8 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
   }
 
   private void renderNewLogs() {
-    StringBuilder sb = new StringBuilder(this.textLog.getText());
+    StringBuilder sb = new StringBuilder(this.textLog.getText().trim());
+    sb.append('\n');
     this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
       sb.append(ChatLogScrollPane.toHistoryLine(m));
     });
