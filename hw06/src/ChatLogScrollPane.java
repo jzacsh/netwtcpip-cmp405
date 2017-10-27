@@ -37,7 +37,7 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
   private void renderNewLogs() {
     StringBuilder sb = new StringBuilder(this.textLog.getText());
     this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
-        sb.append(ChatLogScrollPane.toHistoryLine(m));
+      sb.append(ChatLogScrollPane.toHistoryLine(m));
     });
     this.textLog.setText(sb.toString());
     this.numMessagesSeen = this.src.size();
