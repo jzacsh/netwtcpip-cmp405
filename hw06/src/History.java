@@ -7,9 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Consumer;
 
 public class History implements Runnable {
+  private static final long FLUSH_CYCLE_MILLIS = 200;
   private static final long MAX_BLOCK_MILLIS = 25;
   private static final String TAG = "history thrd";
   private static final Logger log = new Logger(TAG);
@@ -19,7 +22,7 @@ public class History implements Runnable {
   private LockedMapQueue<String, Message> sendingFIFOs = null;
 
   private Thread plumber;
-  private boolean isPlumbing = false;
+  protected boolean isPlumbing = false;
 
   private final Lock registryLock;
   private Map<String, List<Runnable>> registry;
@@ -101,7 +104,7 @@ public class History implements Runnable {
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
-  private void flushSends() {
+  protected void flushSends() {
     this.sendingFIFOs.forEachNonEmpty((final String remoteID, LockedQ<Message> q) -> {
       if (!this.isPlumbing) { return; }
 
@@ -126,7 +129,7 @@ public class History implements Runnable {
   }
 
   /** unsafe; calls should be wrapped in receiptLock.lock(). */
-  private void flushReceives() {
+  protected void flushReceives() {
     this.receiptFIFOs.forEachNonEmpty((String remoteID, LockedQ<Message> q) -> {
       if (!this.isPlumbing) { return; } // fail a bit faster
 
@@ -146,12 +149,10 @@ public class History implements Runnable {
   }
 
   public void run() {
-    // TODO(zacsh) change this to an imperceivable timeout loop (eg: something like every 1/20th of
-    // a second). Will be fast enough, but not chomping up CPU time.
-    while (this.isPlumbing) {
-      this.flushSends();
-      this.flushReceives();
-    }
+    new Timer().scheduleAtFixedRate(
+        new HistoryTimer(this),
+        0L /*delay*/,
+        History.FLUSH_CYCLE_MILLIS /*period*/);
   }
 
   public void startPlumber() {
@@ -166,5 +167,19 @@ public class History implements Runnable {
   public Thread stopPlumber() {
     this.isPlumbing = false;
     return this.plumber;
+  }
+}
+
+class HistoryTimer extends TimerTask {
+  private History h;
+  public HistoryTimer(History h) { this.h = h; }
+  @Override public void run() {
+    if (!this.h.isPlumbing) {
+      this.cancel();
+      return;
+    }
+
+    this.h.flushSends();
+    this.h.flushReceives();
   }
 }
