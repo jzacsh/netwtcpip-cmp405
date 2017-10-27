@@ -23,9 +23,7 @@ public class Chatterbox {
 
   private boolean oneToOneMode = false;
 
-  public Chatterbox() {
-    this(DEFAULT_UDP_PORT, DEFAULT_LOG_LEVEL);
-  }
+  public Chatterbox() { this(DEFAULT_UDP_PORT, DEFAULT_LOG_LEVEL); }
 
   public Chatterbox(int baselinePort, Logger.Level lvl) {
     DatagramSocket sock = AssertNetwork.mustOpenSocket(baselinePort, (SocketException e) -> {
