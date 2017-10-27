@@ -84,7 +84,6 @@ public class RecvChannel implements LocalChannel {
       }
       receiptIndex++;
 
-      // TODO(zacsh) add Logger#debugf to print rawMsg
       message  = new String(inPacket.getData());
 
       this.log.printf(
