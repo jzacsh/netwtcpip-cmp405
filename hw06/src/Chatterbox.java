@@ -142,11 +142,12 @@ public class Chatterbox {
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if chatter.receiver thread fails
-    ChatterJFrame.startDisplay("Chatterbox", DEFAULT_UDP_PORT, chatter.hist, new WindowAdapter() {
-      @Override public void windowClosing(WindowEvent e) {
-        chatter.log.printf("handling window closing: %s\n", e);
-        chatter.teardown();
-      }
-    });
+    new ChatterJFrame("Chatterbox", DEFAULT_UDP_PORT, chatter.hist)
+        .addWindowListener(new WindowAdapter() {
+          @Override public void windowClosing(WindowEvent e) {
+            chatter.log.printf("handling window closing: %s\n", e);
+            chatter.teardown();
+          }
+        });
   }
 }

@@ -91,17 +91,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     return labeledField;
   }
 
-  // TODO(zacsh) remove this in favor of straight-forward constructor
-  public static ChatterJFrame startDisplay(
-      String appTitle,
-      int defaultRemotePort,
-      History hist,
-      WindowAdapter teardown) {
-    ChatterJFrame w = new ChatterJFrame(appTitle, defaultRemotePort, hist);
-    w.addCleanupHandler(teardown);
-    return w;
-  }
-
   private String dashBrdID() {
     return String.join("|", this.destAddr.getText(), this.destPort.getText());
   }
@@ -170,10 +159,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private void handleSolicitations(Remote r) {
     ChatStart s = new ChatStart(r.getHost(), r.getPort());
     s.launchChat(this.hist);
-  }
-
-  public void addCleanupHandler(WindowAdapter cleanup) {
-    this.addWindowListener(cleanup);
   }
 }
 
