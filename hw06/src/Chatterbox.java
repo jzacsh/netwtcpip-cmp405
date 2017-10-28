@@ -113,6 +113,7 @@ public class Chatterbox {
     this.log.printf(
         "Running in %s mode\n",
         this.isOneToOne() ? "one-to-one (CLI)" : "forum (GUI)");
+    this.receiver.report();
   }
 
   public boolean waitOnDirectText() {
@@ -156,9 +157,8 @@ public class Chatterbox {
   public void launch() {
     this.report();
 
-    this.receiver.report().startChannel();
+    this.receiver.startChannel();
     this.hist.startPlumber();
-
     this.log.printf("children spawned, continuing with user task\n");
 
     if (this.isOneToOne()) {
