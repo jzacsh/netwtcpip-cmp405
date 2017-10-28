@@ -14,9 +14,6 @@ public class AssertNetwork {
     return mustOpenSocket(-1 /*port*/, failHandler);
   }
 
-  /**
-   * failMessage should accept a host(%s), port (%d), and error (%s).
-   */
   public static final DatagramSocket mustOpenSocket(int port, Consumer<SocketException> failHandler) {
     DatagramSocket sock = null;
     try {
@@ -38,16 +35,13 @@ public class AssertNetwork {
       failHandler.accept(String.format("%s, but got: %s\n", errContext, e));
     }
 
-    if (port < 0 || port > 0xFFFF) {
+    if (!AssertNetwork.isValidPort(port)) {
       failHandler.accept(String.format("%s, but got %d\n", errContext, port));
     }
 
     return port;
   }
 
-  /**
-   * failMessage should accept a hostname(%s), and error (%s).
-   */
   public static final InetAddress mustResolveHostName(
       final String hostName,
       Consumer<UnknownHostException> failHandler) {
