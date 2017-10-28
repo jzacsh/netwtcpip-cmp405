@@ -40,7 +40,7 @@ public class RecvChannel implements LocalChannel {
     return this;
   }
 
-  public Thread stop() {
+  public Thread stopChannel() {
     this.stopped = true;
     return this.running;
   }
@@ -51,7 +51,7 @@ public class RecvChannel implements LocalChannel {
 
   private void fatalf(Exception e, String format, Object... args) {
     this.log.errorf(e, format, args);
-    this.stop();
+    this.stopChannel();
     this.isOk = false;
   }
 

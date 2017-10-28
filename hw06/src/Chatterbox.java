@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
 import java.io.InputStream;
+import java.util.function.Consumer;
 
 public class Chatterbox {
   private static final String CLI_USAGE =
@@ -126,40 +127,61 @@ public class Chatterbox {
     return this.sender.isFailed();
   }
 
-  public boolean teardown() {
+  public boolean teardown() { return this.teardown(null /*ev*/); }
+
+  public boolean teardown(WindowEvent ev) {
+    if (ev == null) {
+      this.log.printf("handling manual shutdown\n");
+    } else {
+      this.log.printf("handling window closing event: %s\n", ev);
+    }
+
     try {
       this.hist.stopPlumber().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
-      this.receiver.stop().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
+      this.receiver.stopChannel().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
     } catch(InterruptedException e) {
       this.log.errorf(e, "problem stopping receiver");
+      if (!this.isOneToOne()) {
+        System.exit(1);
+      }
       return true;
     }
 
+    if (!this.isOneToOne()) {
+      System.exit(0);
+    }
     return false;
   }
 
-  public static void main(String[] args) {
-    Chatterbox chatter = Chatterbox.parseFromCli(args);
-    chatter.report();
+  public void launch() {
+    this.report();
 
-    chatter.receiver.report().startChannel();
-    chatter.hist.startPlumber();
+    this.receiver.report().startChannel();
+    this.hist.startPlumber();
 
-    chatter.log.printf("children spawned, continuing with user task\n");
+    this.log.printf("children spawned, continuing with user task\n");
 
-    if (chatter.isOneToOne()) {
-      System.exit(chatter.waitOnDirectText() | chatter.teardown() ? 1 : 0);
+    if (this.isOneToOne()) {
+      System.exit(this.waitOnDirectText() || this.teardown() ? 1 : 0);
     }
 
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
-    // 2) or shutdown gui from here if chatter.receiver thread fails
-    new ChatterJFrame("Chatterbox", DEFAULT_UDP_PORT, chatter.hist)
-        .addWindowListener(new WindowAdapter() {
-          @Override public void windowClosing(WindowEvent e) {
-            chatter.log.printf("handling window closing: %s\n", e);
-            chatter.teardown();
-          }
-        });
+    // 2) or shutdown gui from here if this.receiver thread fails
+    new ChatterJFrame("Chatterbox", DEFAULT_UDP_PORT, this.hist).
+        addWindowListener(new TeardownHandler((WindowEvent ev) -> this.teardown(ev)));
   }
+
+  public static void main(String[] args) {
+    Chatterbox.parseFromCli(args).launch();
+  }
+}
+
+class TeardownHandler extends WindowAdapter {
+  private Consumer<WindowEvent> handler;
+  public TeardownHandler(Consumer<WindowEvent> handler) {
+    super();
+    this.handler = handler;
+  }
+  @Override public void windowClosing(WindowEvent e) { this.handler.accept(e); }
 }

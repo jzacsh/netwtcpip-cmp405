@@ -49,14 +49,14 @@ public class OneToOneChannel implements LocalChannel {
   public boolean isFailed() { return !this.isOk; }
   public Thread thread() { return this.running; }
 
-  public Thread stop() {
+  public Thread stopChannel() {
     this.stopped = true;
     return this.running;
   }
 
   private void fatalf(Exception e, String format, Object... args) {
     this.log.errorf(e, format, args);
-    this.stop();
+    this.stopChannel();
     this.isOk = false;
   }
 
