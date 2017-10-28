@@ -129,10 +129,10 @@ public class Chatterbox {
       this.receiver.stop().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
     } catch(InterruptedException e) {
       this.log.errorf(e, "problem stopping receiver");
-      return false;
+      return true;
     }
 
-    return true;
+    return false;
   }
 
   public static void main(String[] args) {
@@ -145,7 +145,7 @@ public class Chatterbox {
     chatter.log.printf("children spawned, continuing with user task\n");
 
     if (chatter.isOneToOne()) {
-      System.exit(chatter.waitOnDirectText() & chatter.teardown() ? 1 : 0);
+      System.exit(chatter.waitOnDirectText() | chatter.teardown() ? 1 : 0);
     }
 
     // TODO(zacsh) fix to either:
