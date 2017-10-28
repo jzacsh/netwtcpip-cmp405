@@ -97,6 +97,9 @@ public class Chatterbox {
             });
           }
           break;
+        default:
+          Chatterbox.log.errorf("unrecognized argument '%s'; see -h for usage\n", args[i]);
+          System.exit(1);
       }
     }
 
