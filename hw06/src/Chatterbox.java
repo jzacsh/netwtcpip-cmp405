@@ -31,6 +31,7 @@ public class Chatterbox {
       this.log.errorf(e, "setup: failed opening receiving socket on %d", baselinePort);
       System.exit(1);
     });
+    this.log.setLevel(lvl);
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
   }
