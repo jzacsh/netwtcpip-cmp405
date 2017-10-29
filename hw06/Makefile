@@ -11,6 +11,9 @@ all: $(JVOBJ)
 $(OUTD)/%.class: $(SRCD)/%.java
 	javac -Xlint:unchecked -cp $(SRCD) $< -d $(OUTD)/
 
+lint:
+	./importscrub.sh $(SRCS)
+
 clean:
 	$(RM) $(OUTD)/*.class
 
