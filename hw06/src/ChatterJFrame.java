@@ -174,7 +174,7 @@ class ChatStart extends Remote {
     try {
       r = Remote.parseFrom(hostRaw, portRaw);
     } catch (Throwable e) {
-      return new ChatStart(e.toString());
+      return new ChatStart(e.getMessage());
     }
     return new ChatStart(r.getHost(), r.getPort());
   }
