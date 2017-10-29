@@ -13,7 +13,7 @@ public class Remote {
   public InetAddress getHost() { return this.host; }
   public int getPort() { return this.port; }
 
-  public String toString() {
+  public final String toString() {
     return String.format("%s:%d", this.host.getHostAddress(), this.port);
   }
 

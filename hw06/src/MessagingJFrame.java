@@ -18,8 +18,8 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   private History hist;
   private final Remote remote;
 
-  public MessagingJFrame(History hist, final Remote r) {
-    super(String.format("chat with %s", r.toString()));
+  public MessagingJFrame(final String readable, History hist, final Remote r) {
+    super(String.format("chat [%s] with %s", readable, r.toString()));
     this.hist = hist;
     this.remote = r;
     this.setLayout(new BorderLayout());

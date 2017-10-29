@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Map;
+import java.util.HashMap;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -28,6 +30,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String ACTION_DASHBRD_START = "ACTION_DASHBRD_START";
 
   private ChatStart start = null;
+  private Map<String, MessagingJFrame> chats;
 
   private History hist;
   private DatagramSocket sock;
@@ -71,6 +74,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.setVisible(true);
 
     this.hist.registerDefaultListener((Remote r) -> this.handleSolicitations(r));
+    this.chats = new HashMap<>();
   }
 
   private JPanel addLabeled(
@@ -136,8 +140,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
           this.lastDashFailure = currentID;
           return;
         }
-
-        this.start.launchChat(this.hist);
+        this.launchCachedChat(this.start);
         this.log.debugf(
             "starting chat with dest: '%s', port: '%s'...\n",
             this.destAddr.getText(), this.destPort.getText());
@@ -150,16 +153,39 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     }
   }
 
+  private void launchCachedChat(ChatStart s) {
+    final String chatID = s.toString();
+    if (!this.chats.containsKey(chatID)) {
+      this.chats.put(chatID, s.launchChat(this.hist));
+      return;
+    }
+
+    MessagingJFrame existing = this.chats.get(chatID);
+    existing.setVisible(true);
+    existing.setFocusable(true);
+    existing.requestFocus();
+  }
+
   private void handleSolicitations(Remote r) {
-    ChatStart s = new ChatStart(r.getHost(), r.getPort());
-    s.launchChat(this.hist);
+    this.launchCachedChat(new ChatStart(r.getHost(), r.getPort()));
   }
 }
 
 class ChatStart extends Remote {
+  private final String context;
   private String failure = null;
 
-  public ChatStart(final InetAddress host, int port) { super(host, port); }
+  public ChatStart(final InetAddress host, int port) {
+    super(host, port);
+    this.context = "recvd";
+  }
+
+  public ChatStart(
+      final String rawHost, final String rawPort,
+      final InetAddress host, int port) {
+    super(host, port);
+    this.context = String.format("started: %s:%s", rawHost, rawPort);
+  }
 
   private ChatStart(String fail) {
     this(null /*host*/, -1 /*port*/);
@@ -176,10 +202,10 @@ class ChatStart extends Remote {
     } catch (Throwable e) {
       return new ChatStart(e.getMessage());
     }
-    return new ChatStart(r.getHost(), r.getPort());
+    return new ChatStart(hostRaw, portRaw, r.getHost(), r.getPort());
   }
 
-  public void launchChat(History hist) {
-    new MessagingJFrame(hist, this);
+  public MessagingJFrame launchChat(History hist) {
+    return new MessagingJFrame(this.context, hist, this);
   }
 }
