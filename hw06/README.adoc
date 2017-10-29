@@ -40,7 +40,7 @@ $ java -cp bin Chatterbox -1:1 someone.elsese.target.machine:2231
 
 == testing receipt on remote machine, `b.lan`
 
-WARN: this section is outdated and should be ignored
+WARNING: this section is outdated and should be ignored
 
 .3 terminals are described below, which you should setup first:
 1. on remote `b`, listen for messages: `nc -ul 6400`
