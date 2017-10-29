@@ -1,8 +1,5 @@
-import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Color;
-import java.util.concurrent.locks.Lock;
-import java.util.List;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;

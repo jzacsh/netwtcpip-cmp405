@@ -1,10 +1,6 @@
-import java.net.InetAddress;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.net.URLEncoder;
-import java.io.UnsupportedEncodingException;
 
 public class OneToOneChannel implements LocalChannel {
   private static final String TAG = "1:1 thrd";
