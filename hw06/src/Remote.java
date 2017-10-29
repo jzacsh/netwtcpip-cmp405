@@ -28,7 +28,7 @@ public class Remote {
     try {
       port = Integer.parseUnsignedInt(portRaw);
     } catch (NumberFormatException e) {
-      throw new Error(String.format("port number '%s' is not a valid number", portRaw));
+      throw new Error(String.format("'%s' is not a valid port number", portRaw));
     }
 
     if (!AssertNetwork.isValidPort(port)) {
