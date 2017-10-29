@@ -14,7 +14,6 @@ public class RecvChannel implements LocalChannel {
   private History hist;
 
   private boolean stopped = false;
-  private Thread running = null;
   private boolean isOk = true;
 
   public RecvChannel(History hist) { this.hist = hist; }
@@ -31,23 +30,10 @@ public class RecvChannel implements LocalChannel {
     return this;
   }
 
-  public RecvChannel startChannel() {
-    this.stopped = false;
-    this.running = new Thread(this);
-    this.running.setName(TAG);
-    this.running.start();
-    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.running);
-    return this;
-  }
-
-  public Thread stopChannel() {
-    this.stopped = true;
-    return this.running;
-  }
+  public void stopChannel() { this.stopped = true; }
 
   public boolean isActive() { return !this.stopped; }
   public boolean isFailed() { return !this.isOk; }
-  public Thread thread() { return this.running; }
 
   private void fatalf(Exception e, String format, Object... args) {
     this.log.errorf(e, format, args);
@@ -57,6 +43,11 @@ public class RecvChannel implements LocalChannel {
 
   /** non-blocking receiver that accepts packets on inSocket. */
   public void run() {
+    this.stopped = false;
+    this.log.printf(
+        "spawned \"%s\" thread: %s\n",
+        TAG, Thread.currentThread().getName());
+
     byte[] inBuffer = new byte[MAX_RECEIVE_BYTES];
     DatagramPacket inPacket = new DatagramPacket(inBuffer, inBuffer.length);
 

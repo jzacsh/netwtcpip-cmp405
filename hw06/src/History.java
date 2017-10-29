@@ -21,7 +21,6 @@ public class History implements Runnable {
   private LockedMapQueue<String, Message> receiptFIFOs = null;
   private LockedMapQueue<String, Message> sendingFIFOs = null;
 
-  private Thread plumber;
   protected boolean isPlumbing = false;
 
   private final Lock registryLock;
@@ -149,25 +148,17 @@ public class History implements Runnable {
   }
 
   public void run() {
+    this.isPlumbing = true;
+    this.log.printf("spawned \"%s\": %s\n", TAG, Thread.currentThread().getName());
+
     new Timer().scheduleAtFixedRate(
         new HistoryTimer(this),
         0L /*delay*/,
         History.FLUSH_CYCLE_MILLIS /*period*/);
   }
 
-  public void startPlumber() {
-    this.isPlumbing = true;
-    this.plumber = new Thread(this);
-    this.plumber.setName(TAG);
-    this.plumber.start();
-    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.plumber);
-  }
-
   // Idempotent halter to the plumber's internal logic
-  public Thread stopPlumber() {
-    this.isPlumbing = false;
-    return this.plumber;
-  }
+  public void stopPlumber() { this.isPlumbing = false; }
 }
 
 class HistoryTimer extends TimerTask {

@@ -7,7 +7,14 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.function.Consumer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class Chatterbox {
   private static final String CLI_USAGE =
@@ -17,6 +24,9 @@ public class Chatterbox {
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level DEFAULT_LOG_LEVEL = Logger.Level.INFO;
+
+  private List<Future<?>> tasks;
+  private ExecutorService execService;
 
   private History hist = null;
   private RecvChannel receiver = null;
@@ -111,22 +121,13 @@ public class Chatterbox {
   }
 
   public void report() {
-    this.log.printf(
-        "Running in %s mode\n",
+    this.log.printf("Running in %s mode\n",
         this.isOneToOne() ? "one-to-one (CLI)" : "forum (GUI)");
+
     this.receiver.report();
-  }
-
-  public boolean waitOnDirectText() {
-    try {
-      // block on user interaction to exit
-      this.sender.report().startChannel().thread().join();
-    } catch(InterruptedException e) {
-      this.log.errorf(e, "failed waiting on UX to exit\n");
-      return true;
+    if (this.isOneToOne()) {
+      this.sender.report();
     }
-
-    return this.sender.isFailed();
   }
 
   public boolean teardown() { return this.teardown(null /*ev*/); }
@@ -138,9 +139,11 @@ public class Chatterbox {
       this.log.printf("handling window closing event: %s\n", ev);
     }
 
+    this.hist.stopPlumber();
+    this.receiver.stopChannel();
     try {
-      this.hist.stopPlumber().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
-      this.receiver.stopChannel().join(Chatterbox.MAX_THREAD_GRACE_MILLIS);
+      this.execService.shutdown();
+      this.execService.awaitTermination(Chatterbox.MAX_THREAD_GRACE_MILLIS, TimeUnit.MILLISECONDS);
     } catch(InterruptedException e) {
       this.log.errorf(e, "problem stopping receiver");
       if (!this.isOneToOne()) {
@@ -155,15 +158,38 @@ public class Chatterbox {
     return false;
   }
 
+  private boolean patientlyWaitFor(Future<?> task) {
+    this.log.debugf("awaiting single task to exit normally...\n", this.tasks.size());
+    try {
+      task.get(); // patiently block on `task` ...
+    } catch(ExecutionException e) {
+      this.log.errorf(e, "found problem with main tasks");
+    } catch(InterruptedException e) {
+      this.log.errorf(e, "found one of main task already stopped");
+    }
+    this.log.debugf("task finally exited. killing remaining %d tasks...\n", this.tasks.size() - 1);
+    return this.teardown();
+  }
+
+  public Future<?> startTask(Runnable r) {
+    if (this.execService == null ) {
+      this.execService = Executors.newWorkStealingPool();
+      this.tasks = new ArrayList<Future<?>>();
+    }
+    Future<?> f = this.execService.submit(r);
+    this.tasks.add(f);
+    return f;
+  }
+
   public void launch() {
     this.report();
 
-    this.receiver.startChannel();
-    this.hist.startPlumber();
+    this.startTask(this.receiver);
+    this.startTask(this.hist);
     this.log.printf("children spawned, continuing with user task\n");
-
     if (this.isOneToOne()) {
-      System.exit(this.waitOnDirectText() || this.teardown() ? 1 : 0);
+      Future<?> senderTask = this.startTask(this.sender);
+      System.exit(this.patientlyWaitFor(senderTask) ? 1 : 0);
     }
 
     // TODO(zacsh) fix to either:

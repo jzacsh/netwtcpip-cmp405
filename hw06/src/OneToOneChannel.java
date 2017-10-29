@@ -18,7 +18,6 @@ public class OneToOneChannel implements LocalChannel {
   private final Remote remote;
   private Scanner msgSrc;
   private History hist;
-  private Thread running;
 
   public OneToOneChannel(final Scanner src, final Remote remote, History hist) {
     this.msgSrc = src;
@@ -31,15 +30,6 @@ public class OneToOneChannel implements LocalChannel {
     return this;
   }
 
-  public OneToOneChannel startChannel() {
-    this.stopped = false;
-    this.running = new Thread(this);
-    this.running.setName(TAG);
-    this.running.start();
-    this.log.printf("spawned \"%s\" thread: %s\n", TAG, this.running);
-    return this;
-  }
-
   public OneToOneChannel report() {
     this.log.printf("READY to capture messages\n\tbound for %s\n", this.remote.toString());
     return this;
@@ -47,13 +37,14 @@ public class OneToOneChannel implements LocalChannel {
 
   public boolean isActive() { return !this.stopped; }
   public boolean isFailed() { return !this.isOk; }
-  public Thread thread() { return this.running; }
+  public Thread thread() { return Thread.currentThread(); }
+  public void stopChannel() { this.stopped = true; }
 
-  public Thread stopChannel() {
-    this.stopped = true;
-    return this.running;
+
+  private void exitf(String format, Object... args) {
+    this.log.printf(format, args);
+    this.stopChannel();
   }
-
   private void fatalf(Exception e, String format, Object... args) {
     this.log.errorf(e, format, args);
     this.stopChannel();
@@ -61,6 +52,9 @@ public class OneToOneChannel implements LocalChannel {
   }
 
   public void run() {
+    this.stopped = false;
+    this.log.printf("spawned \"%s\" thread: %s\n", TAG, Thread.currentThread().getName());
+
     DatagramPacket packet;
     String message = null; // NOTE: no explicit consideration given to charset
 
@@ -71,13 +65,13 @@ public class OneToOneChannel implements LocalChannel {
       try {
         message = this.msgSrc.nextLine().trim();
       } catch (NoSuchElementException e) {
-        this.log.printf("caught EOF, exiting...\n");
+        this.exitf("caught EOF, exiting...\n");
         break;
       }
 
       if (message.length() == 0) {
         if (isPrevEmpty) {
-          this.log.printf("caught two empty messages, exiting.... ");
+          this.exitf("caught two empty messages, exiting.... ");
           break;
         }
         isPrevEmpty = true;
