@@ -19,7 +19,7 @@ public class History implements Runnable {
   public final DatagramSocket source;
 
   private LockedMapQueue<String, Message> receiptFIFOs = null;
-  private LockedMapQueue<String, Message> sendingFIFOs = null;
+  private LockedMapQueue<String, ScheduledMessage> sendingFIFOs = null;
 
   protected boolean isPlumbing = false;
 
@@ -32,7 +32,7 @@ public class History implements Runnable {
     this.source = source;
 
     this.receiptFIFOs = new LockedMapQueue<String, Message>();
-    this.sendingFIFOs = new LockedMapQueue<String, Message>();
+    this.sendingFIFOs = new LockedMapQueue<String, ScheduledMessage>();
     this.full = new LockedMapList<String, Message>();
 
     this.registryLock = new ReentrantLock();
@@ -95,7 +95,10 @@ public class History implements Runnable {
   }
 
   public void safeEnqueueSend(final Remote r, final String message) {
-    this.sendingFIFOs.add(r.toString(), new Message(r, message, false /*isReceived*/));
+  }
+
+  public void safeEnqueueSend(final Remote r, final String message, DatagramSocket out) {
+    this.sendingFIFOs.add(r.toString(), buildSchedule(r, message, out));
   }
 
   public LockedList<Message> getHistoryWith(final Remote remote) {
@@ -104,13 +107,17 @@ public class History implements Runnable {
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
   protected void flushSends() {
-    this.sendingFIFOs.forEachNonEmpty((final String remoteID, LockedQ<Message> q) -> {
+    this.sendingFIFOs.forEachNonEmpty((final String remoteID, LockedQ<ScheduledMessage> q) -> {
       if (!this.isPlumbing) { return; }
 
       LockedList<Message> chatHist = this.full.getNonEmpty(remoteID);
-      q.drain((Message toSend) -> {
+      q.drain((ScheduledMessage toSend) -> {
         try {
-          this.source.send(toSend.toPacket());
+          if (toSend.isDefaultSock()) {
+            this.source.send(toSend.toPacket());
+          } else {
+            toSend.overrideSock.send(toSend.toPacket());
+          }
         } catch(Exception e) {
           this.log.errorf(e, "sending %s message %03d", toSend.getRemote(), chatHist.size() - 1);
           this.stopPlumber();
@@ -159,6 +166,21 @@ public class History implements Runnable {
 
   // Idempotent halter to the plumber's internal logic
   public void stopPlumber() { this.isPlumbing = false; }
+
+  private ScheduledMessage buildSchedule(Remote r, String m, DatagramSocket sock) {
+    return new ScheduledMessage(
+        r, m, false /*isReceived*/,
+        this.source == sock ? null : sock);
+  }
+
+  private class ScheduledMessage extends Message {
+    private DatagramSocket overrideSock = null;
+    public ScheduledMessage(Remote r, String m, boolean isReceived, DatagramSocket out) {
+      super(r, m, isReceived);
+      this.overrideSock = out;
+    }
+    public boolean isDefaultSock() { return this.overrideSock == null; }
+  }
 }
 
 class HistoryTimer extends TimerTask {

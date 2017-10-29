@@ -18,11 +18,21 @@ public class OneToOneChannel implements LocalChannel {
   private final Remote remote;
   private Scanner msgSrc;
   private History hist;
+  private DatagramSocket outSock;
 
+  public OneToOneChannel(
+      final Scanner src,
+      final Remote remote,
+      History hist,
+      DatagramSocket outSock) {
+    this(src, remote, hist);
+    this.outSock = outSock;
+  }
   public OneToOneChannel(final Scanner src, final Remote remote, History hist) {
     this.msgSrc = src;
     this.remote = remote;
     this.hist = hist;
+    this.outSock = this.hist.source;
   }
 
   public OneToOneChannel setLogLevel(final Logger.Level lvl) {
@@ -81,7 +91,7 @@ public class OneToOneChannel implements LocalChannel {
       isPrevEmpty = false;
       msgIndex++;
 
-      this.hist.safeEnqueueSend(this.remote, message);
+      this.hist.safeEnqueueSend(this.remote, message, this.outSock);
       this.log.printf("enqueued message #%03d: '%s'...\n", msgIndex, message);
     }
 
