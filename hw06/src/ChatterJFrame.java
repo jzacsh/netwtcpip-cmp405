@@ -173,7 +173,7 @@ class ChatStart extends Remote {
     Remote r = null;
     try {
       r = Remote.parseFrom(hostRaw, portRaw);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       return new ChatStart(e.toString());
     }
     return new ChatStart(r.getHost(), r.getPort());
