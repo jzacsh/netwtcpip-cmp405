@@ -17,20 +17,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class Chatterbox {
+  private static final String CLI_USAGE =
+      "[--help] [-v*] [ -1:1 DEST[:PORT] ]\n\t-1:1 is a CLI-mode for direct chat with one other host";
+
   private static final int DEFAULT_UDP_PORT = 6400;
-
-  private static final String DOC_ONETOONE_USAGE_A = "DEST_HOST[:DEST_PORT]";
-  private static final String DOC_ONETOONE_USAGE_B = "[SRC_PORT:]DEST_HOST[:DEST_PORT]";
-  private static final String DOC_ONETOONE_USAGE = String.format(
-      "-1:1  %s | %s", DOC_ONETOONE_USAGE_A, DOC_ONETOONE_USAGE_B);
-  private static final String CLI_USAGE = String.format(
-      "[--help] [-v*] [ %s ]\n\t%s\nDefault DEST_PORT (for -1:1 mode or otherwise) is %d\n",
-      DOC_ONETOONE_USAGE, "-1:1 is a CLI-mode for direct chat with one other host.",
-      DEFAULT_UDP_PORT);
-
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
   private static final Logger log = new Logger("chatter");
-  private static final Logger.Level DEFAULT_LOG_LEVEL = Logger.Level.DEBUG;
+  private static final Logger.Level DEFAULT_LOG_LEVEL = Logger.Level.INFO;
 
   private List<Future<?>> tasks;
   private ExecutorService execService;
@@ -55,26 +48,23 @@ public class Chatterbox {
 
   private Chatterbox(
       final InputStream messages,
-      final Triple<Integer, InetAddress, Integer> oneToOne,
+      final String destHostName,
+      final int baselinePort,
       final Logger.Level lvl) {
-    this(oneToOne.c.intValue(), lvl);
+    this(baselinePort, lvl);
     this.oneToOneMode = true;
-    if (oneToOne.a == null) {
-      this.sender = new OneToOneChannel(
-          new Scanner(messages),
-          new Remote(oneToOne.b, oneToOne.c.intValue()),
-          this.hist);
-    } else {
-      DatagramSocket outSock = AssertNetwork.mustOpenSocket(oneToOne.a.intValue(), (SocketException e) -> {
-        Chatterbox.log.errorf(e,
-            "setup: failed opening send-socket for SRC_PORT=%d", oneToOne.a.intValue());
-        System.exit(1);
-      });
-      this.sender = new OneToOneChannel(
-          new Scanner(messages),
-          new Remote(oneToOne.b, oneToOne.c.intValue()),
-          this.hist, outSock);
-    }
+
+    final InetAddress destAddr = AssertNetwork
+        .mustResolveHostName(destHostName, (UnknownHostException e) -> {
+          this.log.errorf(e, "setup: failed resolving destination host '%s'", destHostName);
+          System.exit(1);
+        });
+
+    this.sender = new OneToOneChannel(
+        new Scanner(messages),
+        new Remote(destAddr, baselinePort),
+        this.hist);
+
     this.sender.setLogLevel(lvl);
     this.log.printf("setup: listener & sender setups complete.\n\n");
   }
@@ -86,12 +76,9 @@ public class Chatterbox {
       return new Chatterbox();
     }
 
+    String destHostName = null;
     Logger.Level cliVerbosity = Logger.Level.DEBUG;
     int destPort = DEFAULT_UDP_PORT;
-
-    String hostName;
-    Triple<String, String, String> oneToOneRaw = new Triple<String, String, String>();
-    Triple<Integer, InetAddress, Integer> oneToOneParsed = new Triple<Integer, InetAddress, Integer>();
     for (int i = 0; i < args.length; ++i) {
       switch (args[i]) {
         case "-h":
@@ -109,30 +96,18 @@ public class Chatterbox {
         case "-1:1":
           i++;
           if (i >= args.length) {
-            System.err.printf("missing parameter for flag %s\n", DOC_ONETOONE_USAGE);
+            System.err.printf("missing parameter for flag -1:1 DEST[:PORT]\n");
             System.exit(1);
           }
 
-          final String param = args[i].trim();
-          final String[] hostPort = param.split(":");
-          switch (hostPort.length) {
-            case 1:
-              oneToOneRaw.b = hostPort[0];
-              break;
-            case 2:
-              oneToOneRaw.b = hostPort[0];
-              oneToOneRaw.c = hostPort[1];
-              break;
-            case 3:
-              oneToOneRaw.a = hostPort[0];
-              oneToOneRaw.b = hostPort[1];
-              oneToOneRaw.c = hostPort[2];
-              break;
-            default:
-              System.err.printf("bad parameter, '%s', for flag %s\n", param, DOC_ONETOONE_USAGE);
+          String[] hostPort = args[i].trim().split(":");
+          destHostName = hostPort[0];
+          if (hostPort.length > 1) {
+            destPort = AssertNetwork.mustParsePort(hostPort[1], "DEST_PORT", (String err) -> {
+              Chatterbox.log.errorf(err);
               System.exit(1);
+            });
           }
-          oneToOneParsed = Chatterbox.parseOneToOneArgs(oneToOneRaw);
           break;
         default:
           Chatterbox.log.errorf("unrecognized argument '%s'; see -h for usage\n", args[i]);
@@ -140,32 +115,9 @@ public class Chatterbox {
       }
     }
 
-    return oneToOneParsed.isEmpty()
+    return destHostName == null
         ? new Chatterbox(destPort, cliVerbosity)
-        : new Chatterbox(System.in, oneToOneParsed, cliVerbosity);
-  }
-
-  private static Triple<Integer, InetAddress, Integer> parseOneToOneArgs(Triple<String, String, String> raw) {
-    Triple<Integer, InetAddress, Integer> parsed = new Triple<>();
-    if (raw.a != null) {
-      parsed.a = AssertNetwork.mustParsePort(raw.a, "DEST_PORT", (String err) -> {
-        Chatterbox.log.errorf(err);
-        System.exit(1);
-      });
-    }
-
-    parsed.b = AssertNetwork.mustResolveHostName(raw.b, (UnknownHostException e) -> {
-      Chatterbox.log.errorf(e, "setup: failed resolving destination host '%s'", raw.b);
-      System.exit(1);
-    });
-
-    if (raw.c != null) {
-      parsed.c = AssertNetwork.mustParsePort(raw.c, "DEST_PORT", (String err) -> {
-        Chatterbox.log.errorf(err);
-        System.exit(1);
-      });
-    }
-    return parsed;
+        : new Chatterbox(System.in, destHostName, destPort, cliVerbosity);
   }
 
   public void report() {
@@ -250,18 +202,6 @@ public class Chatterbox {
   public static void main(String[] args) {
     Chatterbox.parseFromCli(args).launch();
   }
-}
-
-class Triple<A, B, C> {
-  public A a;
-  public B b;
-  public C c;
-  public Triple() {
-    this.a = null;
-    this.b = null;
-    this.c = null;
-  }
-  public boolean isEmpty() { return a == null && b == null && c == null; }
 }
 
 class TeardownHandler extends WindowAdapter {
