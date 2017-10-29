@@ -88,7 +88,7 @@ public class OneToOneChannel implements LocalChannel {
       msgIndex++;
 
       this.hist.safeEnqueueSend(this.remote, message);
-      this.log.printf("enqueued message #%03d: '%s'...", msgIndex, message);
+      this.log.printf("enqueued message #%03d: '%s'...\n", msgIndex, message);
     }
 
     this.msgSrc.close();
