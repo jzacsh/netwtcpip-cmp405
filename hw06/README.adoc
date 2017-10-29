@@ -3,32 +3,44 @@
 
 status: *complete*
 
-.sample run
+.Build & Run GUI
 ----
 $ make all # or explicitly, the target: bin/Chatterbox.class
 
 $ java -classpath bin Chatterbox
-Error: got 0 argument(s), but expected 2...
-usage: DESTINATION_HOST DEST_PORT
+[chatter] Running in forum (GUI) mode
+[recv'r thrd] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:6400
+[chatter] children spawned, continuing with user task
+[recv'r thrd] spawned "recv'r thrd" thread: ForkJoinPool-1-worker-1
+[history thrd] spawned "history thrd": ForkJoinPool-1-worker-2
+[recv'r thrd] waiting for input...
+----
 
-$ java -cp bin Chatterbox someone.elses.target.machine 2231
-[setup] listener & sender setups complete.
+.Run CLI for testing
+----
+$ java -cp bin Chatterbox -help
 
-[recv'r] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:59644
-[recv'r] spawning receiver thread... Done.
-[sender] READY to capture messages
-        bound for someone.elsese.target.machine/183.255.7.90 on port 2231
-        via socket: 0.0.0.0/0.0.0.0:41750
-[recv'r] thread: waiting for input...
-[sender] usage instructions:
+$ java -cp bin Chatterbox -1:1 someone.elsese.target.machine:2231
+[chatter] setup: listener & sender setups complete.
+
+[chatter] Running in one-to-one (CLI) mode
+[recv'r thrd] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:2231
+[1:1 thrd] READY to capture messages
+        bound for 192.168.86.111:2231
+[chatter] children spawned, continuing with user task
+[recv'r thrd] spawned "recv'r thrd" thread: ForkJoinPool-1-worker-1
+[history thrd] spawned "history thrd": ForkJoinPool-1-worker-2
+[1:1 thrd] spawned "1:1 thrd" thread: ForkJoinPool-1-worker-3
+[chatter] awaiting single task to exit normally...
+[1:1 thrd] CLI usage instructions:
         Type messages & [enter] to send
         [enter] twice to exit.
-[sender] caught EOF, exiting...
-
-...cleaning up
+[recv'r thrd] waiting for input...
 ----
 
 == testing receipt on remote machine, `b.lan`
+
+WARN: this section is outdated and should be ignored
 
 .3 terminals are described below, which you should setup first:
 1. on remote `b`, listen for messages: `nc -ul 6400`
