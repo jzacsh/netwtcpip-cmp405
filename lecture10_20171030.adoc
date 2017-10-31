@@ -1,0 +1,20 @@
+= lecture 10 20171030
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/s16/lecturenotes/Chapter%2012.pdf
+
+tcp continued (from lecture 9)... {slides}[from slide 13].
+
+layering of three major protocols...
+
+we also measure *roundtrip time* of acks to our messages
+
+TCP *only* makes these roundtrip time on OK traffic; ie: NOT on retransmission
+
+question: define roundtrip time without transmission
+
+.uses formula = `alpha(rtt) + beta (rtt_current)`
+. such that `alpha + beta = 1`
+. average of rtt and current
+
+tcp header *must* have checksum (unlike UDP)
+
+
