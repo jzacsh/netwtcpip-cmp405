@@ -55,7 +55,7 @@ public class Chatterbox {
     this.oneToOneMode = true;
 
     final InetAddress destAddr = AssertNetwork
-        .mustResolveHostName(destHostName, (UnknownHostException e) -> {
+        .mustResolveHostName(destHostName, execService, (Throwable e) -> {
           this.log.errorf(e, "setup: failed resolving destination host '%s'", destHostName);
           System.exit(1);
         });

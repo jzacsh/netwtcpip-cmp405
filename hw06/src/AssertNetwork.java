@@ -1,11 +1,21 @@
+import java.lang.InterruptedException;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Loud-failing, tiny utils. */
 public class AssertNetwork {
+  public static final long MAX_HOST_RESOLUTION_MILLIS = 150L;
+
   /* Maximum possible port number bound by field size: two bytes. */
   public static final int MAX_POSSIBLE_PORT = 0xFFFF;
 
@@ -43,7 +53,7 @@ public class AssertNetwork {
 
   public static final InetAddress mustResolveHostName(
       final String hostName,
-      Consumer<UnknownHostException> failHandler) {
+      Consumer<Throwable> failHandler) {
     InetAddress addr = null;
     try {
       addr = InetAddress.getByName(hostName);
@@ -51,6 +61,26 @@ public class AssertNetwork {
       failHandler.accept(e);
     }
     return addr;
+  }
+
+  public static final InetAddress mustResolveHostName(
+      final String hostName,
+      ExecutorService threadPool,
+      Consumer<Throwable> failHandler) {
+    InetAddress resp = null;
+    ArrayList<Callable<InetAddress>> resolvers = new ArrayList<>();
+    resolvers.add(() -> mustResolveHostName(hostName, failHandler));
+    try {
+      List<Future<InetAddress>> results = threadPool.invokeAll(
+          resolvers, MAX_HOST_RESOLUTION_MILLIS,
+          TimeUnit.MILLISECONDS);
+      resp = results.get(0).get();
+    } catch (ExecutionException e) {
+      failHandler.accept(e);
+    } catch (InterruptedException e) {
+      failHandler.accept(e);
+    }
+    return resp;
   }
 
   public static final boolean isValidPort(final int port) {
