@@ -27,7 +27,7 @@ public class Logger {
   /**
    * NOTE: this method appends its own newline to the end of all logs.
    */
-  public void errorf(Exception e, String fmt, Object... args) {
+  public void errorf(Throwable e, String fmt, Object... args) {
     String error;
     if (this.lvl == Level.DEBUG) {
       StringWriter sw = new StringWriter();
