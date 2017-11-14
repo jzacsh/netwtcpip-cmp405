@@ -1,0 +1,48 @@
+= lecture 20171113
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2013.pdf
+:slides14: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2014.pdf
+:rfcbgp4: https://tools.ietf.org/html/rfc4271#page-12
+
+continuiing {slides}[lecture chap 13] alternative to distance-vector algo: link-state
+
+link-state algo is graph building, from the perspective of each node
+. edges: networks
+. vertices: routers/nodes
+
+both: *Interior Gateway(router) Protocols* (IGPs)
+. ie: both encoding the same thing, both propogating same thing in the same time
+. tend to be used in limited/interior space
+
+today's lecture, on {slides14}[chapter 14]: *Exterior Gateway Protocols* (EGP)
+
+how to split up network into sub-networks? concept of *Autonomous Systems* (AS)
+
+single *AS* equiv. *one administrative authority*
+. internally to an AS: use IGP
+. between to an AS: use EGP
+
+.*BGP-4* ; most popular EGP: _"Border Gateway Protocol"_
+. is classless-aware
+. each *AS* has *one* representative, external-router
+.. with allowance for fallbacks _(eg: multiple physically connected,
+   but only one-at-a-time is elected)_
+. does *not* propogate route distances/graphs/etc.
+. only exposes *which* networks are available through the current *AS*
+.. does *not* expose the details (eg: the distance-vectors for said network) 
+. provides support for *policies* (ie: arbitrary economically-driven contracts)
+. permits *incremental updates*
+.. ie: no need to share *all* current info, can share delta
+. allows *aggregation* of routes (ie: multiplexing routes through a single node)
+. allows *authentication*
+. uses *TCP* (most protocols use UDP)
+.. sends *keepalive*
+.. *four BGP message* types
+... 1. OPEN - initialize communications
+... 2. UPDATE - advertise/withdraw routes
+... 3. NOTIFICATION - response to an incorrect message
+... 4. KEEPALIVE - aggreed polling interval
+
+see {rfcbgp4}["RFC 4271, BGP-4"] for actual details
+
+BGP-4 compresses address entries by classful net; eg: `1,20` means "1 byte",
+"20", for `20.0.0.0`
