@@ -1,0 +1,120 @@
+= lecture 20171115
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2014.pdf
+:slides15: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2015.pdf
+:slides16: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2016.pdf
+:rfcbgp4: https://tools.ietf.org/html/rfc4271#page-12
+
+continuiing {slides}[lecture chap 14] on BPB-4
+
+NOTE: content of messages sent to an *AS* are in the *perspective* of the
+receiving *AS*.
+
+.possible internal metrics:
+. hop count
+. delays
+. (economic) policies
+
+NOTE: egp shares none of these metrics
+
+== chapter 15
+
+ONTO {slides15}[lecture for chapter 15]
+
+.sample IGPs:
+. RIP: link-state
+. HELLO: distance vector
+. OSPF: distance vector (by far one of most resilient)
+
+.RIP
+. originates from UNIX as `routed`
+. uses hop-count metric
+. distance-vector
+. relies on broadcast
+. LAN-intended: assumes low-delay
+. split-horizon/poison reverse
+. current standard: RIP2
+
+general question about multicast: why not just another port?
+
+.two forms of RIP:
+. active
+.. form *used by routers*
+.. broadcasts routing updates periodicially
+.. uses incoming messages to updates routes
+. passive
+.. form *used by hosts*
+.. uses incoming messages to update routes
+.. does not send updates
+
+.RIP protocol details
+. updates every 30 seconds
+. 2-tuples of `(dest-address, distance)`
+. `distance=16` -> unreachable/infinity
+. `distance=1` -> direct _(not zero as in previous IGP we looked at)_ -- "zero-origin"
+
+"slow convergence problem"...
+
+solution to loop:
+"split horizon"
+
+Question: whiteboard sketch of routers {a,b,?} and their resolution for A's
+disconnection from `w` -- seems there's a race on adapter `g` for router B
+
+
+
+
+.measures of distances
+. hops
+.. zero-origin
+.. one-origin (eg: RIP)
+. delay
+. throughput
+. jitter(?)
+
+.HELLO protocol: delay based
+. NSFNET; kept delay between pairs of routers
+. worked on NSFNET because network was simpler (equal throughput everywhere)
+
+.OSPF: Open Shortest Path First
+. link-state (recall: graph of network state is shared)
+. more complicated to configure (eg: load-balancing options; subnetting by
+"areas"; message-authentication; network-specific - ie: classless; etc.)
+
+
+.ospf message types
+1. hello (test reachability)
+2. database (ie: topology)
+3. link status request
+4. link status update
+5. link status acknowledgement
+
+.modern IGPs in use
+. RIP (distance vector)
+. OSPF (link state)
+
+== chapter 16: multi-casting
+
+onto {slides16}[chapter 16 lecture]
+
+.hardware multicasing
+. NIC (network interface controller) accepts packets destined to
+.. hardware unicast address
+.. hardware broadcast address
+. user can dynamically add/remove
+
+.ethernet multicast
+. per low-order bit of high-order byte
+. eg: `01.00.00.00.00.00` base 16 (ie: `01`)
+
+.IP multicast
+. class D: `1110` (ie: 28 bits for groups)
+. each multicast *group* assigned unique *class D*
+. dynamic group membership: host can join/leave anytime
+. use hardware multicase (where available); more efficient
+. *same semantics* as UDP (and thus same semantics)
+. *anyone* on network can be a sender
+. two types
+.. well-known (eg: rip2 is `224.0.0.9`)
+.. transient groups
+
+up to 224.0.0.255 used for multicast routing protocols
