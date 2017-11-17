@@ -1,5 +1,12 @@
 = SendReceive Project Usage
 :hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
+:hw9url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw9.html
+
+== Homework #9
+
+TODO: none of <<hw9instruct, homework 9>> nothing done yet
+
+== Homework #6
 
 status: *complete*
 
@@ -38,7 +45,7 @@ $ java -cp bin Chatterbox -1:1 someone.elsese.target.machine:2231
 [recv'r thrd] waiting for input...
 ----
 
-== testing receipt on remote machine, `b.lan`
+=== testing receipt on remote machine, `b.lan`
 
 WARNING: this section is outdated and should be ignored
 
@@ -151,4 +158,42 @@ Please submit your programs in a ZIP file containing all your java programs.
 Please do not use packages for your project.
 
 Submit your ZIP file on Blackboard to Homework 6
+----
+
+and a dump of {hw9url}[homework 9] pasted below:
+
+[[hw9instruct]]
+.homework 9 instructions
+----
+                                 Homework 9
+
+                      CMP 405: Introduction To Networks
+                 Lehman College, City University of New York
+                                  Fall 2017
+
+This Homework Is Due By 11:59 PM on Wednesday Decemeber 6, 2017
+
+   For this assignment you will be extending your work from Homework 6.
+   This time we will all use the same port number, 64,000.
+
+   You will add a protocol to lookup the IP address of a particular user.
+
+   The protocol should work as follows:
+    1. When initiating a messaging session, you will specify the name of
+       the person you are trying to reach. This should result in a message
+       broadcast to everyone on the local network asking for the IP
+       address of the person. This message will be a String formatted as
+       follows: "????? name-of-person". Please note that the name of the
+       person should be one word with no spaces.
+    2. Everyone will receive this message, but only the person wih that
+       name will reply with a String formatted as follows: "##### name of
+       person ##### ww.xx.yy.zz", where ww.xx.yy.zz is the dotted decimal
+       IP address of the person you are trying to message with.
+    3. The title of the messaging window should be the name of the person
+       you are messaging plus their IP address.
+
+   Please submit your programs in a ZIP file containing all your java
+   programs.
+   Please do not use packages for your project.
+   Submit your ZIP file on Blackboard to Homework 9
 ----
