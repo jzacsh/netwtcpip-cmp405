@@ -18,8 +18,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Chatterbox {
   private static final String CLI_USAGE =
-      "[--help] [-v*] [ -1:1 DEST[:PORT] ]\n\t-1:1 is a CLI-mode for direct chat with one other host";
+      "[--help] [-v*] [ -1:1 DEST[:PORT] | -username LOCAL_USER]\n"
+      + "\t-username LOCAL_USER sets the current username, for name-resolution services in homework 9 mode\n"
+      + "\t-1:1 Optional CLI-mode for direct chat with one other host (unavailbale in homework 9 mode)";
 
+  private static final boolean IS_ONEONE_MODE_DEFAULT = false; // per -1:1 CLI flag
+  private static final boolean IS_HW6_MODE_DEFAULT = true; // negated only by presence of -username CLI flag
   private static final int DEFAULT_UDP_PORT = 64000;
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
   private static final Logger log = new Logger("chatter");
@@ -34,9 +38,21 @@ public class Chatterbox {
 
   private boolean oneToOneMode = false;
 
-  public Chatterbox() { this(DEFAULT_UDP_PORT, DEFAULT_LOG_LEVEL); }
+  /**
+   * Indicates the username to respond with while participating in the distributed user-name service
+   * protocol of homework 9.
+   */
+  private final String userName;
 
+  private Chatterbox() { this(DEFAULT_UDP_PORT, DEFAULT_LOG_LEVEL); }
+
+  /** Construction for normal homework 6 mode. */
   public Chatterbox(int baselinePort, Logger.Level lvl) {
+    this(baselinePort, lvl, null /*userName*/);
+  }
+
+  /** Construction for homework 9 mode. All parameters are required. */
+  public Chatterbox(int baselinePort, Logger.Level lvl, String userName) {
     DatagramSocket sock = AssertNetwork.mustOpenSocket(baselinePort, (SocketException e) -> {
       this.log.errorf(e, "setup: failed opening receiving socket on %d", baselinePort);
       System.exit(1);
@@ -49,6 +65,7 @@ public class Chatterbox {
     this.tasks = new ArrayList<Future<?>>();
   }
 
+  /** Construction for homework 6 mode's One-on-One debugging feature (enabled via -1:1 CLI flag). */
   private Chatterbox(
       final InputStream messages,
       final String destHostName,
@@ -78,6 +95,10 @@ public class Chatterbox {
     if (args.length == 0) {
       return new Chatterbox();
     }
+    boolean isOneOneMode = IS_ONEONE_MODE_DEFAULT;
+    boolean isHw6Mode = IS_HW6_MODE_DEFAULT;
+
+    String userName = null; // if !isHw6Mode, then we require current user's name
 
     String destHostName = null;
     Logger.Level cliVerbosity = Logger.Level.DEBUG;
@@ -96,7 +117,17 @@ public class Chatterbox {
         case "-vv":
           cliVerbosity = Logger.Level.DEBUG;
           break;
+        case "-username":
+          isHw6Mode = false;
+          i++;
+          if (i >= args.length) {
+            System.err.printf("missing username param for -user flag\n");
+            System.exit(1);
+          }
+          userName = args[i].trim();
+          break;
         case "-1:1":
+          isOneOneMode = true;
           i++;
           if (i >= args.length) {
             System.err.printf("missing parameter for flag -1:1 DEST[:PORT]\n");
@@ -118,14 +149,29 @@ public class Chatterbox {
       }
     }
 
-    return destHostName == null
-        ? new Chatterbox(destPort, cliVerbosity)
-        : new Chatterbox(System.in, destHostName, destPort, cliVerbosity);
+    if (isHw6Mode) {
+      return isOneOneMode
+          ? new Chatterbox(System.in, destHostName, destPort, cliVerbosity)
+          : new Chatterbox(destPort, cliVerbosity);
+    }
+
+    if (isOneOneMode) {
+      Chatterbox.log.errorf("-1:1 mode only available in combination with -hw6 mode\n");
+      System.exit(1);
+    }
+
+    return new Chatterbox(destPort, cliVerbosity, userName);
   }
 
+  /** Whether currently running with user-name resolution protocol (ie: in homework #9 mode). */
+  private boolean isUserProtocol() { return this.userName != null; }
+
   public void report() {
-    this.log.printf("Running in %s mode\n",
-        this.isOneToOne() ? "one-to-one (CLI)" : "forum (GUI)");
+    this.log.printf("Running in %s mode [%s]\n",
+        this.isOneToOne() ? "one-to-one (CLI)" : "forum (GUI)",
+        this.isUserProtocol() ?
+          "username protocol, advertising '" + this.userName + "'"
+          : "hw6 mode");
 
     this.receiver.report();
     if (this.isOneToOne()) {
@@ -175,11 +221,6 @@ public class Chatterbox {
   }
 
   public Future<?> startTask(Runnable r) {
-    if (this.execService == null ) {
-      // TODO(zacsh) remove this if-block when constructors flow through one trust-worthy path
-      this.execService = Executors.newWorkStealingPool();
-      this.tasks = new ArrayList<Future<?>>();
-    }
     Future<?> f = this.execService.submit(r);
     this.tasks.add(f);
     return f;
