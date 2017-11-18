@@ -20,9 +20,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String DASH_DEFAULT_MESSAGE = "all fields required";
   private static final String DASH_PROCESSING_MESSAGE = "loading...";
 
+  private boolean isUserProtocol = false;
+
   private JButton startChatBtn;
   private JLabel dashMessaging;
-  private JTextField destAddr;
+  private JTextField destName;
   private JTextField destPort;
 
   private String lastDashFailure = null;
@@ -36,12 +38,13 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private DatagramSocket sock;
 
   private final int defaultRemotePort;
-  public ChatterJFrame(String title, int defaultRemotePort, History hist) {
+  public ChatterJFrame(String title, int defaultRemotePort, History hist, boolean isUserProtocol) {
     super(title);
     this.defaultRemotePort = defaultRemotePort;
     this.hist = hist;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    this.isUserProtocol = isUserProtocol;
 
     this.startChatBtn = new JButton("start chat");
     this.startChatBtn.addActionListener(this);
@@ -53,14 +56,18 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     JPanel txtPanel = new JPanel();
     txtPanel.add(
         this.addLabeled(
-            this.destAddr = new JTextField(30),
-            "destination", ACTION_DASHBRD_START),
+            this.destName = new JTextField(30),
+            this.isUserProtocol ? "username" : "destination",
+            ACTION_DASHBRD_START),
         BorderLayout.LINE_START);
     txtPanel.add(
         this.addLabeled(
             this.destPort = new JTextField(6),
             "port", ACTION_DASHBRD_START),
         BorderLayout.CENTER);
+    if (this.isUserProtocol) {
+      this.destPort.setEnabled(false);
+    }
     this.getContentPane().add(txtPanel, BorderLayout.PAGE_START);
     this.getContentPane().add(this.dashMessaging, BorderLayout.CENTER);
     this.getContentPane().add(this.startChatBtn, BorderLayout.LINE_END);
@@ -77,11 +84,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.chats = new HashMap<>();
   }
 
-  public ChatterJFrame enablePortChanges(boolean allowChanges) {
-    this.destPort.setEnabled(allowChanges);
-    return this;
-  }
-
   private JPanel addLabeled(
       JTextField subject, String label,
       String cmd) {
@@ -95,12 +97,12 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 
   private String dashBrdID() {
-    return String.join("|", this.destAddr.getText(), this.destPort.getText());
+    return String.join("|", this.destName.getText(), this.destPort.getText());
   }
 
   /** Returns a reason for failing validity, or null if valid. */
   private String isValidDashbrdStart() {
-    final String host = this.destAddr.getText().trim();
+    final String host = this.destName.getText().trim();
     final String port = this.destPort.getText().trim();
     if (host.length() == 0 || port.length() == 0) {
       return "host & port required";
@@ -117,7 +119,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.lastDashFailure = null;
     this.dashMessaging.setText(DASH_DEFAULT_MESSAGE);
     this.dashMessaging.setForeground(Color.black);
-    this.destAddr.setText("");
+    this.destName.setText("");
 
     if (this.destPort.isEnabled()) {
       this.destPort.setText(String.valueOf(this.defaultRemotePort));
@@ -137,7 +139,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
         this.markDashProcessing();
         this.log.printf(
             "validating [dest: '%s', port: '%s']... fail:'%s'\n",
-            this.destAddr.getText(), this.destPort.getText(), validityFail);
+            this.destName.getText(), this.destPort.getText(), validityFail);
         if (validityFail != null) {
           final String currentID = this.dashBrdID();
           if (this.lastDashFailure != null && currentID.equals(this.lastDashFailure)) {
@@ -148,10 +150,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
           this.lastDashFailure = currentID;
           return;
         }
+
         this.launchCachedChat(this.start);
         this.log.debugf(
             "starting chat with dest: '%s', port: '%s'...\n",
-            this.destAddr.getText(), this.destPort.getText());
+            this.destName.getText(), this.destPort.getText());
         this.resetDashBrds();
         break;
       default:
