@@ -17,13 +17,18 @@ public class Remote {
     return String.format("%s:%d", this.host.getHostAddress(), this.port);
   }
 
-  public static Remote parseFrom(String hostRaw, String portRaw) throws Exception {
+  private static InetAddress parseHost(String hostRaw) throws Exception {
     InetAddress host = null;
     try {
       host = InetAddress.getByName(hostRaw);
     } catch (UnknownHostException e) {
       throw new Error(String.format("could not resolve host '%s'", hostRaw));
     }
+    return host;
+  }
+
+  public static Remote parseFrom(String hostRaw, String portRaw) throws Exception {
+    InetAddress host = Remote.parseHost(hostRaw);
     int port;
     try {
       port = Integer.parseUnsignedInt(portRaw);
