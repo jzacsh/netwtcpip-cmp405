@@ -1,6 +1,7 @@
 = SendReceive Project Usage
 :hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
 :hw9url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw9.html
+:c9d6d689a19ed: https://github.com/jzacsh/netwtcpip-cmp405/tree/c9d6d689a19ed/hw06/
 
 == Homework #9
 
@@ -8,7 +9,10 @@ TODO: none of <<hw9instruct, homework 9>> nothing done yet
 
 == Homework #6
 
-status: *complete*
+status: *complete* as of {c9d6d689a19ed}[`c9d6d689a19ed`] footnoteref:[flagguardhw9,
+_should_ still work when not passing `-username USER_NAME` flag introduced by
+homework 9; but `git checkout c9d6d689a19ed` to *reliably* see homework 6
+solution]
 
 .Build & Run GUI
 ----
