@@ -65,9 +65,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
             this.destPort = new JTextField(6),
             "port", ACTION_DASHBRD_START),
         BorderLayout.CENTER);
-    if (this.isUserProtocol) {
-      this.destPort.setEnabled(false);
-    }
+    this.destPort.setEnabled(!this.isUserProtocol);
     this.getContentPane().add(txtPanel, BorderLayout.PAGE_START);
     this.getContentPane().add(this.dashMessaging, BorderLayout.CENTER);
     this.getContentPane().add(this.startChatBtn, BorderLayout.LINE_END);
