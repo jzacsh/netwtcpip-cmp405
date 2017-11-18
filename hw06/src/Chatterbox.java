@@ -241,6 +241,7 @@ public class Chatterbox {
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if this.receiver thread fails
     new ChatterJFrame("Chatterbox", DEFAULT_UDP_PORT, this.hist).
+        enablePortChanges(!this.isUserProtocol() /*allowChanges*/).
         addWindowListener(new TeardownHandler((WindowEvent ev) -> this.teardown(ev)));
   }
 

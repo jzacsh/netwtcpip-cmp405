@@ -77,6 +77,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.chats = new HashMap<>();
   }
 
+  public ChatterJFrame enablePortChanges(boolean allowChanges) {
+    this.destPort.setEnabled(allowChanges);
+    return this;
+  }
+
   private JPanel addLabeled(
       JTextField subject, String label,
       String cmd) {
@@ -113,7 +118,10 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.dashMessaging.setText(DASH_DEFAULT_MESSAGE);
     this.dashMessaging.setForeground(Color.black);
     this.destAddr.setText("");
-    this.destPort.setText(String.valueOf(this.defaultRemotePort));
+
+    if (this.destPort.isEnabled()) {
+      this.destPort.setText(String.valueOf(this.defaultRemotePort));
+    }
   }
 
   private void dashNoteFailure(final String currentID, final String reason) {
