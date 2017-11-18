@@ -2,13 +2,26 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class Remote {
+  /** Username resolution protocol dictates everyone use the same port. */
+  private static final int DEFAULT_USERNAME_PROTOCOL_PORT = 64000;
+  private String userName = null;
+
   protected InetAddress host = null;
   protected int port = -1;
+
+  public Remote(String userName, final InetAddress host) {
+    this.userName = userName;
+    this.host = host;
+    this.port = DEFAULT_USERNAME_PROTOCOL_PORT;
+  }
 
   public Remote(final InetAddress host, int port) {
     this.host = host;
     this.port = port;
   }
+
+  /** Whether this is remote host started via just username resolution protocol. */
+  public boolean isViaNameProtocol() { return this.userName != null; }
 
   public InetAddress getHost() { return this.host; }
   public int getPort() { return this.port; }
@@ -40,5 +53,19 @@ public class Remote {
       throw new Error(String.format("%d is an invalid port number", port));
     }
     return new Remote(host, port);
+  }
+
+  public static Remote parseFrom(String userName) throws Exception {
+    String rawResolvedAddress = "192.168.8.111";
+    /* TODO: replace ^ this with actual blocking work to find remote host via protocol */
+
+    InetAddress resolvedAddress = null;
+    try {
+      resolvedAddress = Remote.parseHost(rawResolvedAddress);
+    } catch (UnknownHostException e) {
+      throw new Error("protocol error: %s", e);
+    }
+
+    return new Remote(userName, resolvedAddress);
   }
 }
