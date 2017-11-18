@@ -44,6 +44,9 @@ public class Chatterbox {
     this.log.setLevel(lvl);
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
+    this.userName = userName;
+    this.execService = Executors.newWorkStealingPool();
+    this.tasks = new ArrayList<Future<?>>();
   }
 
   private Chatterbox(
@@ -173,6 +176,7 @@ public class Chatterbox {
 
   public Future<?> startTask(Runnable r) {
     if (this.execService == null ) {
+      // TODO(zacsh) remove this if-block when constructors flow through one trust-worthy path
       this.execService = Executors.newWorkStealingPool();
       this.tasks = new ArrayList<Future<?>>();
     }
