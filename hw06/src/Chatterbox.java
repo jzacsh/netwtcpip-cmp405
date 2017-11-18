@@ -20,7 +20,7 @@ public class Chatterbox {
   private static final String CLI_USAGE =
       "[--help] [-v*] [ -1:1 DEST[:PORT] ]\n\t-1:1 is a CLI-mode for direct chat with one other host";
 
-  private static final int DEFAULT_UDP_PORT = 6400;
+  private static final int DEFAULT_UDP_PORT = 64000;
   private static final int MAX_THREAD_GRACE_MILLIS = RecvChannel.SOCKET_WAIT_MILLIS * 2;
   private static final Logger log = new Logger("chatter");
   private static final Logger.Level DEFAULT_LOG_LEVEL = Logger.Level.INFO;
