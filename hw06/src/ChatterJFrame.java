@@ -118,10 +118,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.dashMessaging.setText(DASH_DEFAULT_MESSAGE);
     this.dashMessaging.setForeground(Color.black);
     this.destName.setText("");
-
-    if (this.destPort.isEnabled()) {
-      this.destPort.setText(String.valueOf(this.defaultRemotePort));
-    }
+    this.destPort.setText(String.valueOf(this.defaultRemotePort));
   }
 
   private void dashNoteFailure(final String currentID, final String reason) {
