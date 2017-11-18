@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 
 public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String TAG = "ChatterJFrame";
@@ -31,7 +32,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
 
   private static final String ACTION_DASHBRD_START = "ACTION_DASHBRD_START";
 
-  private ChatStart start = null;
   private Map<String, MessagingJFrame> chats;
 
   private History hist;
@@ -98,15 +98,11 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     return String.join("|", this.destName.getText(), this.destPort.getText());
   }
 
-  /** Returns a reason for failing validity, or null if valid. */
-  private String isValidDashbrdStart() {
+  /** Whether chat-launch form has been validly populated. */
+  private boolean isValidFormUsage() {
     final String host = this.destName.getText().trim();
     final String port = this.destPort.getText().trim();
-    if (host.length() == 0 || port.length() == 0) {
-      return "host & port required";
-    }
-    this.start = ChatStart.parseFrom(host, port);
-    return this.start.isValid() ? null : this.start.getFailReason();
+    return host.length() != 0 && port.length() != 0;
   }
 
   private void markDashProcessing() {
@@ -130,23 +126,31 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   public void actionPerformed(ActionEvent e) {
     switch (e.getActionCommand()) {
       case ACTION_DASHBRD_START:
-        final String validityFail = this.isValidDashbrdStart();
         this.markDashProcessing();
+
+        ChatStart start = null;
+        final boolean isFailure =
+            !this.isValidFormUsage() ||
+            !(start = ChatStart.parseFrom(this.destName, this.destPort)).isValid();
+
         this.log.printf(
-            "validating [dest: '%s', port: '%s']... fail:'%s'\n",
-            this.destName.getText(), this.destPort.getText(), validityFail);
-        if (validityFail != null) {
+            "validating [dest: '%s', port: '%s']; is failure=%s\n",
+            this.destName.getText(), this.destPort.getText(), isFailure);
+        if (isFailure) {
           final String currentID = this.dashBrdID();
           if (this.lastDashFailure != null && currentID.equals(this.lastDashFailure)) {
             this.resetDashBrds();
             return;
           }
-          this.dashNoteFailure(currentID, validityFail);
+
+          this.dashNoteFailure(
+              currentID,
+              start == null ? "host & port required" : start.getFailReason());
           this.lastDashFailure = currentID;
           return;
         }
 
-        this.launchCachedChat(this.start);
+        this.launchCachedChat(start);
         this.log.debugf(
             "starting chat with dest: '%s', port: '%s'...\n",
             this.destName.getText(), this.destPort.getText());
@@ -201,7 +205,9 @@ class ChatStart extends Remote {
   public boolean isValid() { return this.failure == null; }
   public String getFailReason() { return this.failure; }
 
-  public static ChatStart parseFrom(String hostRaw, String portRaw) {
+  public static ChatStart parseFrom(JTextComponent jHost, JTextComponent jPort) {
+    final String hostRaw = jHost.getText().trim();
+    final String portRaw = jPort.getText().trim();
     Remote r = null;
     try {
       r = Remote.parseFrom(hostRaw, portRaw);
