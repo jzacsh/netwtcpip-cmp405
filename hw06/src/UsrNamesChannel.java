@@ -117,7 +117,7 @@ public class UsrNamesChannel implements LocalChannel {
         userName, badResolution, e));
   }
 
-  private void handlerRequest(final String protocolMessage) {
+  private void handleRequest(final String protocolMessage) {
     final String requestedUser = protocolMessage.substring(
         PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
     if (!requestedUser.equals(this.identity)) {
@@ -376,7 +376,7 @@ public class UsrNamesChannel implements LocalChannel {
       } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
         this.handleResolution(message);
       } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
-        this.handlerRequest(message);
+        this.handleRequest(message);
       } else {
         this.log.errorf(
             "CRITICAL BUG: compliance-logic updated but parsing logic not, triggered on message %d!\n",
