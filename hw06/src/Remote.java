@@ -10,9 +10,9 @@ public class Remote {
   private boolean isViaUserName = false;
 
   /** Whether the next two fields are populated and valid. */
-  protected boolean isChecked = false;
-  protected InetAddress host = null;
-  protected int port = UNCHECKED_PORT;
+  private boolean isChecked = false;
+  private InetAddress host = null;
+  private int port = UNCHECKED_PORT;
 
   public Remote(final String username, final InetAddress host, int port) {
     this.isChecked = true;
