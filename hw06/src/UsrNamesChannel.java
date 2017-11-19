@@ -97,18 +97,21 @@ public class UsrNamesChannel implements LocalChannel {
 
     final String request = String.format("%s %s", PROTOCOL_REQUEST_DELIMITER, usrname);
     try {
-      this.namesSubscription.send(
-          new DatagramPacket(
-              request.getBytes(StandardCharsets.UTF_8),
-              request.length(),
-              this.namesSubscription.getInetAddress(),
-              this.namesSubscription.getLocalPort()));
+      this.namesSubscription.send(this.buildPacketFrom(request));
     } catch(IOException e) {
       handler.accept(null, e);
       return;
     }
 
     this.waitingOn.put(usrname, handler);
+  }
+
+  private DatagramPacket buildPacketFrom(final String src) {
+    return new DatagramPacket(
+        src.getBytes(StandardCharsets.UTF_8),
+        src.length(),
+        this.namesSubscription.getInetAddress(),
+        this.namesSubscription.getLocalPort());
   }
 
   private static final Throwable badResolution(String userName, final String badResolution, Throwable e) {
