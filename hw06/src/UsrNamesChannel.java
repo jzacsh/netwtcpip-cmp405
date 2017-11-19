@@ -40,7 +40,7 @@ public class UsrNamesChannel implements LocalChannel {
   /**
    * Map of consumers waiting for resolution on a given (keyed) username.
    */
-  Map<String, BiConsumer<Remote, Throwable>> waitingOn;
+  private Map<String, BiConsumer<Remote, Throwable>> waitingOn;
 
   /**
    * Map of resolved usernames using protocol described by homework 9 instructions.
@@ -48,7 +48,7 @@ public class UsrNamesChannel implements LocalChannel {
    * - Values are the IP address, portnumber, and username info associated in the most recently
    *   procesesd multicase under given username.
    */
-  Map<String, Remote> resolved;
+  private Map<String, Remote> resolved;
 
   private final String identity;
   private final String protocolIdentity;
