@@ -136,7 +136,7 @@ public class UsrNamesChannel implements LocalChannel {
   // NOTE: doesn't *actualy* iterate over codepoints as it should (despite decoding as UTF string);
   // could certainly be fixed
   private static Entry<String, String> parseNameResolution(final String src) throws ParseException {
-    if (src.length() < PROTOCOL_DECLARATION_DELIMITER.length()*2 + 3 /*spaces*/ + 2 /*username + hostname*/) {
+    if (!UsrNamesChannel.isMaybeDeclaration(src)) {
       throw new ParseException("got empty message", 0);
     }
 
@@ -399,11 +399,10 @@ public class UsrNamesChannel implements LocalChannel {
         message.codePointAt(0) == PROTOCOL_REQUEST_DELIMITER.codePointAt(0)
     );
   }
-
-  private static boolean isMaybeDeclaration(String message) {
+  private static boolean isMaybeDeclaration(String msg) {
     return (
-      message.length() > PROTOCOL_DECLARATION_DELIMITER.length() * 2 + 1 &&
-      message.codePointAt(0) == PROTOCOL_DECLARATION_DELIMITER.codePointAt(0)
+      msg.length() > PROTOCOL_DECLARATION_DELIMITER.length() * 2 + 3 /*spaces*/ + 2 /*username + hostname*/ &&
+      msg.codePointAt(0) == PROTOCOL_DECLARATION_DELIMITER.codePointAt(0)
     );
   }
 
