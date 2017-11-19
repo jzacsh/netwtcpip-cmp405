@@ -16,6 +16,7 @@ import java.text.ParseException;
 public class UsrNamesChannel implements LocalChannel {
   private static final String PROTOCOL_REQUEST_DELIMITER = "?????";
   private static final String PROTOCOL_DECLARATION_DELIMITER = "#####";
+
   private static final int MULTICAST_PORT = 64001;
   private static final String MULTICAST_HOST = "228.5.6.7";
   // TODO(zacsh) find out what professor wants us to use; above details aren't in homework
