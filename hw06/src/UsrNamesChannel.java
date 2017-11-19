@@ -90,6 +90,11 @@ public class UsrNamesChannel implements LocalChannel {
    * one window will be notified).
    */
   public void resolveName(String usrname, BiConsumer<Remote, Throwable> handler) {
+    if (this.resolved.containsKey(usrname)) {
+      handler.accept(this.resolved.get(usrname), null /*throwable*/);
+      return;
+    }
+
     final String request = String.format("%s %s", PROTOCOL_REQUEST_DELIMITER, usrname);
     try {
       this.namesSubscription.send(
