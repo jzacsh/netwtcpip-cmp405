@@ -1,6 +1,8 @@
 import java.lang.InterruptedException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
+import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
@@ -33,6 +35,32 @@ public class AssertNetwork {
     return sock;
   }
 
+  public static final MulticastSocket mustJoinMulticastGroup(
+      String addr, int port, Consumer<Throwable> failHandler) {
+   InetAddress groupAddr = null;
+   try {
+     groupAddr = InetAddress.getByName(addr);
+   } catch (UnknownHostException e) {
+     failHandler.accept(e);
+     return null;
+   }
+
+   MulticastSocket sock = null;
+   try {
+     sock = new MulticastSocket(port);
+     sock.joinGroup(groupAddr);
+   } catch (IOException e) {
+     failHandler.accept(e);
+
+     if (sock != null) {
+       sock.close();
+     }
+     return null;
+   }
+
+   return sock;
+  }
+
   public static final int mustParsePort(
       String portRaw, String label, Consumer<String> failHandler) {
     final String errContext = String.format("%s must be an unsigned 2-byte integer", label);
@@ -50,6 +78,7 @@ public class AssertNetwork {
 
     return port;
   }
+
 
   public static final InetAddress mustResolveHostName(
       final String hostName,
