@@ -296,12 +296,7 @@ public class UsrNamesChannel implements LocalChannel {
 
     final String userName = declaration.getKey();
     final String rawResolution = declaration.getValue();
-    if (userName.length() == 0 || rawResolution.length() == 0) {
-      this.log.errorf("invalid protocol msg '%s'; must have BOTH username and address\n", protocolMessage);
-      return;
-    }
-
-    this.handleResolution(userName.trim(), rawResolution.trim());
+    this.handleResolution(userName, rawResolution);
   }
 
   private void handleResolution(final String userName, final String rawResolution) {
