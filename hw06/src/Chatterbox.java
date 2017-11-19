@@ -156,7 +156,7 @@ public class Chatterbox {
     }
 
     if (isOneOneMode) {
-      Chatterbox.log.errorf("-1:1 mode only available in combination with -hw6 mode\n");
+      Chatterbox.log.errorf("-1:1 mode unavailable with username services\n");
       System.exit(1);
     }
 
