@@ -266,11 +266,12 @@ public class UsrNamesChannel implements LocalChannel {
       }
     }
 
+    final int totalTestLen = gold.length + coal.length;
     if (fails == 0) {
-      System.err.printf("PASS: all %d tests passed\n", gold.length);
+      System.err.printf("PASS: all %d tests passed\n", totalTestLen);
       System.exit(0);
     }
-    System.err.printf("FAIL: %d of %d tests failed\n", fails, gold.length);
+    System.err.printf("FAIL: %d of %d tests failed\n", fails, totalTestLen);
     System.exit(1);
   }
 
