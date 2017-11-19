@@ -407,7 +407,7 @@ public class UsrNamesChannel implements LocalChannel {
 
   private static boolean isMaybeRequest(String message) {
     return (
-        message.length() > PROTOCOL_REQUEST_DELIMITER.length() + 1 &&
+        message.length() > PROTOCOL_REQUEST_DELIMITER.length() + 1 /*1 space*/ &&
         message.codePointAt(0) == PROTOCOL_REQUEST_DELIMITER.codePointAt(0)
     );
   }
