@@ -128,7 +128,7 @@ public class Chatterbox {
           isHw6Mode = false;
           i++;
           if (i >= args.length) {
-            System.err.printf("missing username param for -user flag\n");
+            System.err.printf("missing LOCAL_USER param for -username flag\n");
             System.exit(1);
           }
           userName = args[i].trim();
