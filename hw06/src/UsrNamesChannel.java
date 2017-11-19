@@ -290,7 +290,7 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
 
-    this.handleResolution(userName, rawResolution);
+    this.handleResolution(userName.trim(), rawResolution.trim());
   }
 
   private void handleResolution(final String userName, final String rawResolution) {
