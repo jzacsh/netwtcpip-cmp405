@@ -381,7 +381,7 @@ public class UsrNamesChannel implements LocalChannel {
         this.log.printf("dropping message %d, is not protocol-compliant request or response\n", receiptIndex - 1);
       } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
         this.handleResolution(message);
-      } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
+      } else if (UsrNamesChannel.isMaybeRequest(message)) {
         this.handleRequest(message);
       } else {
         this.log.errorf(
