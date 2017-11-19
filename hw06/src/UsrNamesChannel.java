@@ -137,7 +137,7 @@ public class UsrNamesChannel implements LocalChannel {
   // could certainly be fixed
   private static Entry<String, String> parseNameResolution(final String src) throws ParseException {
     if (!UsrNamesChannel.isMaybeDeclaration(src)) {
-      throw new ParseException("got empty message", 0);
+      throw new ParseException("got implausible message length & first bytes", 0);
     }
 
     int addrDelimEndsAt = -1;
