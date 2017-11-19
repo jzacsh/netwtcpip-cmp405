@@ -52,7 +52,7 @@ public class UsrNamesChannel implements LocalChannel {
   private Map<String, Remote> resolved;
 
   private final String identity;
-  private final String protocolIdentity;
+  private final DatagramPacket protocolIdentity;
   private int defaultRemotePort;
 
   public UsrNamesChannel(String identity, int defaultPort) {
@@ -67,7 +67,8 @@ public class UsrNamesChannel implements LocalChannel {
     this.waitingOn = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.defaultRemotePort = defaultPort;
 
-    this.protocolIdentity = UsrNamesChannel.buildProtocolIdentity(this.identity, this.log);
+    this.protocolIdentity = this.buildPacketFrom(
+        UsrNamesChannel.buildProtocolIdentity(this.identity, this.log));
   }
 
   private static String buildProtocolIdentity(final String identity, final Logger log) {
@@ -128,7 +129,7 @@ public class UsrNamesChannel implements LocalChannel {
     }
 
     try {
-      this.namesSubscription.send(this.buildPacketFrom(this.protocolIdentity));
+      this.namesSubscription.send(this.protocolIdentity);
     } catch(IOException e) {
       this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
       return;
