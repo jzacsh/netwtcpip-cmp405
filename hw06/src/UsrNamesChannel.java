@@ -121,17 +121,20 @@ public class UsrNamesChannel implements LocalChannel {
         userName, badResolution, e));
   }
 
-  private void handleRequest(final String protocolMessage) {
+  private void handleRequest(final String protocolMessage, final InetAddress requestor) {
     final String requestedUser = protocolMessage.substring(
         PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
     if (!requestedUser.equals(this.identity)) {
       return;
     }
 
-    this.log.errorf(
-        "declaration responses not yet implemented. dropping outgoing response:\n\t%s\n",
-        this.protocolIdentity);
-    // TODO(zacsh) complete this code. need to respond with a declaration
+    try {
+      this.namesSubscription.send(this.buildPacketFrom(this.protocolIdentity));
+    } catch(IOException e) {
+      this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
+      return;
+    }
+    this.log.printf("responded to identity request by '%s'\n", requestor.getCanonicalHostName());
   }
 
   /**
@@ -385,7 +388,7 @@ public class UsrNamesChannel implements LocalChannel {
       } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
         this.handleResolution(message);
       } else if (UsrNamesChannel.isMaybeRequest(message)) {
-        this.handleRequest(message);
+        this.handleRequest(message, inPacket.getAddress());
       } else {
         this.log.errorf(
             "CRITICAL BUG: compliance-logic updated but parsing logic not, triggered on message %d!\n",
