@@ -304,18 +304,18 @@ public class UsrNamesChannel implements LocalChannel {
     this.waitingOn.remove(userName); // only a one-time notification api
 
     this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
-    InetAddress resolvedAddr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
+    final InetAddress addr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
       this.log.errorf(badResolution(userName, rawResolution, e).toString());
     });
 
-    if (resolvedAddr == null) {
+    if (addr == null) {
       if (deliverTo != null) {
         deliverTo.accept(null /*resolvesTo*/, badResolution(userName, rawResolution, null));
       }
       return; // explicitly do NOT store protocol-violating messages
     }
 
-    final Remote resolvedTo = new Remote(userName, resolvedAddr, this.defaultRemotePort);
+    final Remote resolvedTo = new Remote(userName, addr, this.defaultRemotePort);
     if (deliverTo != null) {
       deliverTo.accept(resolvedTo, null /*throwable*/);
     }
