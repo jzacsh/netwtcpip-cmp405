@@ -38,6 +38,8 @@ public class Chatterbox {
 
   private boolean oneToOneMode = false;
 
+  private int baselinePort;
+
   /**
    * Indicates the username to respond with while participating in the distributed user-name service
    * protocol of homework 9.
@@ -53,8 +55,9 @@ public class Chatterbox {
 
   /** Construction for homework 9 mode. All parameters are required. */
   public Chatterbox(int baselinePort, Logger.Level lvl, String userName) {
-    DatagramSocket sock = AssertNetwork.mustOpenSocket(baselinePort, (SocketException e) -> {
-      this.log.errorf(e, "setup: failed opening receiving socket on %d", baselinePort);
+    this.baselinePort = baselinePort;
+    DatagramSocket sock = AssertNetwork.mustOpenSocket(this.baselinePort, (SocketException e) -> {
+      this.log.errorf(e, "setup: failed opening receiving socket on %d", this.baselinePort);
       System.exit(1);
     });
     this.log.setLevel(lvl);
@@ -240,7 +243,7 @@ public class Chatterbox {
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if this.receiver thread fails
-    new ChatterJFrame("Chatterbox", DEFAULT_UDP_PORT, this.hist, this.isUserProtocol()).
+    new ChatterJFrame("Chatterbox", this.baselinePort, this.hist, this.isUserProtocol()).
         addWindowListener(new TeardownHandler((WindowEvent ev) -> this.teardown(ev)));
   }
 
