@@ -57,7 +57,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     txtPanel.add(
         this.addLabeled(
             this.destName = new JTextField(30),
-            this.userResolver == null ? "destination" : "username",
+            this.isUserNameMode() ? "destination" : "username",
             ACTION_DASHBRD_START),
         BorderLayout.LINE_START);
     txtPanel.add(
@@ -78,9 +78,12 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.setLocationRelativeTo(null);
     this.setVisible(true);
 
-    this.hist.registerDefaultListener((Remote r) -> this.handleSolicitations(r));
+    this.hist.registerDefaultListener((Remote r) -> this.launchCachedChat(true /*isRecvd*/, r));
+
     this.chats = new HashMap<>();
   }
+
+  private boolean isUserNameMode() { return this.userResolver != null; }
 
   private JPanel addLabeled(
       JTextField subject, String label,
@@ -128,32 +131,27 @@ public class ChatterJFrame extends JFrame implements ActionListener {
       case ACTION_DASHBRD_START:
         this.markDashProcessing();
 
-        ChatStart start = null;
-        final boolean isFailure =
-            !this.isValidFormUsage() ||
-            !(start = ChatStart.parseFrom(this.destName, this.destPort)).isValid();
-
         this.log.printf(
             "validating [dest: '%s', port: '%s']; is failure=%s\n",
-            this.destName.getText(), this.destPort.getText(), isFailure);
-        if (isFailure) {
+            this.destName.getText(), this.destPort.getText(), !this.isValidFormUsage());
+        if (!this.isValidFormUsage()) {
           final String currentID = this.dashBrdID();
           if (this.lastDashFailure != null && currentID.equals(this.lastDashFailure)) {
             this.resetDashBrds();
             return;
           }
 
-          this.dashNoteFailure(
-              currentID,
-              start == null ? "host & port required" : start.getFailReason());
+          this.dashNoteFailure(currentID, "destination & port required");
           this.lastDashFailure = currentID;
           return;
         }
-
-        this.launchCachedChat(start);
         this.log.debugf(
             "starting chat with dest: '%s', port: '%s'...\n",
             this.destName.getText(), this.destPort.getText());
+
+        final Remote target = this.buildUncheckedRemote(this.destName, this.destPort);
+        this.launchCachedChat(false /*isRecvd*/, target);
+
         this.resetDashBrds();
         break;
       default:
@@ -163,61 +161,29 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     }
   }
 
-  private void launchCachedChat(ChatStart s) {
-    final String chatID = s.toString();
-    if (!this.chats.containsKey(chatID)) {
-      this.chats.put(chatID, s.launchChat(this.hist));
+  private Remote buildUncheckedRemote(JTextComponent jDest, JTextComponent jPort) {
+    final String destRaw = jDest.getText().trim();
+    final String portRaw = jPort.getText().trim();
+    return this.isUserNameMode()
+        ? Remote.viaUncheckedName(destRaw, portRaw)
+        : Remote.viaUncheckedAddress(destRaw, portRaw);
+  }
+
+  private void launchCachedChat(boolean isRecvd, final Remote unchecked) {
+    final String launchID = unchecked.toString();
+    if (!this.chats.containsKey(launchID)) {
+      this.chats.put(launchID, this.launchChat(isRecvd, unchecked));
       return;
     }
 
-    MessagingJFrame existing = this.chats.get(chatID);
+    // TODO ensure remove() from this.chats, when window closes
+    MessagingJFrame existing = this.chats.get(launchID);
     existing.setVisible(true);
     existing.setFocusable(true);
     existing.requestFocus();
   }
 
-  private void handleSolicitations(Remote r) {
-    this.launchCachedChat(new ChatStart(r.getHost(), r.getPort()));
-  }
-}
-
-class ChatStart extends Remote {
-  private final String context;
-  private String failure = null;
-
-  public ChatStart(final InetAddress host, int port) {
-    super(host, port);
-    this.context = "recvd";
-  }
-
-  public ChatStart(
-      final String rawHost, final String rawPort,
-      final InetAddress host, int port) {
-    super(host, port);
-    this.context = String.format("started: %s:%s", rawHost, rawPort);
-  }
-
-  private ChatStart(String fail) {
-    this(null /*host*/, -1 /*port*/);
-    this.failure = fail;
-  }
-
-  public boolean isValid() { return this.failure == null; }
-  public String getFailReason() { return this.failure; }
-
-  public static ChatStart parseFrom(JTextComponent jHost, JTextComponent jPort) {
-    final String hostRaw = jHost.getText().trim();
-    final String portRaw = jPort.getText().trim();
-    Remote r = null;
-    try {
-      r = Remote.parseFrom(hostRaw, portRaw);
-    } catch (Throwable e) {
-      return new ChatStart(e.getMessage());
-    }
-    return new ChatStart(hostRaw, portRaw, r.getHost(), r.getPort());
-  }
-
-  public MessagingJFrame launchChat(History hist) {
-    return new MessagingJFrame(this.context, hist, this);
+  private MessagingJFrame launchChat(boolean isRecvd, final Remote target) {
+    return new MessagingJFrame(isRecvd ? "received" : "launched", this.hist, target);
   }
 }

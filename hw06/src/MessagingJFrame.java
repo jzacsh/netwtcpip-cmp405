@@ -1,5 +1,6 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Color;
 import java.awt.BorderLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -49,6 +50,21 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.setVisible(true);
     this.composeField.requestFocus();
     this.setLocationRelativeTo(null);
+
+    // TODO(zacsh) implement lazy-loading of remote and meta-log into chat window, and wire results
+    // to handleResolvedRemote()
+    this.composeField.setDisabledTextColor(Color.RED);
+    this.composeField.setText("[loading] please wait...");
+    this.composeField.setEnabled(false);
+    this.sendBtn.setEnabled(false);
+  }
+
+  private void handleResolvedRemote() {
+    if (this.remote.isValid()) {
+      this.composeField.setText("");
+    }
+    this.composeField.setEnabled(this.remote.isValid());
+    this.sendBtn.setEnabled(this.remote.isValid());
   }
 
   public void actionPerformed(ActionEvent e) {
