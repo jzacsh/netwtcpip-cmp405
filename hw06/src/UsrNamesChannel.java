@@ -355,7 +355,7 @@ public class UsrNamesChannel implements LocalChannel {
     long receiptIndex = 0;
     String message = null;
     while (true) {
-      if (this.isAlive) {
+      if (!this.isAlive) {
         break;
       }
 
