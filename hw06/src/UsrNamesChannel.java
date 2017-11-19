@@ -60,7 +60,7 @@ public class UsrNamesChannel implements LocalChannel {
       System.exit(1);
     });
 
-    this.isAlive = true;
+    this.isAlive = false;
     this.identity = identity;
     this.resolved = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.waitingOn = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
