@@ -187,10 +187,18 @@ public class UsrNamesChannel implements LocalChannel {
     if (usernameLeftBound >= usernameRightBound) {
       throw new ParseException("no username found", addrDelimEndsAt);
     }
-    final String username = src.substring(
+    final String usernameRaw = src.substring(
         usernameLeftBound,
         usernameRightBound);
-    final String addr = src.substring(addrDelimEndsAt + 2 /*+1 for space*/);
+    final String username = usernameRaw.trim();
+    if (username.length() == 0) {
+      throw new ParseException("empty username", usernameRightBound);
+    }
+    final String addrRaw = src.substring(addrDelimEndsAt + 2 /*+1 for space*/);
+    final String addr = addrRaw.trim();
+    if (addr.length() == 0) {
+      throw new ParseException("empty address", src.length() - 1);
+    }
     return new SimpleEntry<>(username, addr);
   }
 
@@ -235,6 +243,8 @@ public class UsrNamesChannel implements LocalChannel {
       "", "#####", "192.168.11.111 #####",
       "#####\tk ##### 192.168.11.111",
       "##### 192.168.11.111",
+      "#####   ##### 192.168.11.111",
+      "#####     #####     ",
       "##### ##### 192.168.11.111",
       "##### k #### 192.168.11.111",
       "##### k##### 192.168.11.111",
