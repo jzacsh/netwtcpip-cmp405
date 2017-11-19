@@ -10,7 +10,7 @@ public class Remote {
   public Remote(String userName, final InetAddress host, final int protocolPort) {
     this.userName = userName;
     this.host = host;
-    this.port = port;
+    this.port = protocolPort;
   }
 
   public Remote(final InetAddress host, int port) {
