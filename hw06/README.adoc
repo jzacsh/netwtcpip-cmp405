@@ -2,10 +2,11 @@
 :hw6url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
 :hw9url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw9.html
 :c9d6d689a19ed: https://github.com/jzacsh/netwtcpip-cmp405/tree/c9d6d689a19ed/hw06/
+:hw9diff: https://github.com/jzacsh/netwtcpip-cmp405/compare/c9d6d689a19ed...master
 
 == Homework #9
 
-TODO: none of <<hw9instruct, homework 9>> nothing done yet
+<<hw9instruct, homework 9>> is currently {hw9diff}[in progress]
 
 == Homework #6
 
