@@ -304,10 +304,9 @@ public class UsrNamesChannel implements LocalChannel {
     this.waitingOn.remove(userName); // only a one-time notification api
 
     this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
-    InetAddress resolvedAddr = AssertNetwork.mustResolveHostName(
-        rawResolution.trim(), (Throwable e) -> {
-          this.log.errorf(badResolution(userName, rawResolution, e).toString());
-        });
+    InetAddress resolvedAddr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
+      this.log.errorf(badResolution(userName, rawResolution, e).toString());
+    });
 
     if (resolvedAddr == null) {
       if (deliverTo != null) {
