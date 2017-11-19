@@ -121,10 +121,9 @@ public class UsrNamesChannel implements LocalChannel {
         userName, badResolution, e));
   }
 
+  /** Expects format: "????? LOCAL_USER" */
   private void handleRequest(final String protocolMessage, final InetAddress requestor) {
-    final String requestedUser = protocolMessage.substring(
-        PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
-    if (!requestedUser.equals(this.identity)) {
+    if (!this.isRequestForCurrentUser(protocolMessage)) {
       return;
     }
 
@@ -135,6 +134,13 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
     this.log.printf("responded to identity request by '%s'\n", requestor.getCanonicalHostName());
+  }
+
+  private boolean isRequestForCurrentUser(final String request) {
+    // Expects format: "????? this.identity"
+    final String requestedUser = request.substring(
+        PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
+    return request.equals(this.identity);
   }
 
   /**
