@@ -21,7 +21,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String DASH_DEFAULT_MESSAGE = "all fields required";
   private static final String DASH_PROCESSING_MESSAGE = "loading...";
 
-  private boolean isUserProtocol = false;
+  private UsrNamesChannel userResolver = null;
 
   private JButton startChatBtn;
   private JLabel dashMessaging;
@@ -38,13 +38,13 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private DatagramSocket sock;
 
   private final int defaultRemotePort;
-  public ChatterJFrame(String title, int defaultRemotePort, History hist, boolean isUserProtocol) {
+  public ChatterJFrame(String title, int defaultRemotePort, History hist, UsrNamesChannel userResolver) {
     super(title);
     this.defaultRemotePort = defaultRemotePort;
     this.hist = hist;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    this.isUserProtocol = isUserProtocol;
+    this.userResolver = userResolver;
 
     this.startChatBtn = new JButton("start chat");
     this.startChatBtn.addActionListener(this);
@@ -57,7 +57,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     txtPanel.add(
         this.addLabeled(
             this.destName = new JTextField(30),
-            this.isUserProtocol ? "username" : "destination",
+            this.userResolver == null ? "destination" : "username",
             ACTION_DASHBRD_START),
         BorderLayout.LINE_START);
     txtPanel.add(
@@ -65,7 +65,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
             this.destPort = new JTextField(6),
             "port", ACTION_DASHBRD_START),
         BorderLayout.CENTER);
-    this.destPort.setEnabled(!this.isUserProtocol);
+    this.destPort.setEnabled(this.userResolver == null);
     this.getContentPane().add(txtPanel, BorderLayout.PAGE_START);
     this.getContentPane().add(this.dashMessaging, BorderLayout.CENTER);
     this.getContentPane().add(this.startChatBtn, BorderLayout.LINE_END);

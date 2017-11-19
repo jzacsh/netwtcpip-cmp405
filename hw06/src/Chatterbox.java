@@ -35,6 +35,7 @@ public class Chatterbox {
   private History hist = null;
   private RecvChannel receiver = null;
   private OneToOneChannel sender = null;
+  private UsrNamesChannel userResolver = null;
 
   private boolean oneToOneMode = false;
 
@@ -64,6 +65,9 @@ public class Chatterbox {
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
     this.userName = userName;
+    if (this.isUserProtocol()) {
+      this.userResolver = new UsrNamesChannel(this.userName, this.baselinePort).setLogLevel(lvl);
+    }
     this.execService = Executors.newWorkStealingPool();
     this.tasks = new ArrayList<Future<?>>();
   }
@@ -240,10 +244,14 @@ public class Chatterbox {
       System.exit(this.patientlyWaitFor(senderTask) ? 1 : 0);
     }
 
+    if (this.isUserProtocol()) {
+      this.startTask(this.userResolver);
+    }
+
     // TODO(zacsh) fix to either:
     // 1) properly block on swing gui to exit
     // 2) or shutdown gui from here if this.receiver thread fails
-    new ChatterJFrame("Chatterbox", this.baselinePort, this.hist, this.isUserProtocol()).
+    new ChatterJFrame("Chatterbox", this.baselinePort, this.hist, this.userResolver).
         addWindowListener(new TeardownHandler((WindowEvent ev) -> this.teardown(ev)));
   }
 
