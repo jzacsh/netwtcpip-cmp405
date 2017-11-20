@@ -67,7 +67,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     if (this.remote.isValid()) {
       this.composeField.setText("");
     } else {
-      this.metaLog(String.format("failed to load chat: %s", this.remote.error()));
+      this.metaLog(String.format("failed: %s", this.remote.error().getCause()));
       this.log.errorf(this.remote.error(), "failed to load chat with %s", this.remote);
       this.remote.error().printStackTrace(System.err);
     }
