@@ -100,7 +100,7 @@ public class UsrNamesChannel implements LocalChannel {
   private static final Throwable badResolution(String userName, final String badResolution, Throwable e) {
     return new Throwable(String.format(
         "protocol error: got bad address, '%s' advertised for user '%s': %s",
-        userName, badResolution, e));
+        badResolution, userName, e));
   }
 
   /** Expects format: "????? LOCAL_USER" */
