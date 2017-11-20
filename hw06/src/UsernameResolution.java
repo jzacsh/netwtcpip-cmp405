@@ -154,14 +154,14 @@ public class UsernameResolution {
     return isMaybeRequest(message) || isMaybeDeclaration(message);
   }
 
-  public static boolean isMaybeRequest(String message) {
+  private static boolean isMaybeRequest(String message) {
     return (
       message.length() > PROTOCOL_REQUEST_DELIMITER.length() + 1 /*1 space*/ &&
       message.codePointAt(0) == PROTOCOL_REQUEST_DELIMITER.codePointAt(0)
     );
   }
 
-  public static boolean isMaybeDeclaration(String msg) {
+  private static boolean isMaybeDeclaration(String msg) {
     return (
       msg.length() > PROTOCOL_DECLARATION_DELIMITER.length() * 2 + 3 /*spaces*/ + 2 /*username + hostname*/ &&
       msg.codePointAt(0) == PROTOCOL_DECLARATION_DELIMITER.codePointAt(0)
