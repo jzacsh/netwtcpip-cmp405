@@ -3,10 +3,17 @@
 :hw9url: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw9.html
 :c9d6d689a19ed: https://github.com/jzacsh/netwtcpip-cmp405/tree/c9d6d689a19ed/hw06/
 :hw9diff: https://github.com/jzacsh/netwtcpip-cmp405/compare/c9d6d689a19ed\...master
+:bugSendHang: https://github.com/jzacsh/netwtcpip-cmp405/blob/53735eeeb2/hw06/src/UsrNamesChannel.java#L111-L119
+:bugRandomVals: https://github.com/jzacsh/netwtcpip-cmp405/blob/53735eeeb2/hw06/src/UsrNamesChannel.java#L13-L16
 
 == Homework #9
 
 <<hw9instruct, homework 9>> is currently {hw9diff}[in progress]
+
+.TODOs to figure out from professor
+. what the {bugRandomVals}[magic IP/ports we shold use] are.
+. if something i should know about messaging group that would
+  {bugSendHang}[cause this hang to happen]
 
 == Homework #6
 
