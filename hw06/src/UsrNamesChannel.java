@@ -8,6 +8,7 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map.Entry;
 
 public class UsrNamesChannel implements LocalChannel {
   private static final int MULTICAST_PORT = 64001;
@@ -49,6 +50,8 @@ public class UsrNamesChannel implements LocalChannel {
   private final DatagramPacket declarationPacket;
   private int defaultRemotePort;
 
+  private InetAddress subscriptionAddr;
+
   public UsrNamesChannel(String identity, int defaultPort) {
     this.namesSubscription = AssertNetwork.mustJoinMulticastGroup(MULTICAST_HOST, MULTICAST_PORT, (Throwable e) -> {
       this.log.errorf(e, "failed configuring multicast subscription (open socket & 'join')");
@@ -61,7 +64,9 @@ public class UsrNamesChannel implements LocalChannel {
     this.waitingOn = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.defaultRemotePort = defaultPort;
 
-    this.protocolIdentity = UsernameResolution.mustBuildProtocolIdentity(this.identity, this.log);
+    Entry<InetAddress, String> results = UsernameResolution.mustBuildProtocolIdentity(this.identity, this.log);
+    this.subscriptionAddr = results.getKey();
+    this.protocolIdentity = results.getValue();
     this.declarationPacket = this.buildPacketFrom(this.protocolIdentity);
   }
 
@@ -92,7 +97,7 @@ public class UsrNamesChannel implements LocalChannel {
     return new DatagramPacket(
         src.getBytes(StandardCharsets.UTF_8),
         src.length(),
-        this.namesSubscription.getInetAddress(),
+        this.subscriptionAddr,
         this.namesSubscription.getLocalPort());
   }
 

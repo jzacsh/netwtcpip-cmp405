@@ -60,7 +60,7 @@ public class UsernameResolution {
 
   public boolean isRequestFor(final String username) { return this.user.equals(username); }
 
-  public static String mustBuildProtocolIdentity(final String identity, final Logger log) {
+  public static Entry<InetAddress, String> mustBuildProtocolIdentity(final String identity, final Logger log) {
     InetAddress localHost = null;
     try {
       localHost = InetAddress.getLocalHost();
@@ -69,9 +69,11 @@ public class UsernameResolution {
       System.exit(1);
     }
 
-    return String.format("%s %s %s %s",
+    final String declaration = String.format("%s %s %s %s",
         PROTOCOL_DECLARATION_DELIMITER, identity,
         PROTOCOL_DECLARATION_DELIMITER, localHost.getHostAddress());
+
+    return new SimpleEntry<>(localHost, declaration);
   }
 
   /**
