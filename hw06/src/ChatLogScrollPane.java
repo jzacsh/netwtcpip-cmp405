@@ -1,5 +1,6 @@
 import java.awt.Font;
 import java.awt.Color;
+import java.util.function.Consumer;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -32,12 +33,10 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     this.renderNewLogs(); // initial rendering of loaded history
   }
 
-  private void renderNewLogs() {
+  private void appendLogs(Consumer<StringBuilder> c) {
     StringBuilder sb = new StringBuilder(this.textLog.getText().trim());
     sb.append('\n');
-    this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
-      sb.append(ChatLogScrollPane.toHistoryLine(m));
-    });
+    c.accept(sb);
     this.textLog.setText(sb.toString());
     this.numMessagesSeen = this.src.size();
 
@@ -45,6 +44,14 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
     JScrollBar vertical = this.getVerticalScrollBar();
     vertical.setValue(vertical.getMaximum());
+  }
+
+  private void renderNewLogs() {
+    this.appendLogs((StringBuilder sb) -> {
+      this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
+        sb.append(ChatLogScrollPane.toHistoryLine(m));
+      });
+    });
   }
 
   public void run() {
