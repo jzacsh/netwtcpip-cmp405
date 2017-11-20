@@ -55,8 +55,10 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.composeField.setEnabled(false);
     this.sendBtn.setEnabled(false);
     this.metaLog("please wait...");
-    this.remote.check(unc);
-    this.handleResolvedRemote();
+    new Thread(() -> {
+      this.remote.check(unc);
+      this.handleResolvedRemote();
+    }).start();
   }
 
   private void metaLog(String msg) { this.composeField.setText("[loading] " + msg); }
