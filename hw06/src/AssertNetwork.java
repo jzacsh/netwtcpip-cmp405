@@ -35,6 +35,14 @@ public class AssertNetwork {
     return sock;
   }
 
+  public static boolean isBroadcast(final InetAddress packet) {
+    final byte[] octets = packet.getAddress();
+    return octets[0] == 255 &&
+           octets[1] == 255 &&
+           octets[2] == 255 &&
+           octets[3] == 255;
+  }
+
   public static final MulticastSocket mustJoinMulticastGroup(
       String addr, int port, Consumer<Throwable> failHandler) {
    InetAddress groupAddr = null;
