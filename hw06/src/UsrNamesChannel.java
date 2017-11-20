@@ -46,11 +46,9 @@ public class UsrNamesChannel implements LocalChannel {
   private Map<String, Remote> resolved;
 
   private final String identity;
-  private String protocolIdentity;
   private final DatagramPacket declarationPacket;
+  private final InetAddress subscriptionAddr;
   private int defaultRemotePort;
-
-  private InetAddress subscriptionAddr;
 
   public UsrNamesChannel(String identity, int defaultPort) {
     this.namesSubscription = AssertNetwork.mustJoinMulticastGroup(MULTICAST_HOST, MULTICAST_PORT, (Throwable e) -> {
@@ -66,8 +64,7 @@ public class UsrNamesChannel implements LocalChannel {
 
     Entry<InetAddress, String> results = UsernameResolution.mustBuildProtocolIdentity(this.identity, this.log);
     this.subscriptionAddr = results.getKey();
-    this.protocolIdentity = results.getValue();
-    this.declarationPacket = this.buildPacketFrom(this.protocolIdentity);
+    this.declarationPacket = this.buildPacketFrom(results.getValue());
   }
 
   /**
@@ -114,13 +111,8 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
 
-    this.log.printf("handling request for destination\n");
-    // TODO remove this log; figure out why above `send()` is hanging indefinitely -- perhaps because
-
     try {
-      // TODO utilize already cached this.declarationPacket -- instead of below repeated building --
-      // once above-mentioned bug about this send() logic is resolved.
-      this.namesSubscription.send(this.buildPacketFrom(this.protocolIdentity));
+      this.namesSubscription.send(this.declarationPacket);
     } catch(IOException e) {
       this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
       return;
