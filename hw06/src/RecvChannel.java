@@ -56,6 +56,19 @@ public class RecvChannel implements LocalChannel {
       return;
     }
 
+    // Really only used in if username services is enabled, but doesn't hurt to
+    // have this run in all modes.
+    try {
+      this.hist.source.setBroadcast(true);
+      if (!this.hist.source.getBroadcast()) {
+        this.log.errorf("failed enabling broadcasting");
+        return;
+      }
+    } catch (SocketException e) {
+      this.fatalf(e, "failed enabling broadcasting");
+      return;
+    }
+
     this.log.printf("waiting for input...\n");
     long receiptIndex = 0;
     String message = null;
@@ -77,10 +90,16 @@ public class RecvChannel implements LocalChannel {
       message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
 
       this.log.printf(
-          "enqueuing received #%03d [%03d chars]: %s%s%s\n",
-          receiptIndex - 1, message.length(), "\"\"\"", message, "\"\"\"");
+          "handling received %s #%03d [%03d chars]: %s%s%s\n",
+          AssertNetwork.isBroadcast(inPacket.getAddress()) ? "message" : "broadcast",
+          receiptIndex - 1,
+          message.length(), "\"\"\"", message, "\"\"\"");
 
-      this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
+      if (AssertNetwork.isBroadcast(inPacket.getAddress())) {
+        this.hist.handleBroadcast(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
+      } else {
+        this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
+      }
 
       for (int i = 0; i < inPacket.getLength(); ++i) { // erase any trace of usage
         inBuffer[i] = 0 /*default nil-value of a byte array*/;

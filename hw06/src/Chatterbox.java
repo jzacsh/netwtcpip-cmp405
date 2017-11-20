@@ -65,7 +65,8 @@ public class Chatterbox {
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
     this.userName = userName;
     if (this.isUserProtocol()) {
-      this.userResolver = new UsrNamesChannel(this.userName, this.baselinePort).setLogLevel(lvl);
+      this.userResolver = new UsrNamesChannel(this.userName, sock, this.baselinePort).setLogLevel(lvl);
+      this.hist.setBroadcastListener((Remote r, String m) -> { this.userResolver.broadcastHandler(m, r) ; });
     }
     this.execService = Executors.newWorkStealingPool();
     this.tasks = new ArrayList<Future<?>>();
@@ -241,10 +242,6 @@ public class Chatterbox {
     if (this.isOneToOne()) {
       Future<?> senderTask = this.startTask(this.sender);
       System.exit(this.patientlyWaitFor(senderTask) ? 1 : 0);
-    }
-
-    if (this.isUserProtocol()) {
-      this.startTask(this.userResolver);
     }
 
     // TODO(zacsh) fix to either:

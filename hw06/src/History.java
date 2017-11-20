@@ -10,6 +10,7 @@ import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class History implements Runnable {
   private static final long FLUSH_CYCLE_MILLIS = 200;
@@ -26,6 +27,8 @@ public class History implements Runnable {
   private final Lock registryLock;
   private Map<String, List<Runnable>> registry;
   private Consumer<Remote> defaultListener = null;
+
+  private BiConsumer<Remote, String> broadcastHandler = null;
 
   private LockedMapList<String, Message> full = null;
   public History(final DatagramSocket source) {
@@ -61,6 +64,16 @@ public class History implements Runnable {
       }
       this.registry.get(triggerID).add(listener);
     });
+  }
+
+  public void setBroadcastListener(BiConsumer<Remote, String> listener) { this.broadcastHandler = listener; }
+  public void handleBroadcast(final Remote from, final String message) {
+    if (this.broadcastHandler == null) {
+      this.log.printf("no broadcast handlers, so dropping message '%s'\n", message);
+      return;
+    }
+
+    this.broadcastHandler.accept(from, message);
   }
 
   private void notifyListenersUnsafe(final String remoteID) {

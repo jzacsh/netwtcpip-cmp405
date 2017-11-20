@@ -7,10 +7,9 @@
 
 == Homework #9
 
-<<hw9instruct, homework 9>> is currently {hw9diff}[in progress]
+status: *complete* but *untested*
 
-.TODOs to figure out from professor
-. what the {bugRandomVals}[magic IP/ports we shold use] are.
+diff <<hw9instruct, of this work>> against hw6, {hw9diff}[listed here]
 
 == Homework #6
 
