@@ -13,6 +13,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
 
   private static final int DEFAULT_COLUMN_WIDTH = 40;
 
+  private ChatLogScrollPane chatLog;
   private JTextField composeField;
   private JButton sendBtn;
 
@@ -26,7 +27,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    ChatLogScrollPane chatLog = new ChatLogScrollPane(
+    this.chatLog = new ChatLogScrollPane(
         20 /*rows*/,
         DEFAULT_COLUMN_WIDTH /*cols*/,
         this.hist.getHistoryWith(this.remote) /*warning: blocking*/);
@@ -67,7 +68,8 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     if (this.remote.isValid()) {
       this.composeField.setText("");
     } else {
-      this.metaLog(String.format("failed: %s", this.remote.error().getCause()));
+      this.chatLog.metaLog(this.remote.error().getCause().toString());
+      this.metaLog("failed to load chat");
       this.log.errorf(this.remote.error(), "failed to load chat with %s", this.remote);
       this.remote.error().printStackTrace(System.err);
     }

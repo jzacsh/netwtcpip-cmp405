@@ -61,6 +61,13 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     this.renderNewLogs();
   }
 
+  public void metaLog(final String m) {
+    this.appendLogs((StringBuilder sb) -> {
+      sb.append("SYSTEM: ");
+      sb.append(m);
+    });
+  }
+
   private static final String toHistoryLine(final Message m) {
     final String who = m.isReceived() ? "[them]" : "[you]";
     return String.format("%6s:  %s\n", who, m.getMessage());
