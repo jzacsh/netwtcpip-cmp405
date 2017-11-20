@@ -114,7 +114,7 @@ public class Remote {
     try {
       hostChecked = InetAddress.getByName(this.rawDest);
     } catch (UnknownHostException e) {
-      throw new Error(String.format("could not resolve host '%s'", this.rawDest));
+      throw new Exception(String.format("could not resolve host '%s'", this.rawDest), e);
     }
     this.host = hostChecked;
     return this.isValid();
