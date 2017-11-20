@@ -75,6 +75,7 @@ public class UsrNamesChannel implements LocalChannel {
    */
   public void resolveName(String usrname, BiConsumer<Remote, Throwable> handler) {
     if (this.resolved.containsKey(usrname)) {
+      this.log.printf("utilizing cached resolution for username, '%s'\n", usrname);
       handler.accept(this.resolved.get(usrname), null /*throwable*/);
       return;
     }
@@ -83,11 +84,12 @@ public class UsrNamesChannel implements LocalChannel {
     try {
       this.namesSubscription.send(this.buildPacketFrom(request));
     } catch(IOException e) {
-      handler.accept(null, e);
+      handler.accept(null /*remote*/, e);
       return;
     }
 
     this.waitingOn.put(usrname, handler);
+    this.log.printf("broadcast request for username, '%s'\n", usrname);
   }
 
   private DatagramPacket buildPacketFrom(final String src) {
