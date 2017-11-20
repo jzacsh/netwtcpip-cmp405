@@ -20,7 +20,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   private History hist;
   private final Remote remote;
 
-  public MessagingJFrame(final String readable, History hist, final Remote r, UsrNamesChannel unc) {
+  public MessagingJFrame(final String readable, History hist, final Remote r, UsernameService unc) {
     super(String.format("chat [%s] with %s", readable, r.toString()));
     this.hist = hist;
     this.remote = r;

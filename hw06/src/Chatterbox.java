@@ -34,7 +34,7 @@ public class Chatterbox {
   private History hist = null;
   private RecvChannel receiver = null;
   private OneToOneChannel sender = null;
-  private UsrNamesChannel userResolver = null;
+  private UsernameService userResolver = null;
 
   private boolean oneToOneMode = false;
 
@@ -65,7 +65,7 @@ public class Chatterbox {
     this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
     this.userName = userName;
     if (this.isUserProtocol()) {
-      this.userResolver = new UsrNamesChannel(this.userName, sock, this.baselinePort).setLogLevel(lvl);
+      this.userResolver = new UsernameService(this.userName, sock, this.baselinePort).setLogLevel(lvl);
       this.hist.setBroadcastListener((Remote r, String m) -> { this.userResolver.broadcastHandler(m, r) ; });
     }
     this.execService = Executors.newWorkStealingPool();

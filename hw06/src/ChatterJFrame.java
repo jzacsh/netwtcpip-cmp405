@@ -20,7 +20,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private static final String DASH_DEFAULT_MESSAGE = "all fields required";
   private static final String DASH_PROCESSING_MESSAGE = "loading...";
 
-  private UsrNamesChannel userResolver = null;
+  private UsernameService userResolver = null;
 
   private JButton startChatBtn;
   private JLabel dashMessaging;
@@ -37,7 +37,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   private DatagramSocket sock;
 
   private final int defaultRemotePort;
-  public ChatterJFrame(String title, int defaultRemotePort, History hist, UsrNamesChannel userResolver) {
+  public ChatterJFrame(String title, int defaultRemotePort, History hist, UsernameService userResolver) {
     super(title);
     this.defaultRemotePort = defaultRemotePort;
     this.hist = hist;

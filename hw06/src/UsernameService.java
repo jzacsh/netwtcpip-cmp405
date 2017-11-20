@@ -11,8 +11,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
-// TODO(zacsh) rename: no longer a channel!
-public class UsrNamesChannel {
+public class UsernameService {
   /**
    * Likely maximimum number of unique user resolutions we'll see in a runtime
    * Based on the lecture hall's size being about 30 students.
@@ -44,7 +43,7 @@ public class UsrNamesChannel {
   private final DatagramSocket broadcastTo;
 
   private long receiptIndex;
-  public UsrNamesChannel(String identity, final DatagramSocket broadcastTo, int globalPort) {
+  public UsernameService(String identity, final DatagramSocket broadcastTo, int globalPort) {
     this.broadcastTo = broadcastTo;
     this.receiptIndex = 0;
     this.identity = identity;
@@ -145,7 +144,7 @@ public class UsrNamesChannel {
     this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
   }
 
-  public UsrNamesChannel report() {
+  public UsernameService report() {
     this.log.printf(
         "participating in username resolution protocol, as user='%s'\n",
         this.identity);
@@ -180,7 +179,7 @@ public class UsrNamesChannel {
     }
   }
 
-  public UsrNamesChannel setLogLevel(final Logger.Level lvl) {
+  public UsernameService setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
     return this;
   }

@@ -65,7 +65,7 @@ public class Remote {
 
   public Throwable error() { return this.problem; }
 
-  public boolean check(UsrNamesChannel uns) {
+  public boolean check(UsernameService uns) {
     if (this.isChecked()) {
       return this.isValid();
     }
@@ -84,7 +84,7 @@ public class Remote {
     return isValid;
   }
 
-  private boolean checkByUsername(UsrNamesChannel service) throws Exception {
+  private boolean checkByUsername(UsernameService service) throws Exception {
     service.resolveName(this.rawDest /*usrname*/, (Remote r, Throwable e) -> {
       if (r != null) {
         this.host = r.host;
