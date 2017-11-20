@@ -77,7 +77,6 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
 
-    ;
     final String request = UsernameResolution.buildRequest(usrname);
     try {
       this.namesSubscription.send(this.buildPacketFrom(request));
