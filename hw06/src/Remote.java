@@ -77,7 +77,7 @@ public class Remote {
           this.isViaNameProtocol()
               ? this.checkByUsername(uns)
               : this.checkByAddress());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       this.problem = e;
     }
 
