@@ -74,6 +74,11 @@ public class UsrNamesChannel implements LocalChannel {
    * one window will be notified).
    */
   public void resolveName(String usrname, BiConsumer<Remote, Throwable> handler) {
+    if (this.identity.equals(usrname)) {
+      handler.accept(null /*remote*/, new IllegalStateException("local user trying to ask group about themselves"));
+      return;
+    }
+
     if (this.resolved.containsKey(usrname)) {
       this.log.printf("utilizing cached resolution for username, '%s'\n", usrname);
       handler.accept(this.resolved.get(usrname), null /*throwable*/);
