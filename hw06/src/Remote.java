@@ -125,11 +125,11 @@ public class Remote {
     try {
       portChecked = Integer.parseUnsignedInt(this.rawPort);
     } catch (NumberFormatException e) {
-      throw new Error(String.format("'%s' is not a valid port number", this.rawPort));
+      throw new Exception(String.format("'%s' is not a valid port number", this.rawPort));
     }
 
     if (!AssertNetwork.isValidPort(portChecked)) {
-      throw new Error(String.format("%d is an invalid port number", portChecked));
+      throw new Exception(String.format("%d is an invalid port number", portChecked));
     }
 
     this.port = portChecked;
