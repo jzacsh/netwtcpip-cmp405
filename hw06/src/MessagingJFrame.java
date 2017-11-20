@@ -19,7 +19,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
   private History hist;
   private final Remote remote;
 
-  public MessagingJFrame(final String readable, History hist, final Remote r) {
+  public MessagingJFrame(final String readable, History hist, final Remote r, UsrNamesChannel unc) {
     super(String.format("chat [%s] with %s", readable, r.toString()));
     this.hist = hist;
     this.remote = r;
@@ -51,17 +51,21 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.composeField.requestFocus();
     this.setLocationRelativeTo(null);
 
-    // TODO(zacsh) implement lazy-loading of remote and meta-log into chat window, and wire results
-    // to handleResolvedRemote()
     this.composeField.setDisabledTextColor(Color.RED);
-    this.composeField.setText("[loading] please wait...");
     this.composeField.setEnabled(false);
     this.sendBtn.setEnabled(false);
+    this.metaLog("please wait...");
+    this.remote.check(unc);
+    this.handleResolvedRemote();
   }
+
+  private void metaLog(String msg) { this.composeField.setText("[loading] " + msg); }
 
   private void handleResolvedRemote() {
     if (this.remote.isValid()) {
       this.composeField.setText("");
+    } else {
+      this.metaLog("failed to load chat");
     }
     this.composeField.setEnabled(this.remote.isValid());
     this.sendBtn.setEnabled(this.remote.isValid());

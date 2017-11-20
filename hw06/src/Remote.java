@@ -1,5 +1,6 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 public class Remote {
   private static final int UNCHECKED_PORT = -1;
@@ -9,10 +10,11 @@ public class Remote {
   private String rawPort = null;
   private boolean isViaUserName = false;
 
+  private int port = UNCHECKED_PORT;
+  private InetAddress host = null;
   /** Whether the next two fields are populated and valid. */
   private boolean isChecked = false;
-  private InetAddress host = null;
-  private int port = UNCHECKED_PORT;
+  private Throwable problem = null;
 
   public Remote(final String username, final InetAddress host, int port) {
     this.isChecked = true;
@@ -61,23 +63,64 @@ public class Remote {
         this.isViaNameProtocol() ? "" : " not");
   }
 
-  public boolean checkAddress() throws Exception {
-    if (this.isViaNameProtocol()) {
-      throw new IllegalStateException("checkAddress() called for a user-name target");
-    }
+  public Throwable error() { return this.problem; }
 
+  public boolean check(UsrNamesChannel uns) {
     if (this.isChecked()) {
       return this.isValid();
     }
     this.isChecked = true;
 
+    boolean isValid = false;
+    try {
+      isValid = this.checkPort() && (
+          this.isViaNameProtocol()
+              ? this.checkByUsername(uns)
+              : this.checkByAddress());
+    } catch (Exception e) {
+      this.problem = e;
+    }
+
+    return isValid;
+  }
+
+  private boolean checkByUsername(UsrNamesChannel service) throws Exception {
+    service.resolveName(this.rawDest /*usrname*/, (Remote r, Throwable e) -> {
+      if (r != null) {
+        this.host = r.host;
+      }
+      this.problem = e;
+    });
+
+    while (true) {
+      if (this.problem != null || this.host != null) {
+        break;
+      }
+
+      try {
+        TimeUnit.MILLISECONDS.sleep(100);
+      } catch (InterruptedException e) {
+        throw new Exception("failed waiting on username resolution", e);
+      }
+    }
+    if (problem != null) {
+      throw new Exception("resolution failed", problem);
+    }
+    return this.host != null;
+  }
+
+  private boolean checkByAddress() throws Exception {
     InetAddress hostChecked = null;
     try {
       hostChecked = InetAddress.getByName(this.rawDest);
     } catch (UnknownHostException e) {
       throw new Error(String.format("could not resolve host '%s'", this.rawDest));
     }
+    this.host = hostChecked;
+    return this.isValid();
+  }
 
+  private boolean checkPort() throws Exception {
     int portChecked;
     try {
       portChecked = Integer.parseUnsignedInt(this.rawPort);
@@ -89,13 +132,16 @@ public class Remote {
       throw new Error(String.format("%d is an invalid port number", portChecked));
     }
 
-    this.host = hostChecked;
     this.port = portChecked;
-    return this.isValid();
+    return this.port != UNCHECKED_PORT;
   }
 
   public boolean isChecked() { return this.isChecked; }
+
   public boolean isValid() {
-    return this.isChecked() && this.host != null && this.port != UNCHECKED_PORT;
+    return this.isChecked() &&
+        this.problem == null &&
+        this.host != null &&
+        this.port != UNCHECKED_PORT;
   }
 }

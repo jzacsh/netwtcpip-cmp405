@@ -1,22 +1,15 @@
 import java.io.IOException;
 import java.util.function.BiConsumer;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.HashMap;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.UnknownHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 
 public class UsrNamesChannel implements LocalChannel {
-  private static final String PROTOCOL_REQUEST_DELIMITER = "?????";
-  private static final String PROTOCOL_DECLARATION_DELIMITER = "#####";
-
   private static final int MULTICAST_PORT = 64001;
   private static final String MULTICAST_HOST = "228.5.6.7";
   // TODO(zacsh) find out what professor wants us to use; above details aren't in homework
@@ -52,7 +45,8 @@ public class UsrNamesChannel implements LocalChannel {
   private Map<String, Remote> resolved;
 
   private final String identity;
-  private final DatagramPacket protocolIdentity;
+  private String protocolIdentity;
+  private final DatagramPacket declarationPacket;
   private int defaultRemotePort;
 
   public UsrNamesChannel(String identity, int defaultPort) {
@@ -67,22 +61,8 @@ public class UsrNamesChannel implements LocalChannel {
     this.waitingOn = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.defaultRemotePort = defaultPort;
 
-    this.protocolIdentity = this.buildPacketFrom(
-        UsrNamesChannel.buildProtocolIdentity(this.identity, this.log));
-  }
-
-  private static String buildProtocolIdentity(final String identity, final Logger log) {
-    InetAddress localHost = null;
-    try {
-      localHost = InetAddress.getLocalHost();
-    } catch (UnknownHostException e) {
-      log.errorf(e, "failed determining local IP address");
-      System.exit(1);
-    }
-
-    return String.format("%s %s %s %s",
-        PROTOCOL_DECLARATION_DELIMITER, identity,
-        PROTOCOL_DECLARATION_DELIMITER, localHost.getHostAddress());
+    this.protocolIdentity = UsernameResolution.mustBuildProtocolIdentity(this.identity, this.log);
+    this.declarationPacket = this.buildPacketFrom(this.protocolIdentity);
   }
 
   /**
@@ -97,7 +77,8 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
 
-    final String request = String.format("%s %s", PROTOCOL_REQUEST_DELIMITER, usrname);
+    ;
+    final String request = UsernameResolution.buildRequest(usrname);
     try {
       this.namesSubscription.send(this.buildPacketFrom(request));
     } catch(IOException e) {
@@ -123,13 +104,19 @@ public class UsrNamesChannel implements LocalChannel {
   }
 
   /** Expects format: "????? LOCAL_USER" */
-  private void handleRequest(final String protocolMessage, final InetAddress requestor) {
-    if (!this.isRequestForCurrentUser(protocolMessage)) {
+  private void handleRequest(final UsernameResolution protocol, final InetAddress requestor) {
+    if (!protocol.isRequestFor(this.identity)) {
+      this.log.printf("dropping request for '%s' (ie: not local user)\n", protocol.user);
       return;
     }
 
+    this.log.printf("handling request for destination\n");
+    // TODO remove this log; figure out why above `send()` is hanging indefinitely -- perhaps because
+
     try {
-      this.namesSubscription.send(this.protocolIdentity);
+      // TODO utilize already cached this.declarationPacket -- instead of below repeated building --
+      // once above-mentioned bug about this send() logic is resolved.
+      this.namesSubscription.send(this.buildPacketFrom(this.protocolIdentity));
     } catch(IOException e) {
       this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
       return;
@@ -137,187 +124,15 @@ public class UsrNamesChannel implements LocalChannel {
     this.log.printf("responded to identity request by '%s'\n", requestor.getCanonicalHostName());
   }
 
-  private boolean isRequestForCurrentUser(final String request) {
-    // Expects format: "????? this.identity"
-    final String requestedUser = request.substring(
-        PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
-    return request.equals(this.identity);
-  }
-
-  /**
-   * Expected format: "##### name of person ##### ww.xx.yy.zz"
-   */
-  // NOTE: doesn't *actualy* iterate over codepoints as it should (despite decoding as UTF string);
-  // could certainly be fixed
-  private static Entry<String, String> parseNameResolution(final String src) throws ParseException {
-    if (!UsrNamesChannel.isMaybeDeclaration(src)) {
-      throw new ParseException("got implausible message length & first bytes", 0);
-    }
-
-    int addrDelimEndsAt = -1;
-    int delimTracking = -1;
-    for (int i = 0; i < src.length(); ++i) {
-      if (i >= src.length() - 1) {
-        throw new ParseException("encountered EOF-decl before finding address", 0);
-      }
-
-      if (i < PROTOCOL_DECLARATION_DELIMITER.length()) {
-        if (src.charAt(i) != PROTOCOL_DECLARATION_DELIMITER.charAt(i)) {
-          throw new ParseException("expected analogous delimiter char", i);
-        }
-        continue;
-      } else if (i == PROTOCOL_DECLARATION_DELIMITER.length()) {
-        if (src.charAt(i) != ' ') {
-          throw new ParseException("expected post-delimiter(#1) space at col %d", i);
-        }
-      } else {
-        if (delimTracking == -1) {
-          if (src.charAt(i) == PROTOCOL_DECLARATION_DELIMITER.charAt(0)) {
-            delimTracking++;
-          }
-        } else {
-          if (src.charAt(i) == PROTOCOL_DECLARATION_DELIMITER.charAt(delimTracking+1)) {
-            delimTracking++;
-            if (delimTracking == PROTOCOL_DECLARATION_DELIMITER.length() - 1) {
-              addrDelimEndsAt = i;
-              if (src.charAt(i + 1) != ' ') {
-                throw new ParseException("expected post-delimiter(#2) space at col %d", i+1);
-              }
-              break;
-            }
-          } else {
-            delimTracking = -1;
-          }
-        }
-      }
-    }
-
-    if (addrDelimEndsAt == -1) {
-      throw new ParseException("no hostname found", src.length() - 1);
-    }
-
-    final int usernameLeftBound = PROTOCOL_DECLARATION_DELIMITER.length()+1/*include space*/;
-    final int usernameRightBound = addrDelimEndsAt - PROTOCOL_DECLARATION_DELIMITER.length();
-    if (usernameLeftBound >= usernameRightBound) {
-      throw new ParseException("no username found", addrDelimEndsAt);
-    }
-    final String usernameRaw = src.substring(
-        usernameLeftBound,
-        usernameRightBound);
-    final String username = usernameRaw.trim();
-    if (username.length() == 0) {
-      throw new ParseException("empty username", usernameRightBound);
-    }
-    final String addrRaw = src.substring(addrDelimEndsAt + 2 /*+1 for space*/);
-    final String addr = addrRaw.trim();
-    if (addr.length() == 0) {
-      throw new ParseException("empty address", src.length() - 1);
-    }
-    return new SimpleEntry<>(username, addr);
-  }
-
-  /** Poor man's unit tests. */
-  public static void main(String[] args) {
-    Entry<String, String> actual;
-    String[][] gold = new String[][]{
-      {"##### walrus koo koo ##### 1.2.3.4", "walrus koo koo", "1.2.3.4"},
-      {"##### wal-rus ##### walrus.lan", "wal-rus", "walrus.lan"},
-      {"##### 192.168.11.111 ##### walrus.lan", "192.168.11.111", "walrus.lan"},
-      {"##### k ##### 192.168.11.111", "k", "192.168.11.111"}
-    };
-
-    int fails = 0;
-    for (int i = 0; i < gold.length; ++i) {
-      try {
-        actual = parseNameResolution(gold[i][0]);
-      } catch (Throwable e) {
-        System.err.printf(
-            "FAIL[1:% 3d]: '%s' -> ('%s', '%s') but got exception:\n\t",
-            i, gold[i][0], gold[i][1], gold[i][2]);
-        e.printStackTrace(System.err);
-        fails++;
-        continue;
-      }
-
-      if (!actual.getKey().equals(gold[i][1]) ||
-          !actual.getValue().equals(gold[i][2])) {
-        System.err.printf(
-            "FAIL[1:% 3d]: '%s' -> ('%s', '%s') but got ('%s', '%s')\n",
-            i, gold[i][0], gold[i][1], gold[i][2],
-            actual.getKey(), actual.getValue());
-        fails++;
-        continue;
-      }
-      System.err.printf(
-          "PASS[1:% 3d]: '%s' -> ('%s', '%s')\n",
-          i, gold[i][0], gold[i][1], gold[i][2]);
-    }
-
-    String[] coal = new String[]{
-      "", "#####", "192.168.11.111 #####",
-      "#####\tk ##### 192.168.11.111",
-      "##### 192.168.11.111",
-      "#####   ##### 192.168.11.111",
-      "#####     #####     ",
-      "##### ##### 192.168.11.111",
-      "##### k #### 192.168.11.111",
-      "##### k##### 192.168.11.111",
-      "##### k #####192.168.11.111",
-      "##### k ##### ",
-      "#### k ##### 192.168.11.111",
-      "#####k ##### 192.168.11.111",
-      "##### ##### 192.168.11.111",
-      "########## 192.168.11.111",
-    };
-    for (int i = 0; i < coal.length; ++i) {
-      try {
-        actual = parseNameResolution(coal[i]);
-
-        fails++;
-        System.err.printf(
-            "FAIL[2:% 3d]: invalid '%s' not caught; parsed as ('%s', '%s')\n",
-            i, coal[i], actual.getKey(), actual.getValue());
-      } catch (ParseException expected) {
-        System.err.printf(
-            "PASS[2:% 3d]: invalid '%s' caught with: '%s'\n",
-            i, coal[i], expected.getMessage());
-      } catch (Throwable unexpected) {
-        fails++;
-        System.err.printf(
-            "FAIL[2:% 3d]: unexpected exception for '%s':\n\t",
-            i, coal[i]);
-        unexpected.printStackTrace(System.err);
-      }
-    }
-
-    final int totalTestLen = gold.length + coal.length;
-    if (fails == 0) {
-      System.err.printf("PASS: all %d tests passed\n", totalTestLen);
-      System.exit(0);
-    }
-    System.err.printf("FAIL: %d of %d tests failed\n", fails, totalTestLen);
-    System.exit(1);
-  }
-
-  private void handleResolution(final String protocolMessage) {
-    final Entry<String, String> declaration;
-    try {
-      declaration = parseNameResolution(protocolMessage);
-    } catch (ParseException e) {
-      this.log.errorf(e, "protocol parsing error");
+  private void handleResolution(final String userName, final String rawResolution) {
+    if (userName.equals(this.identity)) {
+      this.log.printf("dropping (spoof?) declaration about current user being at '%s'\n", rawResolution);
       return;
     }
 
-    final String userName = declaration.getKey();
-    final String rawResolution = declaration.getValue();
-    this.handleResolution(userName, rawResolution);
-  }
-
-  private void handleResolution(final String userName, final String rawResolution) {
     BiConsumer<Remote, Throwable> deliverTo = this.waitingOn.get(userName);
     this.waitingOn.remove(userName); // only a one-time notification api
 
-    this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
     final InetAddress addr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
       this.log.errorf(badResolution(userName, rawResolution, e).toString());
     });
@@ -334,6 +149,7 @@ public class UsrNamesChannel implements LocalChannel {
       deliverTo.accept(resolvedTo, null /*throwable*/);
     }
     this.resolved.put(userName, resolvedTo);
+    this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
   }
 
   public UsrNamesChannel report() {
@@ -364,7 +180,7 @@ public class UsrNamesChannel implements LocalChannel {
       return;
     }
 
-    this.log.printf("waiting for name-resolution multi-casts...\n");
+    this.log.printf("listening for name-resolution multi-casts...\n");
     long receiptIndex = 0;
     String message = null;
     while (true) {
@@ -386,43 +202,29 @@ public class UsrNamesChannel implements LocalChannel {
       message = new String(inPacket.getData(), StandardCharsets.UTF_8).trim();
 
       this.log.printf(
-          "parsing declaration by %s:%d #%03d [%03d chars]: %s%s%s\n",
-          inPacket.getAddress().getHostAddress(), inPacket.getPort(),
-          receiptIndex - 1, message.length(), "\"\"\"", message, "\"\"\"");
+          "parsing broadcast #%03d by %s:%d [%03d chars]: %s%s%s\n",
+          receiptIndex - 1, inPacket.getAddress().getHostAddress(), inPacket.getPort(),
+          message.length(), "\"\"\"", message, "\"\"\"");
 
-      if (!UsrNamesChannel.isProtocolCompliant(message)) {
-        this.log.printf("dropping message %d, is not protocol-compliant request or response\n", receiptIndex - 1);
-      } else if (UsrNamesChannel.isMaybeDeclaration(message)) {
-        this.handleResolution(message);
-      } else if (UsrNamesChannel.isMaybeRequest(message)) {
-        this.handleRequest(message, inPacket.getAddress());
+      if (UsernameResolution.isProtocolCompliant(message)) {
+        UsernameResolution protocol = new UsernameResolution(message);
+        if (!protocol.parse()) {
+          this.log.errorf(protocol.problem, "protocol parsing error with message %d", receiptIndex - 1);
+        }
+
+        if (protocol.isRequest()) {
+          this.handleRequest(protocol, inPacket.getAddress());
+        } else {
+          this.handleResolution(protocol.user, protocol.destRaw);
+        }
       } else {
-        this.log.errorf(
-            "CRITICAL BUG: compliance-logic updated but parsing logic not, triggered on message %d!\n",
-            receiptIndex - 1);
+        this.log.printf("dropping message %d, is not protocol-compliant request or response\n", receiptIndex - 1);
       }
 
       for (int i = 0; i < inPacket.getLength(); ++i) { // erase any trace of usage
         inBuffer[i] = 0 /*default nil-value of a byte array*/;
       }
     }
-  }
-
-  private static boolean isProtocolCompliant(String message) {
-    return isMaybeRequest(message) || isMaybeDeclaration(message);
-  }
-
-  private static boolean isMaybeRequest(String message) {
-    return (
-        message.length() > PROTOCOL_REQUEST_DELIMITER.length() + 1 /*1 space*/ &&
-        message.codePointAt(0) == PROTOCOL_REQUEST_DELIMITER.codePointAt(0)
-    );
-  }
-  private static boolean isMaybeDeclaration(String msg) {
-    return (
-      msg.length() > PROTOCOL_DECLARATION_DELIMITER.length() * 2 + 3 /*spaces*/ + 2 /*username + hostname*/ &&
-      msg.codePointAt(0) == PROTOCOL_DECLARATION_DELIMITER.codePointAt(0)
-    );
   }
 
   public UsrNamesChannel setLogLevel(final Logger.Level lvl) {

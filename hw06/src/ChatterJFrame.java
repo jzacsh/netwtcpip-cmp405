@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.util.Map;
 import java.util.HashMap;
 import javax.swing.JButton;
@@ -184,6 +183,6 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 
   private MessagingJFrame launchChat(boolean isRecvd, final Remote target) {
-    return new MessagingJFrame(isRecvd ? "received" : "launched", this.hist, target);
+    return new MessagingJFrame(isRecvd ? "received" : "launched", this.hist, target, this.userResolver);
   }
 }

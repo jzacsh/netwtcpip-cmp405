@@ -3,7 +3,6 @@ import java.awt.event.WindowEvent;
 import java.net.InetAddress;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.lang.InterruptedException;
 import java.io.InputStream;
