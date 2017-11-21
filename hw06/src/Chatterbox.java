@@ -62,7 +62,7 @@ public class Chatterbox {
     });
     this.log.setLevel(lvl);
     this.hist = new History(sock).setLogLevel(lvl);
-    this.receiver = new RecvChannel(this.hist).setLogLevel(lvl);
+    this.receiver = new RecvChannel(this.hist, this.isUserProtocol()).setLogLevel(lvl);
     this.userName = userName;
     if (this.isUserProtocol()) {
       this.userResolver = new UsernameService(this.userName, sock, this.baselinePort).setLogLevel(lvl);

@@ -14,7 +14,12 @@ public class RecvChannel implements LocalChannel {
   private boolean stopped = false;
   private boolean isOk = true;
 
-  public RecvChannel(History hist) { this.hist = hist; }
+  private boolean hasUserService;
+
+  public RecvChannel(History hist, boolean isUserServicePossible) {
+    this.hist = hist;
+    this.hasUserService = isUserServicePossible;
+  }
 
   public RecvChannel setLogLevel(final Logger.Level lvl) {
     this.log.setLevel(lvl);
@@ -90,17 +95,18 @@ public class RecvChannel implements LocalChannel {
       message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
 
       this.log.printf(
-          "handling received %s #%03d from %s [%03d chars]: %s%s%s\n",
-          AssertNetwork.isBroadcast(inPacket.getAddress()) ? "message" : "broadcast",
+          "handling received msg #%03d from %s [%03d chars]: %s%s%s\n",
           receiptIndex - 1,
           inPacket.getAddress(),
           message.length(), "\"\"\"", message, "\"\"\"");
 
       // Protocol, per in-class explanation, is: we treat *all* messages as
       // potential protocol-format. We don't care if it was broadcast.
-      if (UsernameResolution.isProtocolCompliant(message)) {
+      if (this.hasUserService && UsernameResolution.isProtocolCompliant(message)) {
+        this.log.printf("handling '%s' as user-name protocol-message\n", message);
         this.hist.handleBroadcast(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
       } else {
+        this.log.printf("handling '%s' as human-to-human message\n", message);
         this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
       }
 
