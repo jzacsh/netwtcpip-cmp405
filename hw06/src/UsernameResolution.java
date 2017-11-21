@@ -14,6 +14,8 @@ public class UsernameResolution {
   public InetAddress dest = null;
   public Throwable problem = null;
 
+  public String whoAsked;
+
   private boolean isParsed;
   private boolean isValid;
 
@@ -36,8 +38,13 @@ public class UsernameResolution {
     }
 
     if (UsernameResolution.isMaybeRequest(this.src)) {
-      // Expects format: "????? this.identity"
-      this.user = this.src.substring(PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
+      // Expects format: "????? this.identity ##### whoAsked"
+      String stripped = this.src.substring(PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
+      final int indexOfDelim = stripped.indexOf(PROTOCOL_DECLARATION_DELIMITER);
+
+      this.user = stripped.substring(0, indexOfDelim -1);
+      this.whoAsked = stripped.substring(
+          indexOfDelim + PROTOCOL_DECLARATION_DELIMITER.length() + 1 /*single space*/);
       this.isValid = true;
     } else if (UsernameResolution.isMaybeDeclaration(this.src)) {
       try {
@@ -148,8 +155,11 @@ public class UsernameResolution {
     return new SimpleEntry<>(username, addr);
   }
 
-  public static String buildRequest(String usrname) {
-    return String.format("%s %s", PROTOCOL_REQUEST_DELIMITER, usrname);
+  public static String buildRequest(String usrname, String localUser) {
+    return String.format(
+        "%s %s %s %s",
+        PROTOCOL_REQUEST_DELIMITER, usrname,
+        PROTOCOL_DECLARATION_DELIMITER, localUser);
   }
 
   public static boolean isProtocolCompliant(String message) {

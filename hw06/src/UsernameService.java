@@ -18,7 +18,7 @@ public class UsernameService {
    */
   private static final int LIKELY_MAX_USERS = 100;
 
-  private static final String TAG = "usrname reslv'r thrd";
+  private static final String TAG = "usrname reslv'r";
   private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;
 
@@ -36,15 +36,16 @@ public class UsernameService {
   private Map<String, Remote> resolved;
 
   private final String identity;
-  private final DatagramPacket declarationPacket;
-  private final InetAddress subscriptionAddr;
+  private final String selfDeclaration;
+  private final InetAddress localAddr;
+  private final InetAddress broadcastAddr;
   private int globalRemotePort;
 
-  private final DatagramSocket broadcastTo;
+  private final DatagramSocket sock;
 
   private long receiptIndex;
-  public UsernameService(String identity, final DatagramSocket broadcastTo, int globalPort) {
-    this.broadcastTo = broadcastTo;
+  public UsernameService(String identity, final DatagramSocket sock, int globalPort) {
+    this.sock = sock;
     this.receiptIndex = 0;
     this.identity = identity;
     this.resolved = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
@@ -52,8 +53,12 @@ public class UsernameService {
     this.globalRemotePort = globalPort;
 
     Entry<InetAddress, String> results = UsernameResolution.mustBuildProtocolIdentity(this.identity, this.log);
-    this.subscriptionAddr = results.getKey();
-    this.declarationPacket = this.buildPacketFrom(results.getValue());
+    this.localAddr = results.getKey();
+    this.selfDeclaration = results.getValue();
+    this.broadcastAddr = AssertNetwork.mustResolveHostName("255.255.255.255", (Throwable e) -> {
+      this.log.errorf("failed to load broadcast address");
+      System.exit(1);
+    });
   }
 
   /**
@@ -74,9 +79,9 @@ public class UsernameService {
       return;
     }
 
-    final String request = UsernameResolution.buildRequest(usrname);
+    final String request = UsernameResolution.buildRequest(usrname, this.identity);
     try {
-      this.broadcastTo.send(this.buildPacketFrom(request));
+      this.sock.send(this.buildPacketFrom(request, this.broadcastAddr));
     } catch(IOException e) {
       handler.accept(null /*remote*/, e);
       return;
@@ -86,12 +91,11 @@ public class UsernameService {
     this.log.printf("broadcast request for username, '%s'\n", usrname);
   }
 
-  private DatagramPacket buildPacketFrom(final String src) {
+  private DatagramPacket buildPacketFrom(final String src, InetAddress to) {
     return new DatagramPacket(
         src.getBytes(StandardCharsets.UTF_8),
         src.length(),
-        this.subscriptionAddr,
-        this.broadcastTo.getLocalPort());
+        to, this.sock.getLocalPort());
   }
 
   private static final Throwable badResolution(String userName, final String badResolution, Throwable e) {
@@ -103,17 +107,28 @@ public class UsernameService {
   /** Expects format: "????? LOCAL_USER" */
   private void handleRequest(final UsernameResolution protocol, final InetAddress requestor) {
     if (!protocol.isRequestFor(this.identity)) {
-      this.log.printf("dropping request for '%s' (ie: not local user)\n", protocol.user);
+      this.log.printf(
+          "dropping request for '%s' from '%s' (ie: not local user='%s')\n",
+          protocol.user, protocol.whoAsked, this.identity);
+      // TODO: find out HOW this is broken and triggering even when
+      // this.identity == protocol.user
       return;
     }
 
+    this.log.printf(
+        "storing requestor's identity ('%s', '%s') as an aside...\n",
+        protocol.whoAsked, requestor.getCanonicalHostName());
+    this.handleResolution(protocol.whoAsked, requestor.getCanonicalHostName());
+
     try {
-      this.broadcastTo.send(this.declarationPacket);
+      this.sock.send(this.buildPacketFrom(this.selfDeclaration, requestor));
     } catch(IOException e) {
       this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
       return;
     }
-    this.log.printf("responded to identity request by '%s'\n", requestor.getCanonicalHostName());
+    this.log.printf(
+        "responded to identity request by '%s' ('%s')\n",
+        protocol.whoAsked, requestor.getCanonicalHostName());
   }
 
   private void handleResolution(final String userName, final String rawResolution) {
