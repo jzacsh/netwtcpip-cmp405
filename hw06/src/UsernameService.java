@@ -101,7 +101,6 @@ public class UsernameService {
         badResolution, userName, e));
   }
 
-  /** Expects format: "????? LOCAL_USER" */
   private void handleRequest(final UsernameResolution protocol, final InetAddress requestor) {
     if (!protocol.isRequestFor(this.identity)) {
       this.log.printf(
