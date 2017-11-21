@@ -65,8 +65,10 @@ public class Chatterbox {
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist, this.isUserProtocol()).setLogLevel(lvl);
     if (this.isUserProtocol()) {
-      this.userResolver = new UsernameService(this.userName, sock, this.baselinePort).setLogLevel(lvl);
-      this.hist.setBroadcastListener((Remote r, String m) -> { this.userResolver.broadcastHandler(m, r) ; });
+      this.userResolver =
+          new UsernameService(this.userName, sock, this.baselinePort).setLogLevel(lvl);
+      this.hist.setBroadcastListener(
+          (Remote r, String m) -> this.userResolver.broadcastHandler(m, r));
     }
     this.execService = Executors.newWorkStealingPool();
     this.tasks = new ArrayList<Future<?>>();
