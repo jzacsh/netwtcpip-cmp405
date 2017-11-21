@@ -63,21 +63,21 @@ public class Remote {
   public InetAddress getHost() { return this.host; }
   public int getPort() { return this.port; }
 
-  public final String toString() {
+  public final String toString() { return this.toID(); }
+
+  public final String toID() {
     final String maybeUser = this.isViaNameProtocol() ? this.rawDest + "@" : "";
     return String.format("%s%s", maybeUser, this.toTcpIpAppID());
   }
 
   public final String toTcpIpAppID() {
-    final String maybeIP = this.hostIP();
-    return String.format(
-        "%s:%s",
-        maybeIP.length() == 0 && !this.isViaNameProtocol() ? this.rawDest : maybeIP,
-        this.rawPort);
+    return String.format("%s:%s", this.hostIP(), this.rawPort);
   }
 
   private String hostIP() {
-    return this.host == null ? "" : this.host.getHostAddress();
+    return this.host == null
+        ? (this.isViaNameProtocol() ? "" : this.rawDest)
+        : this.host.getHostAddress();
   }
 
   public Throwable error() { return this.problem; }

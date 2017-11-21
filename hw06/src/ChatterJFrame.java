@@ -152,8 +152,9 @@ public class ChatterJFrame extends JFrame implements ActionListener {
         this.markDashProcessing();
 
         this.log.printf(
-            "validating [dest: '%s', port: '%s']; is failure=%s\n",
-            this.destName.getText(), this.destPort.getText(), !this.isValidFormUsage());
+            "validating [dest: '%s', port: '%s'] (ID='%s'); is failure=%s\n",
+            this.destName.getText(), this.destPort.getText(),
+            this.dashBrdID(), !this.isValidFormUsage());
         if (!this.isValidFormUsage()) {
           final String currentID = this.dashBrdID();
           if (this.lastDashFailure != null && currentID.equals(this.lastDashFailure)) {
@@ -190,7 +191,8 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 
   private void launchCachedChat(boolean isRecvd, final Remote unchecked) {
-    final String launchID = unchecked.toTcpIpAppID();
+    final String launchID = unchecked.toID();
+    this.log.printf("launching (maybe cached) chat against ID='%s'\n", launchID);
     if (!this.chats.containsKey(launchID)) {
       this.chats.put(launchID, this.launchChat(isRecvd, unchecked));
       return;
