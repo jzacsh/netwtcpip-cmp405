@@ -104,8 +104,8 @@ public class UsernameService {
   private void handleRequest(final UsernameResolution protocol, final InetAddress requestor) {
     if (!protocol.isRequestFor(this.identity)) {
       this.log.printf(
-          "dropping request for '%s' from '%s' (ie: not local user='%s')\n",
-          protocol.user, protocol.whoAsked, this.identity);
+          "dropping request from '%s', for '%s' (not for local user='%s')\n",
+          protocol.whoAsked, protocol.user, this.identity);
       // TODO: find out HOW this is broken and triggering even when
       // this.identity == protocol.user
       return;
