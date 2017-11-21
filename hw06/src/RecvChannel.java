@@ -74,7 +74,9 @@ public class RecvChannel implements LocalChannel {
       return;
     }
 
-    this.log.printf("listening for messages on %s\n", this.hist.source);
+    this.log.printf("listening for messages on %s:%d\n",
+        this.hist.source.getLocalAddress().getHostAddress(),
+        this.hist.source.getLocalPort());
     long receiptIndex = 0;
     String message = null;
     Remote sender;
