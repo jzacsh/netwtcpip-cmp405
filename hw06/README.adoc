@@ -7,7 +7,7 @@
 
 == Homework #9
 
-status: *complete* but *untested*
+status: *complete* and *graded*
 
 diff <<hw9instruct, of this work>> against hw6, {hw9diff}[listed here]
 
