@@ -19,6 +19,9 @@ public class UsernameService {
   private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;
 
+  private static final Throwable ILLEGAL_EXISTENTIAL_STATE_EXCEPTION =
+      new IllegalStateException("local user trying to ask group about themselves");
+
   /**
    * Map of consumers waiting for resolution on a given (keyed) username.
    */
@@ -66,7 +69,7 @@ public class UsernameService {
    */
   public void resolveName(String usrname, BiConsumer<Remote, Throwable> handler) {
     if (this.identity.equals(usrname)) {
-      handler.accept(null /*remote*/, new IllegalStateException("local user trying to ask group about themselves"));
+      handler.accept(null /*remote*/, ILLEGAL_EXISTENTIAL_STATE_EXCEPTION);
       return;
     }
 
