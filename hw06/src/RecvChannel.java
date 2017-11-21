@@ -95,7 +95,9 @@ public class RecvChannel implements LocalChannel {
       }
       receiptIndex++;
 
-      message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
+      message  = new String(
+          inPacket.getData()
+          /*, StandardCharsets.UTF_8: TODO possibly the '.' in getHostAddress() from other person's machine is funky?*/);
       sender = new Remote(inPacket.getAddress(), inPacket.getPort());
 
       this.log.printf(

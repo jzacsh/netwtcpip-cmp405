@@ -141,15 +141,10 @@ public class UsernameService {
         protocol.whoAsked, requestor.getHostAddress());
   }
 
-  private void handleResolution(final String userName, final String rawResolution) {
-    this.log.printf("verifying raw resolution IP, '%s'...\n", rawResolution);
-    final InetAddress addr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
-      this.log.errorf(badResolution(userName, rawResolution, e).toString());
-    });
-    this.handleResolution(userName, addr, rawResolution);
-  }
-
-  private void handleResolution(final String userName, final InetAddress resolved, final String rawResolution) {
+  private void handleResolution(
+      final String userName,
+      final InetAddress resolved,
+      final String rawResolution) {
     if (userName.equals(this.identity)) {
       this.log.printf("dropping (spoof?) declaration about current user being at '%s'\n", rawResolution);
       return;
@@ -222,7 +217,14 @@ public class UsernameService {
     if (protocol.isRequest()) {
       this.handleRequest(protocol, from.getHost());
     } else {
-      this.handleResolution(protocol.user, protocol.destRaw);
+      this.handleResolution(
+          protocol.user,
+
+          from.getHost(),
+
+          // per instructor: ignore second half of protocol's message;
+          // instead just infer from packet headers
+          from.getHost().getHostAddress());
     }
   }
 
