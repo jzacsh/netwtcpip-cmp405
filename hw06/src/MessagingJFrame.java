@@ -49,7 +49,6 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     this.pack();
 
     this.setVisible(true);
-    this.composeField.requestFocus();
     this.setLocationRelativeTo(null);
 
     this.composeField.setDisabledTextColor(Color.RED);
@@ -75,6 +74,7 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     }
     this.composeField.setEnabled(this.remote.isValid());
     this.sendBtn.setEnabled(this.remote.isValid());
+    this.composeField.requestFocus();
   }
 
   public void actionPerformed(ActionEvent e) {
