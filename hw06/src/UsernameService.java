@@ -18,7 +18,7 @@ public class UsernameService {
    */
   private static final int LIKELY_MAX_USERS = 100;
 
-  private static final String TAG = "usrname reslv'r";
+  private static final String TAG = "username-r";
   private static final Logger log = new Logger(TAG);
   private static final int MAX_RECEIVE_BYTES = 1000;
 
@@ -117,21 +117,29 @@ public class UsernameService {
 
     this.log.printf(
         "storing requestor's identity ('%s', '%s') as an aside...\n",
-        protocol.whoAsked, requestor.getCanonicalHostName());
-    this.handleResolution(protocol.whoAsked, requestor.getCanonicalHostName());
+        protocol.whoAsked, requestor.getHostAddress());
+    this.handleResolution(protocol.whoAsked, requestor, requestor.getHostAddress());
 
     try {
       this.sock.send(this.buildPacketFrom(this.selfDeclaration, requestor));
     } catch(IOException e) {
-      this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getCanonicalHostName());
+      this.log.errorf(e, "failed responding declaration request by '%s'", requestor.getHostAddress());
       return;
     }
     this.log.printf(
         "responded to identity request by '%s' ('%s')\n",
-        protocol.whoAsked, requestor.getCanonicalHostName());
+        protocol.whoAsked, requestor.getHostAddress());
   }
 
   private void handleResolution(final String userName, final String rawResolution) {
+    this.log.printf("verifying raw resolution IP, '%s'...\n", rawResolution);
+    final InetAddress addr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
+      this.log.errorf(badResolution(userName, rawResolution, e).toString());
+    });
+    this.handleResolution(userName, addr, rawResolution);
+  }
+
+  private void handleResolution(final String userName, final InetAddress resolved, final String rawResolution) {
     if (userName.equals(this.identity)) {
       this.log.printf("dropping (spoof?) declaration about current user being at '%s'\n", rawResolution);
       return;
@@ -140,23 +148,23 @@ public class UsernameService {
     BiConsumer<Remote, Throwable> deliverTo = this.waitingOn.get(userName);
     this.waitingOn.remove(userName); // only a one-time notification api
 
-    final InetAddress addr = AssertNetwork.mustResolveHostName(rawResolution, (Throwable e) -> {
-      this.log.errorf(badResolution(userName, rawResolution, e).toString());
-    });
-
-    if (addr == null) {
+    if (resolved == null) {
       if (deliverTo != null) {
         deliverTo.accept(null /*resolvesTo*/, badResolution(userName, rawResolution, null));
       }
       return; // explicitly do NOT store protocol-violating messages
     }
 
-    final Remote resolvedTo = new Remote(userName, addr, this.globalRemotePort);
+    final Remote resolvedTo = new Remote(userName, resolved, this.globalRemotePort);
     if (deliverTo != null) {
       deliverTo.accept(resolvedTo, null /*throwable*/);
     }
     this.resolved.put(userName, resolvedTo);
-    this.log.printf("resolved user '%s' to raw IP address '%s'\n", userName, rawResolution);
+
+    this.log.printf(
+        "resolved, stored, & notified %d api-listener(s) of (user,ip)=('%s','%s')\n",
+        deliverTo == null ? 0 : 1,
+        userName, rawResolution);
   }
 
   public UsernameService report() {
