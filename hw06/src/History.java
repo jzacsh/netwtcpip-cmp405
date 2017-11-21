@@ -76,10 +76,10 @@ public class History implements Runnable {
     this.broadcastHandler.accept(from, message);
   }
 
-  private void notifyListenersUnsafe(final String remoteID) {
-    this.log.debugf(
-        "notifying listeners on activity for '%s' [have: listeners=%s, default=%s]\n",
-        remoteID, this.registry.containsKey(remoteID), this.defaultListener != null);
+  private void notifyListenersUnsafe(final String remoteID, final String logTag) {
+    this.log.printf(
+        "notifying listeners of %s for '%s' [have: listeners=%s, default=%s]\n",
+        logTag, remoteID, this.registry.containsKey(remoteID), this.defaultListener != null);
     if (this.registry.containsKey(remoteID)) {
       this.registry.get(remoteID).forEach((Runnable listener) -> listener.run());
       return;
@@ -138,7 +138,7 @@ public class History implements Runnable {
             toSend.getMessage());
       });
 
-      RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));
+      RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID, "SENDS"));
     });
   }
 
@@ -158,7 +158,7 @@ public class History implements Runnable {
             received.getMessage());
       });
 
-      RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));
+      RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID, "RECVS"));
     });
   }
 

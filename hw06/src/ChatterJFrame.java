@@ -190,7 +190,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 
   private void launchCachedChat(boolean isRecvd, final Remote unchecked) {
-    final String launchID = unchecked.toString();
+    final String launchID = unchecked.toTcpIpAppID();
     if (!this.chats.containsKey(launchID)) {
       this.chats.put(launchID, this.launchChat(isRecvd, unchecked));
       return;

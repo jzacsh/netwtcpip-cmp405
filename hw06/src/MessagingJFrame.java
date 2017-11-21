@@ -19,19 +19,17 @@ public class MessagingJFrame extends JFrame implements ActionListener {
 
   private History hist;
   private final Remote remote;
+  private final String cause;
 
-  public MessagingJFrame(final String readable, History hist, final Remote r, UsernameService unc) {
-    super(String.format("chat [%s] with %s", readable, r.toString()));
+  public MessagingJFrame(final String cause, History hist, final Remote r, UsernameService unc) {
+    super(MessagingJFrame.buildTitle(r, cause));
+    this.cause = cause;
     this.hist = hist;
     this.remote = r;
     this.setLayout(new BorderLayout());
     this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    this.chatLog = new ChatLogScrollPane(
-        20 /*rows*/,
-        DEFAULT_COLUMN_WIDTH /*cols*/,
-        this.hist.getHistoryWith(this.remote) /*warning: blocking*/);
-    this.hist.registerRemoteListener(this.remote, chatLog);
+    this.chatLog = new ChatLogScrollPane(20 /*rows*/, DEFAULT_COLUMN_WIDTH /*cols*/);
     this.getContentPane().add(chatLog, BorderLayout.CENTER);
 
     JPanel composePanel = new JPanel();
@@ -61,20 +59,34 @@ public class MessagingJFrame extends JFrame implements ActionListener {
     }).start();
   }
 
+  private static String buildTitle(final Remote r, final String cause) {
+    return String.format("chat [%s] with %s", cause, r.toString());
+  }
+
   private void metaLog(String msg) { this.composeField.setText("[loading] " + msg); }
 
   private void handleResolvedRemote() {
     if (this.remote.isValid()) {
+      this.setTitle(MessagingJFrame.buildTitle(this.remote, this.cause));
+      this.chatLog.metaLog(String.format("successfully identified peer as '%s'", this.remote.toString()));
       this.composeField.setText("");
+      this.chatLog.syncFrom(this.hist.getHistoryWith(this.remote) /*warning: blocking*/);
     } else {
+      this.setTitle(String.format("failed session: could not identify '%s'", this.remote.toString()));
       this.chatLog.metaLog(this.remote.error().getCause().toString());
       this.metaLog("failed to load chat");
       this.log.errorf(this.remote.error(), "failed to load chat with %s", this.remote);
       this.remote.error().printStackTrace(System.err);
     }
+
     this.composeField.setEnabled(this.remote.isValid());
     this.sendBtn.setEnabled(this.remote.isValid());
-    this.composeField.requestFocus();
+
+    if (this.remote.isValid()) {
+      this.composeField.requestFocus();
+      this.chatLog.run(); // process chat logs
+      this.hist.registerRemoteListener(this.remote, this.chatLog); // render logs as they come
+    }
   }
 
   public void actionPerformed(ActionEvent e) {

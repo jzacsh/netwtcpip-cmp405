@@ -9,13 +9,12 @@ import javax.swing.ScrollPaneConstants;
 class ChatLogScrollPane extends JScrollPane implements Runnable {
   private final Logger log = new Logger("ChatLogScrollPane");
   private static final long MAX_BLOCK_MILLIS = 25;
-  private LockedList<Message> src;
+  private LockedList<Message> src = null;
   private int numMessagesSeen;
   private JTextArea textLog;
 
-  public ChatLogScrollPane(int rows, int cols, LockedList<Message> logs) {
+  public ChatLogScrollPane(int rows, int cols) {
     super();
-    this.src = logs;
     this.numMessagesSeen = 0;
 
     this.textLog = new JTextArea(rows, cols);
@@ -29,16 +28,15 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
     this.textLog.setDisabledTextColor(Color.BLACK);
     this.textLog.setLineWrap(true);
     this.textLog.setWrapStyleWord(true);
-
-    this.renderNewLogs(); // initial rendering of loaded history
   }
+
+  public void syncFrom(LockedList<Message> logs) { this.src = logs; }
 
   private void appendLogs(Consumer<StringBuilder> c) {
     StringBuilder sb = new StringBuilder(this.textLog.getText().trim());
     sb.append('\n');
     c.accept(sb);
     this.textLog.setText(sb.toString());
-    this.numMessagesSeen = this.src.size();
 
     // ensure as vertical scrollbars become necessary, we are *utilizing* them
     // https://stackoverflow.com/a/5150437; ie: behave like tail(1)
@@ -51,6 +49,7 @@ class ChatLogScrollPane extends JScrollPane implements Runnable {
       this.src.getPastIndex(this.numMessagesSeen, (Message m) -> {
         sb.append(ChatLogScrollPane.toHistoryLine(m));
       });
+      this.numMessagesSeen = this.src.size();
     });
   }
 
