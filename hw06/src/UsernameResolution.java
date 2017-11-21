@@ -8,6 +8,19 @@ public class UsernameResolution {
   private static final String PROTOCOL_REQUEST_DELIMITER = "?????";
   private static final String PROTOCOL_DECLARATION_DELIMITER = "#####";
 
+  /** Expected format: "????? USER ##### WHO_ASKED" */
+  private static final int PROTOCOL_MIN_REQUEST_STR_LEN =
+      PROTOCOL_REQUEST_DELIMITER.length()
+      + PROTOCOL_DECLARATION_DELIMITER.length()
+      + 3 /*spaces: 2 around USER, 1 before WHO_ASKED*/
+      + 2 /*username + whoasked*/;
+
+  /** Expected format: "##### USER ##### IP_ADDRESS" */
+  private static final int PROTOCOL_MIN_DECLARATION_STR_LEN =
+      PROTOCOL_DECLARATION_DELIMITER.length() * 2
+      + 3 /*spaces: 2 around USER, 1 before IP_ADDRESS*/
+      + 2 /*username + hostname*/;
+
   public final String src;
   public String user;
   public String destRaw;
@@ -184,14 +197,14 @@ public class UsernameResolution {
 
   private static boolean isMaybeRequest(String message) {
     return (
-      message.length() > PROTOCOL_REQUEST_DELIMITER.length() + 1 /*1 space*/ &&
+      message.length() > PROTOCOL_MIN_REQUEST_STR_LEN &&
       message.codePointAt(0) == PROTOCOL_REQUEST_DELIMITER.codePointAt(0)
     );
   }
 
   private static boolean isMaybeDeclaration(String msg) {
     return (
-      msg.length() > PROTOCOL_DECLARATION_DELIMITER.length() * 2 + 3 /*spaces*/ + 2 /*username + hostname*/ &&
+      msg.length() > PROTOCOL_MIN_DECLARATION_STR_LEN &&
       msg.codePointAt(0) == PROTOCOL_DECLARATION_DELIMITER.codePointAt(0)
     );
   }
