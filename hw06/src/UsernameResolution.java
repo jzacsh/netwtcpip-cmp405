@@ -38,17 +38,17 @@ public class UsernameResolution {
     }
 
     if (UsernameResolution.isMaybeRequest(this.src)) {
-      // Expects format: "????? this.identity ##### whoAsked"
-      String stripped = this.src.substring(PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
-      final int indexOfDelim = stripped.indexOf(PROTOCOL_DECLARATION_DELIMITER);
-
-      this.user = stripped.substring(0, indexOfDelim -1);
-      this.whoAsked = stripped.substring(
-          indexOfDelim + PROTOCOL_DECLARATION_DELIMITER.length() + 1 /*single space*/);
-      this.isValid = true;
+      try {
+        Entry<String, String> results = UsernameResolution.parseNameRequest(this.src);
+        this.user = results.getKey();
+        this.whoAsked = results.getValue();
+        this.isValid = true;
+      } catch (ParseException e) {
+        this.problem = e;
+      }
     } else if (UsernameResolution.isMaybeDeclaration(this.src)) {
       try {
-        Entry<String, String> results = this.parseNameResolution(this.src);
+        Entry<String, String> results = UsernameResolution.parseNameResolution(this.src);
         this.user = results.getKey();
         this.destRaw = results.getValue();
         this.isValid = true;
@@ -81,6 +81,22 @@ public class UsernameResolution {
         PROTOCOL_DECLARATION_DELIMITER, localHost.getHostAddress());
 
     return new SimpleEntry<>(localHost, declaration);
+  }
+
+  /** Expects format: "????? this.identity ##### whoAsked". */
+  private static Entry<String, String> parseNameRequest(final String src) throws ParseException {
+    final String seeking, whoAsked;
+
+    String strippedOfPrefix = src.trim().substring(PROTOCOL_REQUEST_DELIMITER.length() + 1 /*single space*/);
+    final int indexOfDelim = strippedOfPrefix.indexOf(PROTOCOL_DECLARATION_DELIMITER);
+
+    seeking = strippedOfPrefix.substring(0, indexOfDelim -1);
+    whoAsked = strippedOfPrefix.substring(
+        indexOfDelim
+        + PROTOCOL_DECLARATION_DELIMITER.length()
+        + 1 /*single space*/);
+
+    return new SimpleEntry<>(seeking, whoAsked);
   }
 
   /**
