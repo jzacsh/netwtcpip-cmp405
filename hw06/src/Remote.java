@@ -65,9 +65,23 @@ public class Remote {
 
   public final String toString() {
     return String.format(
-        "'%s':'%s':[is%s username service]",
-        this.rawDest, this.rawPort,
+        "'%s':[is%s username service]",
+        this.toTcpIpAppID(),
         this.isViaNameProtocol() ? "" : " not");
+  }
+
+  public final String toTcpIpAppID() {
+    final String maybeUser = this.isViaNameProtocol() ? this.rawDest : "";
+    final String maybeIP = this.hostIP();
+    return String.format(
+        "[%s]:%s:%s",
+        maybeUser,
+        maybeIP.length() == 0 && !this.isViaNameProtocol() ? this.rawDest : maybeIP,
+        this.rawPort);
+  }
+
+  private String hostIP() {
+    return this.host == null ? "" : this.host.getHostAddress();
   }
 
   public Throwable error() { return this.problem; }

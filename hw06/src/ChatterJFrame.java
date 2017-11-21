@@ -84,6 +84,7 @@ public class ChatterJFrame extends JFrame implements ActionListener {
   }
 
   private void handleReceivedChat(Remote r) {
+    this.log.printf("handling unclaimed chat session with '%s'\n", r.toTcpIpAppID());
     Entry<String, Remote> usrToAddr;
     if (!this.isUserNameMode() ||
         (usrToAddr = this.userResolver.getUserBehind(r.getHost())) == null) {

@@ -57,7 +57,7 @@ public class History implements Runnable {
    */
   public void registerRemoteListener(Remote trigger, Runnable listener) {
     RunLocked.safeRun(this.registryLock, () -> {
-      final String triggerID = trigger.toString();
+      final String triggerID = trigger.toTcpIpAppID();
       List<Runnable> listeners;
       if (!this.registry.containsKey(triggerID)) {
         this.registry.put(triggerID, new ArrayList<Runnable>());
@@ -104,15 +104,15 @@ public class History implements Runnable {
   }
 
   public void safeEnqueueReceived(final Remote r, final String message) {
-    this.receiptFIFOs.add(r.toString(), new Message(r, message, true /*isReceived*/));
+    this.receiptFIFOs.add(r.toTcpIpAppID(), new Message(r, message, true /*isReceived*/));
   }
 
   public void safeEnqueueSend(final Remote r, final String message) {
-    this.sendingFIFOs.add(r.toString(), new Message(r, message, false /*isReceived*/));
+    this.sendingFIFOs.add(r.toTcpIpAppID(), new Message(r, message, false /*isReceived*/));
   }
 
   public LockedList<Message> getHistoryWith(final Remote remote) {
-    return this.full.getNonEmpty(remote.toString());
+    return this.full.getNonEmpty(remote.toTcpIpAppID());
   }
 
   /** unsafe; calls should be wrapped in sendingLock.lock(). */
@@ -133,7 +133,9 @@ public class History implements Runnable {
         chatHist.add(toSend);
         this.log.debugf(
             "socket.send()d: %s message %03d: '%s'\n",
-            toSend.getRemote(), chatHist.size() - 1, toSend.getMessage());
+            toSend.getRemote().toTcpIpAppID(),
+            chatHist.size() - 1,
+            toSend.getMessage());
       });
 
       RunLocked.safeRun(this.registryLock, () -> this.notifyListenersUnsafe(remoteID));
