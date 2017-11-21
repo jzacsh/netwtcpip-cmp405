@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.net.DatagramSocket;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.HashMap;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -77,9 +78,28 @@ public class ChatterJFrame extends JFrame implements ActionListener {
     this.setLocationRelativeTo(null);
     this.setVisible(true);
 
-    this.hist.registerDefaultListener((Remote r) -> this.launchCachedChat(true /*isRecvd*/, r));
+    this.hist.registerDefaultListener((Remote r) -> this.handleReceivedChat(r));
 
     this.chats = new HashMap<>();
+  }
+
+  private void handleReceivedChat(Remote r) {
+    Entry<String, Remote> usrToAddr;
+    if (!this.isUserNameMode() ||
+        (usrToAddr = this.userResolver.getUserBehind(r.getHost())) == null) {
+      if (this.isUserNameMode()) {
+        this.log.printf(
+            "BUG: falling back on user-nameless window; missing reverse mapping for IP='%s'",
+            r.getHost().getHostAddress());
+      }
+      this.launchCachedChat(true /*isRecvd*/, r);
+      return;
+    }
+    final String username = usrToAddr.getKey();
+    this.log.printf("converting incoming anonymous session to chat with user, '%s'\n", username);
+
+    r.setUserKnown(username /*username*/);
+    this.launchCachedChat(true /*isRecvd*/, r);
   }
 
   private boolean isUserNameMode() { return this.userResolver != null; }

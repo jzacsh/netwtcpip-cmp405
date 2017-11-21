@@ -74,9 +74,10 @@ public class RecvChannel implements LocalChannel {
       return;
     }
 
-    this.log.printf("waiting for input...\n");
+    this.log.printf("listening for messages on %s\n", this.hist.source);
     long receiptIndex = 0;
     String message = null;
+    Remote sender;
     while (true) {
       if (this.stopped) {
         break;
@@ -93,21 +94,23 @@ public class RecvChannel implements LocalChannel {
       receiptIndex++;
 
       message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
+      sender = new Remote(inPacket.getAddress(), inPacket.getPort());
 
       this.log.printf(
-          "handling received msg #%03d from %s [%03d chars]: %s%s%s\n",
+          "handling received msg #%03d from %s (from: '%s') [%03d chars]: %s%s%s\n",
           receiptIndex - 1,
           inPacket.getAddress(),
+          sender.toString(),
           message.length(), "\"\"\"", message, "\"\"\"");
 
       // Protocol, per in-class explanation, is: we treat *all* messages as
       // potential protocol-format. We don't care if it was broadcast.
       if (this.hasUserService && UsernameResolution.isProtocolCompliant(message)) {
-        this.log.printf("handling '%s' as user-name protocol-message\n", message);
-        this.hist.handleBroadcast(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
+        this.log.printf("handling as user-name protocol-message\n");
+        this.hist.handleBroadcast(sender, message);
       } else {
-        this.log.printf("handling '%s' as human-to-human message\n", message);
-        this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
+        this.log.printf("handling as human-to-human message\n");
+        this.hist.safeEnqueueReceived(sender, message);
       }
 
       for (int i = 0; i < inPacket.getLength(); ++i) { // erase any trace of usage

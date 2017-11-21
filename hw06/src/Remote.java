@@ -27,6 +27,8 @@ public class Remote {
   public Remote(final InetAddress host, int port) {
     this.isChecked = true;
     this.isViaUserName = false;
+    this.rawDest = host.getHostAddress(); // back fill
+    this.rawPort = String.valueOf(port); // back fill
     this.host = host;
     this.port = port;
   }
@@ -34,6 +36,11 @@ public class Remote {
   private Remote(String port) {
     this.rawPort = port;
     this.isChecked = false;
+  }
+
+  public void setUserKnown(final String username) {
+    this.rawDest = username;
+    this.isViaUserName = true;
   }
 
   public static Remote viaUncheckedAddress(String host, String port) {

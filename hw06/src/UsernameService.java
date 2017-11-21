@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.util.function.BiConsumer;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -33,7 +35,14 @@ public class UsernameService {
    * - Values are the IP address, portnumber, and username info associated in the most recently
    *   procesesd multicase under given username.
    */
-  private Map<String, Remote> resolved;
+  private Map<String, Remote> addrByUser;
+
+  /**
+   * Reverse map of resolved IP addresses. Inverse of {@link #addrByUser} but keyed by
+   * dotted-decimal notation string value of remote host. Port is ignored, as username-service
+   * protocol dictates a hardcoded port.
+   */
+  private Map<String, String> userByAddr;
 
   private final String identity;
   private final String selfDeclaration;
@@ -48,7 +57,9 @@ public class UsernameService {
     this.sock = sock;
     this.receiptIndex = 0;
     this.identity = identity;
-    this.resolved = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
+
+    this.addrByUser = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
+    this.userByAddr = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.waitingOn = new HashMap<>(LIKELY_MAX_USERS /*initialCapacity*/);
     this.globalRemotePort = globalPort;
 
@@ -73,9 +84,9 @@ public class UsernameService {
       return;
     }
 
-    if (this.resolved.containsKey(usrname)) {
+    if (this.addrByUser.containsKey(usrname)) {
       this.log.printf("utilizing cached resolution for username, '%s'\n", usrname);
-      handler.accept(this.resolved.get(usrname), null /*throwable*/);
+      handler.accept(this.addrByUser.get(usrname), null /*throwable*/);
       return;
     }
 
@@ -158,12 +169,26 @@ public class UsernameService {
     if (deliverTo != null) {
       deliverTo.accept(resolvedTo, null /*throwable*/);
     }
-    this.resolved.put(userName, resolvedTo);
-
+    this.storeNameResolution(userName, resolvedTo);
     this.log.printf(
         "resolved, stored, & notified %d api-listener(s) of (user,ip)=('%s','%s')\n",
         deliverTo == null ? 0 : 1,
         userName, rawResolution);
+  }
+
+  private void storeNameResolution(final String user, final Remote r) {
+    this.addrByUser.put(user, r);
+    this.userByAddr.put(r.getHost().getHostAddress(), user);
+  }
+
+  public Entry<String, Remote> getUserBehind(final InetAddress addr) {
+    final String ipAddr = addr.getHostAddress();
+    if (!this.userByAddr.containsKey(ipAddr)) {
+      return null;
+    }
+
+    final String usr = this.userByAddr.get(ipAddr);
+    return new SimpleEntry<>(usr, this.addrByUser.get(usr));
   }
 
   public UsernameService report() {

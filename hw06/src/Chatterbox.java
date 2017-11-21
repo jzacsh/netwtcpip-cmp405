@@ -55,6 +55,7 @@ public class Chatterbox {
 
   /** Construction for homework 9 mode. All parameters are required. */
   public Chatterbox(int baselinePort, Logger.Level lvl, String userName) {
+    this.userName = userName;
     this.baselinePort = baselinePort;
     DatagramSocket sock = AssertNetwork.mustOpenSocket(this.baselinePort, (SocketException e) -> {
       this.log.errorf(e, "setup: failed opening receiving socket on %d", this.baselinePort);
@@ -63,7 +64,6 @@ public class Chatterbox {
     this.log.setLevel(lvl);
     this.hist = new History(sock).setLogLevel(lvl);
     this.receiver = new RecvChannel(this.hist, this.isUserProtocol()).setLogLevel(lvl);
-    this.userName = userName;
     if (this.isUserProtocol()) {
       this.userResolver = new UsernameService(this.userName, sock, this.baselinePort).setLogLevel(lvl);
       this.hist.setBroadcastListener((Remote r, String m) -> { this.userResolver.broadcastHandler(m, r) ; });
