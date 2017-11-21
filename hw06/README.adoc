@@ -11,6 +11,34 @@ status: *complete* and *graded*
 
 diff <<hw9instruct, of this work>> against hw6, {hw9diff}[listed here]
 
+=== running on unix-y machine
+
+NOTE: these commands do not require an IDE, just run on a non-Windows shell.
+
+.build homework 9 in terminal
+----
+$ make hw9
+rm -f bin/*.class
+javac -Xlint:unchecked -cp src src/LockedMapList.java -d bin/
+javac -Xlint:unchecked -cp src src/ChatLogScrollPane.java -d bin/
+javac -Xlint:unchecked -cp src src/LockedMapQueue.java -d bin/
+javac -Xlint:unchecked -cp src src/OneToOneChannel.java -d bin/
+javac -Xlint:unchecked -cp src src/Chatterbox.java -d bin/
+Now just run:
+  java -cp bin Chatterbox -username YOUR_USER_NAME
+----
+
+.if above worked, then run & watch for GUI popup
+----
+$ java -cp bin Chatterbox -username jon
+[chatter] Running in forum (GUI) mode [username protocol, advertising 'jon']
+[recv'r thrd] READY to spawn thread consuming from local socket 0.0.0.0/0.0.0.0:64000
+[chatter] children spawned, continuing with user task
+[recv'r thrd] spawned "recv'r thrd" thread: ForkJoinPool-1-worker-1
+[history thrd] spawned "history thrd": ForkJoinPool-1-worker-2
+[recv'r thrd] listening for messages on 0.0.0.0:64000
+----
+
 == Homework #6
 
 status: *complete* as of {c9d6d689a19ed}[`c9d6d689a19ed`] footnoteref:[flagguardhw9,
