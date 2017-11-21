@@ -90,12 +90,15 @@ public class RecvChannel implements LocalChannel {
       message  = new String(inPacket.getData(), StandardCharsets.UTF_8);
 
       this.log.printf(
-          "handling received %s #%03d [%03d chars]: %s%s%s\n",
+          "handling received %s #%03d from %s [%03d chars]: %s%s%s\n",
           AssertNetwork.isBroadcast(inPacket.getAddress()) ? "message" : "broadcast",
           receiptIndex - 1,
+          inPacket.getAddress(),
           message.length(), "\"\"\"", message, "\"\"\"");
 
-      if (AssertNetwork.isBroadcast(inPacket.getAddress())) {
+      // Protocol, per in-class explanation, is: we treat *all* messages as
+      // potential protocol-format. We don't care if it was broadcast.
+      if (UsernameResolution.isProtocolCompliant(message)) {
         this.hist.handleBroadcast(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
       } else {
         this.hist.safeEnqueueReceived(new Remote(inPacket.getAddress(), inPacket.getPort()), message);
