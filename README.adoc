@@ -4,6 +4,7 @@
 :hw6: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw6.html
 :hw9: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/hw/hw9.html
 :c9d6d689a19ed: https://github.com/jzacsh/netwtcpip-cmp405/tree/c9d6d689a19ed/hw06/
+:b24ce5f90cda: https://github.com/jzacsh/netwtcpip-cmp405/tree/b24ce5f90cda/hw06/
 
 {me}[My] own coursework -- lecture notes, scribbles, homework -- while taking
 {cmp405}[CMP-405 at Lehman], Fall 2017.
@@ -14,7 +15,7 @@
 | hw # | location | description | as of
 
 | 6 | `hw06/` | {hw6}[chat application] | {c9d6d689a19ed}[`c9d6d689a19ed`]
-| 9 | `hw06/` | hw6 forked to add {hw9}[username resolution] |
+| 9 | `hw06/` | hw6 forked to add {hw9}[username resolution] | {b24ce5f90cda}[`b24ce5f90cda`]
 |===
 
 see `testdata_ipframe/` readme for my tinkering with `framespect.bin.c`
