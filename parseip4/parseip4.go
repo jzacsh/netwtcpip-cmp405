@@ -26,21 +26,27 @@ func NewAddr(highest, second, third, lowest uint8) OctsList {
 	return OctsList{highest, second, third, lowest}
 }
 
+const (
+	bitsOctetA = 32 - 8   // octet A in IP address A.B.C.D
+	bitsOctetB = 32 - 8*2 // octet B in IP address A.B.C.D
+	bitsOctetC = 32 - 8*3 // octet C in IP address A.B.C.D
+)
+
 // Pack produces a single integer with tthe values of OctsList in the
 // appropriate bit location.
 func (o OctsList) Pack() Octets {
-	return (Octets(o[0]) << 24) +
-		(Octets(o[1]) << 16) +
-		(Octets(o[2]) << 8) +
+	return (Octets(o[0]) << bitsOctetA) +
+		(Octets(o[1]) << bitsOctetB) +
+		(Octets(o[2]) << bitsOctetC) +
 		(Octets(o[3]))
 }
 
 // OctsList unpacks a Octets value into its component 8-bit valued integers.
 func (ino Octets) List() OctsList {
 	return OctsList{
-		uint8((0xFF000000 & ino) >> 24),
-		uint8((0x00FF0000 & ino) >> 16),
-		uint8((0x0000FF00 & ino) >> 8),
+		uint8((0xFF000000 & ino) >> bitsOctetA),
+		uint8((0x00FF0000 & ino) >> bitsOctetB),
+		uint8((0x0000FF00 & ino) >> bitsOctetC),
 		uint8(0x000000FF & ino),
 	}
 }

@@ -1,0 +1,56 @@
+= lecture 20171108
+:slides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2012.pdf
+:routingslides: http://comet.lehman.cuny.edu/sfakhouri/teaching/cmp/cmp405/f17/lecturenotes/Chapter%2013.pdf
+
+{slides}[TCP continued] & more
+
+if the tcp stream is over(ish) does requestor keep sending current next-byte ACK?
+
+== routing: lecture 13
+
+{routingslides}[routing slides]
+
+IP implement routing
+
+.routing 101
+. hosts & routers *forward* datagrams
+. ip forwarding is table-driven
+. table called _routing table_ 
+
+.static routing
+ . fixed at boot time
+ . useful for simple cases
+
+.dynamic routing
+. table initialized at boot time
+. updated by protocols (propogating route info)
+. necessary in large internets
+
+.sources of info
+. initialization (eg: from disk)
+. updates (eg: from protocols)
+. observations
+.. *hosts tend to freeze* tables after initialization
+.. routers use protocols to grow
+
+=== dynamic routing algorithms
+
+.classes of automatic route propogation
+. distance-vector
+. link-state
+
+.distance-vector alg
+. initialize table w/one entry for each direct-net
+. periodically run distance-vector update to exchange info w/routers reachable
+  over direct-nets eg:
+.. broadcast your table contents w/distances (ie: directs are "0")
+.. recv' such broadcast
+   --> take min_subset against table (where max is on distance value)
+
+NOTE: distance-vector does NOT broadcast route, only the (network,distance)
+two-tuples
+
+*eventually* stable
+
+
+
